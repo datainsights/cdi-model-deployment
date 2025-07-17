@@ -1,0 +1,56 @@
+# RStudio project files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# macOS system files
+.DS_Store
+
+# Python virtual environment
+venv/
+
+# renv package management
+renv/
+renv/library/
+renv/staging/
+renv/python/
+
+# Bookdown and documentation output
+!docs/                 # GitBook HTML (exclude only if building elsewhere)
+domain-bs4/
+domain-pdf/
+
+
+# Images and data
+# Ignore all files in data/
+data/*
+
+# But do not ignore the folder itself
+!data/
+images/*.*
+!docs/images/
+
+# Intermediate and cache files
+*.utf8.md
+*.knit.md
+*.log
+*.aux
+*.out
+*.toc
+*.synctex.gz
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+
+# Quarto and Pandoc cache
+_quarto/
+_cache/
+
+# Temporary/Working files
+index.Rmd
+_bookdown.yml
+*_files/figure-html/
+*_files/figure-latex/
+.github/template-assets/project_tree.txt
