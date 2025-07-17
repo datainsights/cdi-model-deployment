@@ -4,18 +4,18 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Model Deployment Q&amp;A Guide | model-deployment.knit</title>
+  <title>Q&A 4 How do you serve saved models as prediction endpoints using FastAPI? | model-deployment.knit</title>
   <meta name="description" content="Model Deployment Q&amp;A Guide" />
   <meta name="generator" content="bookdown 0.42 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Model Deployment Q&amp;A Guide | model-deployment.knit" />
+  <meta property="og:title" content="Q&A 4 How do you serve saved models as prediction endpoints using FastAPI? | model-deployment.knit" />
   <meta property="og:type" content="book" />
   
   
   <meta name="github-repo" content="https://github.com/datainsights/cdi-model-deployment/" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Model Deployment Q&amp;A Guide | model-deployment.knit" />
+  <meta name="twitter:title" content="Q&A 4 How do you serve saved models as prediction endpoints using FastAPI? | model-deployment.knit" />
   
   
   
@@ -28,8 +28,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-
-<link rel="next" href="welcome-to-the-cdi-model-deployment-guide.html"/>
+<link rel="prev" href="how-do-you-evaluate-models-before-deployment.html"/>
+<link rel="next" href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html"/>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
@@ -201,21 +201,91 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="header">
-<h1 class="title"><div class="line-block">Model Deployment Q&amp;A Guide</div></h1>
-<h2 class="subtitle"><em><div class="line-block"><img src="images/cover.png" style="width:75.0%" /><br />
-Last updated: July 18, 2025</div></em></h2>
+<div id="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi" class="section level1 hasAnchor" number="4">
+<h1><span class="header-section-number">Q&A 4</span> How do you serve saved models as prediction endpoints using FastAPI?<a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="explanation-3" class="section level2 hasAnchor" number="4.1">
+<h2><span class="header-section-number">4.1</span> Explanation<a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#explanation-3" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Once you’ve saved your trained models, the next step is to create an API that loads those models and makes them available for real-time prediction. FastAPI is a lightweight, high-performance framework that’s ideal for this.</p>
+<p>In this Q&amp;A, we define a FastAPI app that:</p>
+<ul>
+<li>Loads all <code>.joblib</code> models from the <code>models/</code> folder</li>
+<li>Defines a prediction route <code>/predict/{model_name}</code></li>
+<li>Accepts JSON input using a <code>pydantic</code> schema</li>
+<li>Returns a prediction as a JSON response</li>
+</ul>
 </div>
-<div id="section" class="section level1 unnumbered">
-<h1 class="unnumbered"></h1>
+<div id="python-code-define-fastapi-app" class="section level2 hasAnchor" number="4.2">
+<h2><span class="header-section-number">4.2</span> Python Code (Define FastAPI App)<a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#python-code-define-fastapi-app" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-1" tabindex="-1"></a><span class="co"># scripts/model_api.py</span></span>
+<span id="cb11-2"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-2" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-3" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb11-4"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-4" tabindex="-1"></a><span class="im">import</span> joblib</span>
+<span id="cb11-5"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-5" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb11-6"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-6" tabindex="-1"></a><span class="im">from</span> fastapi <span class="im">import</span> FastAPI, HTTPException</span>
+<span id="cb11-7"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-7" tabindex="-1"></a><span class="im">from</span> pydantic <span class="im">import</span> BaseModel</span>
+<span id="cb11-8"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-8" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-9" tabindex="-1"></a><span class="co"># Load models dynamically</span></span>
+<span id="cb11-10"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-10" tabindex="-1"></a>MODEL_DIR <span class="op">=</span> <span class="st">&quot;models&quot;</span></span>
+<span id="cb11-11"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-11" tabindex="-1"></a>models <span class="op">=</span> {}</span>
+<span id="cb11-12"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-12" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-13" tabindex="-1"></a><span class="cf">for</span> fname <span class="kw">in</span> os.listdir(MODEL_DIR):</span>
+<span id="cb11-14"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-14" tabindex="-1"></a>    <span class="cf">if</span> fname.endswith(<span class="st">&quot;.joblib&quot;</span>):</span>
+<span id="cb11-15"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-15" tabindex="-1"></a>        model_name <span class="op">=</span> fname.replace(<span class="st">&quot;.joblib&quot;</span>, <span class="st">&quot;&quot;</span>)</span>
+<span id="cb11-16"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-16" tabindex="-1"></a>        model_path <span class="op">=</span> os.path.join(MODEL_DIR, fname)</span>
+<span id="cb11-17"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-17" tabindex="-1"></a>        models[model_name] <span class="op">=</span> joblib.load(model_path)</span>
+<span id="cb11-18"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-18" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-19" tabindex="-1"></a><span class="co"># Create FastAPI app</span></span>
+<span id="cb11-20"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-20" tabindex="-1"></a>app <span class="op">=</span> FastAPI()</span>
+<span id="cb11-21"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-21" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-22" tabindex="-1"></a><span class="co"># Define input schema</span></span>
+<span id="cb11-23"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-23" tabindex="-1"></a><span class="kw">class</span> InputData(BaseModel):</span>
+<span id="cb11-24"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-24" tabindex="-1"></a>    Pclass: <span class="bu">int</span></span>
+<span id="cb11-25"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-25" tabindex="-1"></a>    Sex: <span class="bu">int</span></span>
+<span id="cb11-26"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-26" tabindex="-1"></a>    Age: <span class="bu">float</span></span>
+<span id="cb11-27"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-27" tabindex="-1"></a>    Fare: <span class="bu">float</span></span>
+<span id="cb11-28"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-28" tabindex="-1"></a>    Embarked: <span class="bu">int</span></span>
+<span id="cb11-29"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-29" tabindex="-1"></a></span>
+<span id="cb11-30"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-30" tabindex="-1"></a><span class="co"># Define output schema</span></span>
+<span id="cb11-31"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-31" tabindex="-1"></a><span class="kw">class</span> PredictionOutput(BaseModel):</span>
+<span id="cb11-32"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-32" tabindex="-1"></a>    model: <span class="bu">str</span></span>
+<span id="cb11-33"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-33" tabindex="-1"></a>    prediction: <span class="bu">int</span></span>
+<span id="cb11-34"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-34" tabindex="-1"></a></span>
+<span id="cb11-35"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-35" tabindex="-1"></a><span class="co"># Route to list available models</span></span>
+<span id="cb11-36"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-36" tabindex="-1"></a><span class="at">@app.get</span>(<span class="st">&quot;/models&quot;</span>)</span>
+<span id="cb11-37"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-37" tabindex="-1"></a><span class="kw">def</span> list_models():</span>
+<span id="cb11-38"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-38" tabindex="-1"></a>    <span class="cf">return</span> {<span class="st">&quot;available_models&quot;</span>: <span class="bu">list</span>(models.keys())}</span>
+<span id="cb11-39"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-39" tabindex="-1"></a></span>
+<span id="cb11-40"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-40" tabindex="-1"></a><span class="co"># Route to predict using any loaded model</span></span>
+<span id="cb11-41"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-41" tabindex="-1"></a><span class="at">@app.post</span>(<span class="st">&quot;/predict/</span><span class="sc">{model_name}</span><span class="st">&quot;</span>, response_model<span class="op">=</span>PredictionOutput)</span>
+<span id="cb11-42"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-42" tabindex="-1"></a><span class="kw">def</span> predict(model_name: <span class="bu">str</span>, input_data: InputData):</span>
+<span id="cb11-43"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-43" tabindex="-1"></a>    <span class="cf">if</span> model_name <span class="kw">not</span> <span class="kw">in</span> models:</span>
+<span id="cb11-44"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-44" tabindex="-1"></a>        <span class="cf">raise</span> HTTPException(status_code<span class="op">=</span><span class="dv">404</span>, detail<span class="op">=</span><span class="st">&quot;Model not found.&quot;</span>)</span>
+<span id="cb11-45"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-45" tabindex="-1"></a></span>
+<span id="cb11-46"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-46" tabindex="-1"></a>    input_df <span class="op">=</span> pd.DataFrame([input_data.<span class="bu">dict</span>()])</span>
+<span id="cb11-47"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-47" tabindex="-1"></a>    model <span class="op">=</span> models[model_name]</span>
+<span id="cb11-48"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-48" tabindex="-1"></a></span>
+<span id="cb11-49"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-49" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb11-50"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-50" tabindex="-1"></a>        prediction <span class="op">=</span> model.predict(input_df)[<span class="dv">0</span>]</span>
+<span id="cb11-51"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-51" tabindex="-1"></a>        <span class="cf">return</span> PredictionOutput(model<span class="op">=</span>model_name, prediction<span class="op">=</span><span class="bu">int</span>(prediction))</span>
+<span id="cb11-52"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-52" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb11-53"><a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#cb11-53" tabindex="-1"></a>        <span class="cf">raise</span> HTTPException(status_code<span class="op">=</span><span class="dv">500</span>, detail<span class="op">=</span><span class="bu">str</span>(e))</span></code></pre></div>
+</div>
+<div id="r-code-3" class="section level2 hasAnchor" number="4.3">
+<h2><span class="header-section-number">4.3</span> R Code<a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html#r-code-3" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<pre class="unnumbered"><code># This deployment workflow is implemented in Python using FastAPI.
+# For R, consider plumber for serving models as REST APIs.</code></pre>
+<blockquote>
+<p>✅ Takeaway: FastAPI allows you to create scalable prediction endpoints by loading saved models and exposing them through clean, documented routes.</p>
+</blockquote>
+</div>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-
-<a href="welcome-to-the-cdi-model-deployment-guide.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="how-do-you-evaluate-models-before-deployment.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
@@ -246,7 +316,7 @@ gitbook.start({
     "size": 2
   },
   "edit": {
-    "link": "https://github.com/datainsights/cdi-general-ds/edit/main/index.Rmd",
+    "link": "https://github.com/datainsights/cdi-general-ds/edit/main/01-1-model-deployment.Rmd",
     "text": "Edit"
   },
   "history": {

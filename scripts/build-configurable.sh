@@ -19,44 +19,44 @@ link_bookdown_config() {
 }
 
 # -------------------------------
-# domain GitBook
+# model-deployment GitBook
 # -------------------------------
-if [[ "$1" == "domain-gitbook" ]]; then
-  echo "📘 Building domain GitBook..."
-  cp -f index-domain-gitbook.Rmd index.Rmd
-  link_bookdown_config _bookdown-domain.yml
+if [[ "$1" == "model-deployment-gitbook" ]]; then
+  echo "📘 Building model-deployment GitBook..."
+  cp -f index-model-deployment-gitbook.Rmd index.Rmd
+  link_bookdown_config _bookdown-model-deployment.yml
 
   mkdir -p docs
   Rscript -e 'bookdown::render_book("index.Rmd", "bookdown::gitbook", output_dir = "docs")'
 
   rm index.Rmd
-  echo "✅ domain GitBook complete → /docs"
+  echo "✅ model-deployment GitBook complete → /docs"
 
 
-# -------------------------------
-# domain PDF
-# -------------------------------
-elif [[ "$1" == "domain-bs4" ]]; then
-  echo "📘 Building domain bs4..."
-  cp -f index-domain-bs4.Rmd index.Rmd
-  link_bookdown_config _bookdown-domain.yml
-  mkdir -p domain-bs4
-  Rscript -e 'bookdown::render_book("index.Rmd", "bookdown::bs4_book", output_dir = "domain-bs4")'
-  rm index.Rmd
-  echo "✅ domain bs4 complete → /domain-bs4"
+# # -------------------------------
+# # model-deployment PDF
+# # -------------------------------
+# elif [[ "$1" == "model-deployment-bs4" ]]; then
+#   echo "📘 Building model-deployment bs4..."
+#   cp -f index-model-deployment-bs4.Rmd index.Rmd
+#   link_bookdown_config _bookdown-model-deployment.yml
+#   mkdir -p model-deployment-bs4
+#   Rscript -e 'bookdown::render_book("index.Rmd", "bookdown::bs4_book", output_dir = "model-deployment-bs4")'
+#   rm index.Rmd
+#   echo "✅ model-deployment bs4 complete → /model-deployment-bs4"
 
 
-# -------------------------------
-# domain BS4
-# -------------------------------
-elif [[ "$1" == "domain-pdf" ]]; then
-  echo "📘 Building domain PDF..."
-  cp -f index-domain-pdf.Rmd index.Rmd
-  link_bookdown_config _bookdown-domain.yml
-  mkdir -p domain-pdf
-  Rscript -e 'bookdown::render_book("index.Rmd", "bookdown::pdf_book", output_dir = "domain-pdf")'
-  rm index.Rmd
-  echo "✅ domain PDF complete → /domain-pdf"
+# # -------------------------------
+# # model-deployment BS4
+# # -------------------------------
+# elif [[ "$1" == "model-deployment-pdf" ]]; then
+#   echo "📘 Building model-deployment PDF..."
+#   cp -f index-model-deployment-pdf.Rmd index.Rmd
+#   link_bookdown_config _bookdown-model-deployment.yml
+#   mkdir -p model-deployment-pdf
+#   Rscript -e 'bookdown::render_book("index.Rmd", "bookdown::pdf_book", output_dir = "model-deployment-pdf")'
+#   rm index.Rmd
+#   echo "✅ model-deployment PDF complete → /model-deployment-pdf"
 
 
 

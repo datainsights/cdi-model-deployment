@@ -4,18 +4,18 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Model Deployment Q&amp;A Guide | model-deployment.knit</title>
+  <title>Q&A 5 How do you run and test your FastAPI app using Uvicorn and Swagger UI? | model-deployment.knit</title>
   <meta name="description" content="Model Deployment Q&amp;A Guide" />
   <meta name="generator" content="bookdown 0.42 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Model Deployment Q&amp;A Guide | model-deployment.knit" />
+  <meta property="og:title" content="Q&A 5 How do you run and test your FastAPI app using Uvicorn and Swagger UI? | model-deployment.knit" />
   <meta property="og:type" content="book" />
   
   
   <meta name="github-repo" content="https://github.com/datainsights/cdi-model-deployment/" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Model Deployment Q&amp;A Guide | model-deployment.knit" />
+  <meta name="twitter:title" content="Q&A 5 How do you run and test your FastAPI app using Uvicorn and Swagger UI? | model-deployment.knit" />
   
   
   
@@ -28,8 +28,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-
-<link rel="next" href="welcome-to-the-cdi-model-deployment-guide.html"/>
+<link rel="prev" href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html"/>
+<link rel="next" href="how-do-you-visualize-model-evaluation-results-from-csv.html"/>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
@@ -201,21 +201,72 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="header">
-<h1 class="title"><div class="line-block">Model Deployment Q&amp;A Guide</div></h1>
-<h2 class="subtitle"><em><div class="line-block"><img src="images/cover.png" style="width:75.0%" /><br />
-Last updated: July 18, 2025</div></em></h2>
+<div id="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui" class="section level1 hasAnchor" number="5">
+<h1><span class="header-section-number">Q&A 5</span> How do you run and test your FastAPI app using Uvicorn and Swagger UI?<a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="explanation-4" class="section level2 hasAnchor" number="5.1">
+<h2><span class="header-section-number">5.1</span> Explanation<a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#explanation-4" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>After creating your FastAPI app, you need to <strong>run it locally</strong> to test prediction endpoints. The standard way to run FastAPI is through <strong>Uvicorn</strong>, an ASGI server that supports fast, async APIs.</p>
+<p>When you run your app, FastAPI automatically provides an interactive, browser-based <strong>Swagger UI</strong> at <code>/docs</code>, where you can test endpoints and submit real input.</p>
 </div>
-<div id="section" class="section level1 unnumbered">
-<h1 class="unnumbered"></h1>
+<div id="run-command-terminal" class="section level2 hasAnchor" number="5.2">
+<h2><span class="header-section-number">5.2</span> Run Command (Terminal)<a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#run-command-terminal" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Assuming your FastAPI file is located at <code>scripts/model_api.py</code> and your app instance is named <code>app</code>, run:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#cb13-1" tabindex="-1"></a><span class="ex">uvicorn</span> scripts.model_api:app <span class="at">--reload</span></span></code></pre></div>
+<ul>
+<li>script.model_api is the Python path: folder + filename (without .py)</li>
+<li>:app refers to the FastAPI() instance inside the file</li>
+<li>–reload enables live reloading during development</li>
+</ul>
+<blockquote>
+
+</blockquote>
+</div>
+<div id="output-sample" class="section level2 hasAnchor" number="5.3">
+<h2><span class="header-section-number">5.3</span> Output (Sample)<a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#output-sample" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>INFO: Uvicorn running on <a href="http://127.0.0.1:8000" class="uri">http://127.0.0.1:8000</a> (Press CTRL+C to quit)
+INFO: Started reloader process…</p>
+</div>
+<div id="test-in-your-browser" class="section level2 hasAnchor" number="5.4">
+<h2><span class="header-section-number">5.4</span> Test in Your Browser<a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#test-in-your-browser" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<ul>
+<li><p>Go: <a href="http://127.0.0.1:8000/docs" class="uri">http://127.0.0.1:8000/docs</a></p></li>
+<li><p>You’ll see:</p>
+<ul>
+<li>/models → GET endpoint to list all available models</li>
+<li>/predict/{model_name} → POST endpoint with a form to test predictions</li>
+</ul></li>
+</ul>
+<p>Click “<strong>Try it out</strong>” on any route, fill in the form, and hit <strong>Execute</strong> to see the response.</p>
+</div>
+<div id="example-json-input" class="section level2 hasAnchor" number="5.5">
+<h2><span class="header-section-number">5.5</span> Example JSON Input<a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#example-json-input" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>{
+“Pclass”: 1,
+“Sex”: 1,
+“Age”: 32.0,
+“Fare”: 100.0,
+“Embarked”: 2
+}</p>
+</div>
+<div id="troubleshooting" class="section level2 hasAnchor" number="5.6">
+<h2><span class="header-section-number">5.6</span> Troubleshooting<a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#troubleshooting" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>If you get Address already in use:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#cb14-1" tabindex="-1"></a><span class="ex">lsof</span> <span class="at">-i</span> :8000     <span class="co"># Find the PID</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#cb15-1" tabindex="-1"></a><span class="bu">kill</span> <span class="at">-9</span> <span class="op">&lt;</span>PID<span class="op">&gt;</span>     <span class="co"># Kill the process using the port</span></span></code></pre></div>
+<p>Or use an alternate port: like so:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="how-do-you-run-and-test-your-fastapi-app-using-uvicorn-and-swagger-ui.html#cb16-1" tabindex="-1"></a><span class="ex">uvicorn</span> script.model_api:app <span class="at">--reload</span> <span class="at">--port</span> 8001</span></code></pre></div>
+<blockquote>
+<p>✅ Takeaway: FastAPI’s auto-generated Swagger UI lets you run and test prediction APIs right from your browser. Uvicorn runs the app, and /docs gives you an instant frontend for debugging.</p>
+</blockquote>
+</div>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-
-<a href="welcome-to-the-cdi-model-deployment-guide.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="how-do-you-serve-saved-models-as-prediction-endpoints-using-fastapi.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="how-do-you-visualize-model-evaluation-results-from-csv.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
@@ -246,7 +297,7 @@ gitbook.start({
     "size": 2
   },
   "edit": {
-    "link": "https://github.com/datainsights/cdi-general-ds/edit/main/index.Rmd",
+    "link": "https://github.com/datainsights/cdi-general-ds/edit/main/01-1-model-deployment.Rmd",
     "text": "Edit"
   },
   "history": {

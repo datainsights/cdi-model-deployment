@@ -1,0 +1,8 @@
+Model,Accuracy,Precision,Recall,F1 Score
+knn,0.6853,0.6841,0.6867,0.6838
+svc,0.6364,0.6378,0.6109,0.6038
+logistic_regression,0.7902,0.8057,0.7737,0.7784
+gradient_boosting,0.7832,0.7917,0.7691,0.7732
+random_forest,0.7832,0.7837,0.7742,0.7769
+naive_bayes,0.7692,0.7734,0.7566,0.76
+decision_tree,0.6853,0.6816,0.6732,0.6746

@@ -7,7 +7,7 @@ total_start=$(date +%s)  # ⬅️ Start total timer
 
 # Define the list of Jupyter Notebook filenames (without extension)
 NOTEBOOK_NAMES=(
-    "00-1-domain"
+    "01-1-model-deployment"
 )
 
 # Define the output directory (use current folder)
@@ -51,7 +51,7 @@ done
 
 echo "🚀 Starting full build for all types of BOOKDOWN reports..."
 
-levels=("domain-gitbook" "domain-bs4" "domain-pdf")
+levels=("model-deployment-gitbook")
 for level in "${levels[@]}"; do
   echo ""
   echo "🔁 Building: $level"

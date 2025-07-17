@@ -1,0 +1,67 @@
+---
+title: |
+  | Model Deployment Q&A Guide
+subtitle: |
+  | ![](images/cover.png){width=75%}  
+  | Last updated: `r format(Sys.Date(), "%B %d, %Y")` 
+knit: bookdown::render_book
+site: bookdown::bookdown_site
+documentclass: book
+csl: 
+  - library/apa.csl
+bibliography:
+  - library/references.bib
+classoption: openany
+citation_package:
+  - natbib
+  - biblatex
+  - amsplain
+colorlinks: yes
+css: 
+  - style.css
+always_allow_html: yes
+fig_caption: yes
+fontsize: 12pt
+geometry: margin=1in
+indent: no
+keep_tex: yes
+link-citations: yes
+mainfont: Times New Roman
+biblio-style: apalike
+spacing: double
+pandoc_args: ["--variable=linestretch:2"]
+description:
+github-repo: "https://github.com/datainsights/cdi-model-deployment/"
+favicon: "favicon.ico"
+---
+
+# (PART) PREFACE {-}
+
+# {-}
+
+
+# 👋 Welcome to the CDI Model Deployment Guide {-}
+
+Welcome to the **Model Deployment** domain of the [Complex Data Insights (CDI)](https://complexdatainsights.com) Q&A series — where your machine learning models take their final and most impactful step: **into the real world**.
+
+In this guide, you’ll follow a complete, hands-on journey:
+
+- 🧠 Train and evaluate models
+- ⚙️ Serve models with FastAPI
+- 📡 Test endpoints via Swagger UI
+- 📦 Package with Docker
+- 🖥️ Integrate with Streamlit or Gradio
+- 🌍 Prepare for cloud deployment
+
+Whether you're a developer, researcher, or educator, this Q&A-driven guide will help you:
+
+- Save and reuse machine learning models effectively  
+- Build, test, and scale model APIs with confidence  
+- Interpret predictions with meaningful context  
+- Generalize your deployment flow for any project or platform  
+
+We’ll start from the fundamentals and go all the way to production — one Q&A at a time.
+
+---
+
+Let’s bring your models to life. 🔧📊🧠

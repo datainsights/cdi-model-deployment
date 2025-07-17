@@ -1,4 +1,4 @@
-book_filename: "domain"
+book_filename: "model-deployment"
 before_chapter_script: ["scripts/_setup.R"]
 delete_merged_file: yes
 
@@ -8,6 +8,6 @@ language:
 
 rmd_files:
   - index.Rmd
-  - 00-1-domain.Rmd
+  - 01-1-model-deployment.Rmd
 
 

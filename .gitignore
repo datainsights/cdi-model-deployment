@@ -18,8 +18,8 @@ renv/python/
 
 # Bookdown and documentation output
 !docs/                 # GitBook HTML (exclude only if building elsewhere)
-domain-bs4/
-domain-pdf/
+*-bs4/
+*-pdf/
 
 
 # Images and data
@@ -51,6 +51,7 @@ _cache/
 # Temporary/Working files
 index.Rmd
 _bookdown.yml
+_bookdown_files
 *_files/figure-html/
 *_files/figure-latex/
 .github/template-assets/project_tree.txt
