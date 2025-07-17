@@ -1,0 +1,226 @@
+/* -----------------------------
+   BOOK STRUCTURE / LAYOUT
+------------------------------ */
+.book-extra { display: none; }
+
+.sidebar li.book-part {
+  margin-top: 1rem;
+  color: #bbb;
+}
+
+#main-container {
+  width: 100%;
+  background-color: white;
+  color: black;
+  padding: 30px;
+  margin: 0 auto;
+}
+
+#footer {
+  background-color: #000;
+  color: white;
+  font-size: 90%;
+  padding: 20px;
+}
+
+#footer a {
+  color: rgb(82, 214, 247);
+}
+
+
+/* -----------------------------
+   HEADER STYLING
+------------------------------ */
+#header {
+  color: black;
+  text-align: center;
+  width: 100%;
+}
+
+#header h1 {
+  font-size: 2.2em;
+  font-family: "Roboto";
+  font-weight: 700;
+}
+
+#header .subtitle {
+  font-size: 1.2em;
+  color: grey;
+  font-family: "Roboto";
+  font-weight: 400;
+}
+
+#header .date {
+  color: #6c6c6c;
+  font-size: 1.2em;
+}
+
+.author { display: none; }
+
+
+/* -----------------------------
+   TYPOGRAPHY & GLOBAL TEXT
+------------------------------ */
+body {
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #1e1e1e;
+  background-color: #fff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #003b4a; /* CDI Primary */
+}
+
+.book .book-body .page-wrapper .page-inner section.normal h1 {
+  font-size: 2.4em;
+}
+
+.book .book-body .page-wrapper .page-inner section.normal h2 {
+  font-size: 1.6em;
+}
+
+.book .book-body .page-wrapper .page-inner section.normal h3 {
+  font-size: 1.4em;
+}
+
+.book .book-body .page-wrapper .page-inner section.normal p {
+  font-size: 1.2em;
+  font-weight: 400;
+}
+
+/* === Global Paragraph Styling === */
+p {
+  font-size: 16px;
+  line-height: 1.4;
+  margin-top: 0;
+  margin-bottom: 1.8em;
+}
+
+
+/* -----------------------------
+   CODE BLOCKS & TABLES
+------------------------------ */
+code, pre {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 90%;
+  line-height: 1.5;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  white-space: inherit;
+}
+
+pre {
+  word-break: normal;
+  word-wrap: normal;
+}
+
+p code {
+  white-space: inherit;
+}
+
+table {
+  background-color: #eee;
+  color: black;
+}
+
+table td, table th {
+  padding: 0.5em 1em;
+  font-size: 12px;
+  text-transform: none;
+}
+
+
+/* -----------------------------
+   IMAGES
+------------------------------ */
+img {
+  margin: auto;
+  max-width: 75%;
+  height: auto;
+  vertical-align: middle;
+  border-style: none;
+}
+
+
+/* -----------------------------
+   LINKS & TEXT EMPHASIS
+------------------------------ */
+a {
+  color: #007ea8;
+}
+
+a:hover {
+  color: #00a9c0;
+  text-decoration: underline;
+}
+
+em { font-style: italic; }
+strong { font-weight: bold; }
+
+
+/* -----------------------------
+   GLOBAL BLOCKQUOTE STYLE (CDI Themed)
+------------------------------ */
+blockquote {
+  background-color: #f9f9f9;
+  border-left: 5px solid #00a9c0; /* CDI teal */
+  padding: 1em 1.2em;
+  margin: 1.5em 0;
+  font-style: italic;
+  border-radius: 4px;
+  color: #003b4a; /* Darker CDI text tone */
+  font-size: 90%;
+  line-height: 1.6;
+}
+
+hr {
+  height: 1px;
+  border: none;
+  background-color: #ddd;
+  margin: 2em 0;
+}
+
+p.caption {
+  color: #777;
+  margin-top: 10px;
+}
+
+
+/* -----------------------------
+   FONT AWESOME ICON BLOCKS
+------------------------------ */
+.infoicon, .questionicon, .alerticon, .arrowicon {
+  padding: 1em;
+  margin-bottom: 10px;
+  background: #022400;
+  color: white;
+  position: relative;
+}
+
+.infoicon::before {
+  content: "\f05a";
+}
+.alerticon::before {
+  content: "\f06a";
+}
+.questionicon::before {
+  content: "\f128";
+}
+.arrowicon::before {
+  content: "\f178";
+}
+
+.infoicon::before,
+.questionicon::before,
+.alerticon::before,
+.arrowicon::before {
+  font-family: FontAwesome;
+  font-weight: 900;
+  margin-right: 5px;
+  font-size: 25px;
+}
