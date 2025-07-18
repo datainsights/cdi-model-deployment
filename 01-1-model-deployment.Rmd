@@ -232,9 +232,9 @@ print(results_df)
     1                  svc    0.6364     0.6378  0.6109    0.6038
     2  logistic_regression    0.7902     0.8057  0.7737    0.7784
     3    gradient_boosting    0.7762     0.7858  0.7612    0.7652
-    4        random_forest    0.7692     0.7675  0.7617    0.7636
+    4        random_forest    0.7832     0.7837  0.7742    0.7769
     5          naive_bayes    0.7692     0.7734  0.7566    0.7600
-    6        decision_tree    0.6853     0.6816  0.6732    0.6746
+    6        decision_tree    0.6783     0.6746  0.6653    0.6664
 
 
 ## R Code
@@ -487,3 +487,334 @@ ggplot(df, aes(x = Accuracy, y = reorder(Model, Accuracy))) +
 ```
 
 > ✅ Takeaway: Visualizing model metrics makes it easier to select, explain, and justify your deployment choice. Graphs tell the story your numbers started.
+
+# How do you get started with Docker before containerizing your model? {#docker-image-template}
+
+## Explanation
+
+Docker is a tool that lets you package your application — including code, dependencies, and environment — into a portable container. Containers run the same way across laptops, servers, and the cloud, making them perfect for deploying machine learning APIs.
+
+Before containerizing your FastAPI model, you should first:
+
+- Understand what Docker is
+- Install and start Docker Desktop
+- Build and run a basic Docker image
+
+---
+
+## Step 1: Install Docker Desktop
+
+👉 [Download Docker for Mac](https://www.docker.com/products/docker-desktop/)  
+👉 [Download Docker for Windows](https://www.docker.com/products/docker-desktop/)
+
+Install it like any other application.
+
+---
+
+## Step 2: Start Docker Desktop
+
+After installation:
+
+- **Mac**: Open **Docker** from Launchpad or the Applications folder  
+- **Windows**: Open **Docker Desktop** from the Start menu
+
+You should see the 🐳 Docker whale icon appear in your menu bar or system tray.
+
+✅ Wait for the message ➡️ `Docker is running`
+
+---
+
+## Step 3: Confirm Docker is Active
+
+In your terminal, run:
+
+```bash
+docker info
+```
+
+You should see details like Docker version, containers, and storage. If you see an error like:
+
+*Cannot connect to the Docker daemon...*
+
+That means Docker is not running — go back and start Docker Desktop.
+
+## Step 4: Write Your First Dockerfile
+
+Create a folder named hello-docker, and inside it create a Dockerfile:
+
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY . .
+
+CMD ["python3", "-c", "print('🎉 Hello from Docker!')"]
+```
+
+## Step 5: Build and Run Your First Container
+
+```bash
+docker build -t hello-docker .
+docker run hello-docker
+```
+
+You should see:
+
+*🎉 Hello from Docker!*
+
+
+
+## Step 6: Log in to Docker Hub
+
+Before pushing images or scanning them, log in:
+
+```bash
+docker login
+```
+
+You can use:
+
+- Your Docker ID or email
+- Your password (not recommended)
+- Or a Personal Access Token (PAT) (recommended)
+
+🔐 Create a PAT here
+
+Using a PAT is required if:
+
+- You have 2FA enabled
+- You’re part of an organization using SSO
+- You want better security
+
+
+## Step 7: Tag and Push Your Image
+
+After login:
+
+```bash
+docker tag hello-docker yourusername/hello-docker
+docker push yourusername/hello-docker
+```
+
+This makes your image accessible from the cloud or collaborators.
+
+## Step 8: Scan Your Image with Docker Scout (Optional)
+
+After building an image, Docker may suggest:
+
+*View a summary of image vulnerabilities and recommendations → docker scout quickview*
+
+```bash
+docker scout quickview
+```
+
+Docker Scout checks for:
+
+- Vulnerabilities in your base image
+- Outdated dependencies
+- Upgrade suggestions
+
+> Make sure you’re logged in before using Scout
+
+## Example Log Insights
+
+- Cannot connect to the Docker daemon...
+  - → Start Docker Desktop first and retry.
+- Using a limited-scope PAT grants better security..
+  - → Prefer PATs for login over full passwords.
+
+> ✅ Takeaway: Understanding Docker basics — installation, login, and image scanning — prepares you for robust, secure ML model deployment and reproducibility..
+
+# How do you containerize your model API using Docker for reproducible deployment?
+
+## Explanation
+
+Docker allows you to **package your model API and dependencies into a container** that runs the same way on any machine. This makes your deployment:
+
+- Portable across teams and clouds
+- Reproducible and isolated from system conflicts
+- Easy to scale or integrate with CI/CD pipelines
+
+We'll build a Docker container for your FastAPI model API that loads saved `.joblib` models and runs with Uvicorn.
+
+## Project Structure
+
+```plaintext
+cdi-model-deployment/
+├── script/
+│   └── model_api.py
+├── models/
+│   └── [saved models here]
+├── requirements.txt
+└── Dockerfile
+```
+
+## Dockerfile
+
+```dockerfile
+# Base image
+FROM python:3.12-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy code and model directory
+COPY script/model_api.py ./script/model_api.py
+COPY models/ ./models/
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose port for Uvicorn
+EXPOSE 8000
+
+# Run the API with Uvicorn
+CMD ["uvicorn", "script.model_api:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+
+## Libraries in requirements.txt (Minimum Needed)
+
+```plaintext
+fastapi==0.115.4
+uvicorn==0.35.0
+joblib==1.4.2
+scikit-learn==1.6.0
+pandas==2.2.3
+gradio==5.9.1
+streamlit==1.39.0
+```
+
+## Build the Docker Image
+
+```bash
+docker build -t model-api .
+```
+
+## Run the Docker Container
+
+```bash
+docker run -p 8000:8000 model-api
+```
+
+**Then test it at:**
+
+http://127.0.0.1:8000/docs
+
+## Optional: .dockerignore
+
+To avoid copying your local venv or large files:
+
+```plaintext
+__pycache__/
+venv/
+*.csv
+*.ipynb
+```
+
+
+
+>✅ Takeaway: Docker lets you containerize your model API so it runs identically on any machine — a must-have for production deployment.
+
+# How do you tag and push your model image to Docker Hub?
+
+## 📘 Explanation
+
+Once you’ve built your Docker image locally (e.g., `model-api:latest`), you can share it with others or deploy it remotely by **tagging** it with your Docker Hub name and **pushing** it to your Docker Hub repository.
+
+This makes your image accessible from anywhere using `docker pull`.
+
+---
+
+## Log into Docker Hub
+
+```bash
+docker login
+```
+
+You’ll be prompted to enter your Docker Hub username and password or Personal Access Token (PAT).
+
+## Tag the image using your Docker Hub username
+
+```bash
+docker tag model-api your_dockerhub_username/model-api
+```
+> 🔁 Replace your_dockerhub_username with your Docker Hub username.
+
+Example:
+
+```bash
+docker tag model-api tmbuza/model-api
+```
+
+## Push the image to Docker Hub
+
+```bash
+docker push your_dockerhub_username/model-api
+```
+
+Example:
+
+```bash
+docker push tmbuza/model-api
+```
+
+> Docker will upload the image layers and confirm when complete.
+>
+## Confirm image available publicly or privately
+
+Visit your Docker Hub account and check under Repositories.
+
+✅ You (or others) can now pull the image with:
+
+```bash
+docker pull your_dockerhub_username/model-api
+```
+
+
+Example:
+
+```bash
+docker pull tmbuza/model-api
+```
+
+> ✅ Takeaway: Tagging and pushing your image makes it accessible for deployment, collaboration, or reuse—especially valuable in reproducible ML workflows.
+
+# How do you pull and run your model API image from Docker Hub?
+
+## Explanation
+
+After pushing your trained model image to Docker Hub, you can reuse it on any machine or server with Docker installed. This step is key in model deployment because it enables **reproducibility**, **portability**, and **team collaboration**—you don't have to re-train or re-build the image every time.
+
+## Bash Code
+
+### Pull the image from Docker Hub
+xample using `tnbuza` username
+
+```bash
+docker pull tmbuza/model-api
+```
+
+## Run the Docker container
+
+```bash
+docker run -d -p 8000:8000 tmbuza/model-api
+```
+
+**Explanation**:
+
+- -d = run in detached mode
+- -p 8000:8000 = map internal container port 8000 to local machine port 8000
+  
+## Test the running API
+Visit the following URL in your browser:
+
+
+http://127.0.0.1:8000/docs
+
+You should see the interactive FastAPI Swagger UI to test predictions directly.
+
+
+> ✅ Takeaway: Pulling and running your model API from Docker Hub turns it into a reusable and portable microservice — ideal for deployment on servers, sharing with teams, or testing in production-like environments.
