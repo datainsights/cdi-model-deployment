@@ -4,10 +4,10 @@ bookdown::gitbook:
   config:
     toc:
       before: |
-        <li><a href="https://datainsights.github.io/cdi-general-ds">CDI Practical User Guides</a></li>
+        <li><a href="https://datainsights.github.io/cdi-model-deployment">CDI Practical User Guides</a></li>
       after: |
         <li><a href="https://complexdatainsights.com/explore-products">Explore More Guides</a></li>
-    edit: https://github.com/datainsights/cdi-general-ds/edit/main/%s
+    edit: https://github.com/datainsights/cdi-model-deployment/edit/main/%s
     download: ["pdf", "epub"]
 
 bookdown::pdf_book:
