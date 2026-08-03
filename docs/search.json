@@ -245,7 +245,128 @@
     "href": "02-from-model-training-to-deployment.html",
     "title": "From Model Training to Deployment",
     "section": "",
-    "text": "ID: MD-L02\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Select and test a deployment candidate\n\n\nThis chapter will train and evaluate the classification pipeline used throughout the guide.",
+    "text": "Learning objectives\nTraining a model and deploying a model are related, but they are not the same task. During model development, the main question is whether a model performs well on data it has not seen. During deployment, the question becomes broader:\nThis chapter develops the classification pipeline used throughout the guide. The objective is not to search for the most sophisticated algorithm. It is to establish one dependable prediction workflow that can later be saved, loaded, tested, exposed through an API, and packaged in a container.\nBy the end of this chapter, you should be able to:",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#learning-objectives",
+    "href": "02-from-model-training-to-deployment.html#learning-objectives",
+    "title": "From Model Training to Deployment",
+    "section": "",
+    "text": "distinguish a fitted estimator from a deployable prediction pipeline;\ndefine the input and output contract of a model;\nprevent preprocessing leakage by fitting transformations inside a pipeline;\nevaluate a deployment candidate on untouched test data;\nselect metrics that reflect the model’s intended use; and\nidentify the artifacts and evidence required before deployment.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#the-development-to-deployment-transition",
+    "href": "02-from-model-training-to-deployment.html#the-development-to-deployment-transition",
+    "title": "From Model Training to Deployment",
+    "section": "The development-to-deployment transition",
+    "text": "The development-to-deployment transition\nA notebook result is not yet a deployed model. Deployment requires the modelling logic to move through a sequence of increasingly strict boundaries.\n\n\nCode\nflowchart TD\n    A[Raw input data] --&gt; B[Validated feature table]\n    B --&gt; C[Preprocessing and model pipeline]\n    C --&gt; D[Evaluation on held-out data]\n    D --&gt; E[Saved model artifact]\n    E --&gt; F[Prediction service]\n    F --&gt; G[Tests and monitoring]\n\n\n\n\n\nflowchart TD\n    A[Raw input data] --&gt; B[Validated feature table]\n    B --&gt; C[Preprocessing and model pipeline]\n    C --&gt; D[Evaluation on held-out data]\n    D --&gt; E[Saved model artifact]\n    E --&gt; F[Prediction service]\n    F --&gt; G[Tests and monitoring]\n\n\n\n\n\n\nEach boundary introduces a responsibility. The training code must preserve feature definitions. The saved artifact must reproduce the fitted transformations. The service must reject invalid requests. Tests must confirm that predictions remain stable as the surrounding software changes.\nThis guide therefore treats deployment as a continuation of reproducible model development, not as an export step added at the end.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#the-running-example",
+    "href": "02-from-model-training-to-deployment.html#the-running-example",
+    "title": "From Model Training to Deployment",
+    "section": "The running example",
+    "text": "The running example\nThe guide uses the breast cancer diagnostic dataset included with scikit-learn. The task is binary classification: predict whether a tumour is malignant or benign from measurements derived from a digitized image of a breast mass.\nThe dataset is useful for teaching deployment because it is:\n\nbundled with scikit-learn and available without a separate download;\nsmall enough to train quickly;\nentirely numeric, which keeps the first API contract understandable; and\nrealistic enough to demonstrate probability estimates, class imbalance, and careful interpretation.\n\nTo keep future prediction requests concise, the guide uses eight explicitly named measurements rather than all available columns.\nFEATURES = [\n    \"mean radius\",\n    \"mean texture\",\n    \"mean perimeter\",\n    \"mean area\",\n    \"mean smoothness\",\n    \"mean compactness\",\n    \"mean concavity\",\n    \"mean concave points\",\n]\n\n\n\n\n\n\nWarning\n\n\n\nThis dataset supports workflow instruction, not clinical decision-making. A teaching model trained on a public benchmark must not be interpreted as a validated medical device or used to guide patient care.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#define-the-prediction-contract-first",
+    "href": "02-from-model-training-to-deployment.html#define-the-prediction-contract-first",
+    "title": "From Model Training to Deployment",
+    "section": "Define the prediction contract first",
+    "text": "Define the prediction contract first\nA deployment contract specifies what the model accepts and what it returns. Writing this contract before training helps expose assumptions that may otherwise remain hidden in a notebook.\nFor this guide, one prediction request will contain eight numeric measurements with the exact feature names listed above. The eventual service will return:\n\nthe predicted class label;\nthe probability assigned to each class; and\nthe model version used for the prediction.\n\nThe first two outputs can already be produced during model evaluation. The model version will be added when the trained pipeline is saved in the next chapter.\nFeature names are part of the contract. Their spelling, meaning, units, and expected ranges must remain consistent between training and prediction. A model can execute successfully and still produce an invalid result when these semantics change.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#separate-training-data-from-evaluation-data",
+    "href": "02-from-model-training-to-deployment.html#separate-training-data-from-evaluation-data",
+    "title": "From Model Training to Deployment",
+    "section": "Separate training data from evaluation data",
+    "text": "Separate training data from evaluation data\nThe test set represents data that the final candidate has not seen during fitting. It must be separated before estimating preprocessing parameters or fitting the classifier.\nfrom sklearn.model_selection import train_test_split\n\nX_train, X_test, y_train, y_test = train_test_split(\n    X,\n    y,\n    test_size=0.20,\n    stratify=y,\n    random_state=42,\n)\nThe arguments have deliberate roles:\n\ntest_size=0.20 reserves 20% of observations for final evaluation;\nstratify=y preserves the class proportions in both subsets; and\nrandom_state=42 makes the split reproducible.\n\nThe test set should not guide repeated model or threshold changes. If extensive comparison is required, use cross-validation within the training data and evaluate the selected candidate on the test set once.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#keep-preprocessing-with-the-model",
+    "href": "02-from-model-training-to-deployment.html#keep-preprocessing-with-the-model",
+    "title": "From Model Training to Deployment",
+    "section": "Keep preprocessing with the model",
+    "text": "Keep preprocessing with the model\nLogistic regression is sensitive to feature scale. Standardization is therefore part of the prediction workflow, not merely a temporary training convenience.\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import StandardScaler\n\npipeline = Pipeline(\n    steps=[\n        (\"scale\", StandardScaler()),\n        (\n            \"classifier\",\n            LogisticRegression(\n                max_iter=1000,\n                random_state=42,\n            ),\n        ),\n    ]\n)\n\npipeline.fit(X_train, y_train)\nThe scaler is fitted only from X_train. At prediction time, the same fitted scaler transforms incoming values before the classifier receives them. Keeping both steps in one pipeline prevents three common errors:\n\nfitting preprocessing on the full dataset and leaking test information;\napplying different transformations during training and prediction; and\nsaving the classifier while forgetting the fitted preprocessing object.\n\nFrom this point forward, the pipeline—not the logistic regression estimator by itself—is the deployment candidate.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#evaluate-the-candidate",
+    "href": "02-from-model-training-to-deployment.html#evaluate-the-candidate",
+    "title": "From Model Training to Deployment",
+    "section": "Evaluate the candidate",
+    "text": "Evaluate the candidate\nAccuracy alone can hide important errors. This chapter records several complementary metrics:\n\n\n\n\n\n\n\nMetric\nQuestion it answers\n\n\n\n\nAccuracy\nWhat proportion of all predictions is correct?\n\n\nPrecision\nWhen the model predicts the positive class, how often is it correct?\n\n\nRecall\nWhat proportion of positive cases does the model identify?\n\n\nF1 score\nHow well does the model balance precision and recall?\n\n\nROC AUC\nHow well does the model rank the two classes across thresholds?\n\n\n\nIn the scikit-learn dataset, target value 0 means malignant and 1 means benign. The training script defines malignant as the operational positive class when calculating precision, recall, and F1. Making that choice explicit prevents a technically correct metric from answering the wrong question.\nfrom sklearn.metrics import (\n    accuracy_score,\n    precision_score,\n    recall_score,\n    f1_score,\n    roc_auc_score,\n)\n\ny_pred = pipeline.predict(X_test)\ny_probability_malignant = pipeline.predict_proba(X_test)[:, 0]\n\nmetrics = {\n    \"accuracy\": accuracy_score(y_test, y_pred),\n    \"precision_malignant\": precision_score(y_test, y_pred, pos_label=0),\n    \"recall_malignant\": recall_score(y_test, y_pred, pos_label=0),\n    \"f1_malignant\": f1_score(y_test, y_pred, pos_label=0),\n    \"roc_auc_malignant\": roc_auc_score(\n        (y_test == 0).astype(int),\n        y_probability_malignant,\n    ),\n}\nThe code uses probability column 0 because pipeline.classes_ follows the encoded class order [0, 1]. Never assume a probability column represents a particular class without checking classes_.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#run-the-complete-training-program",
+    "href": "02-from-model-training-to-deployment.html#run-the-complete-training-program",
+    "title": "From Model Training to Deployment",
+    "section": "Run the complete training program",
+    "text": "Run the complete training program\nThe short examples above explain individual decisions. The executable workflow belongs in a chapter-prefixed Python script:\npython scripts/python/02-train-deployment-candidate.py\nThe script should:\n\nload the bundled dataset;\nselect and validate the eight features;\ncreate the stratified train-test split;\nfit the complete pipeline;\ncalculate and print evaluation metrics; and\nwrite the metrics to results/metrics/02-deployment-candidate-metrics.csv.\n\nThe model is intentionally not saved in this chapter. Chapter Saving and Loading Model Pipelines will introduce model persistence, metadata, and safe loading as distinct deployment responsibilities.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#decide-whether-the-model-is-ready-to-package",
+    "href": "02-from-model-training-to-deployment.html#decide-whether-the-model-is-ready-to-package",
+    "title": "From Model Training to Deployment",
+    "section": "Decide whether the model is ready to package",
+    "text": "Decide whether the model is ready to package\nA strong score does not automatically make a model deployable. Before saving the candidate, confirm that the following statements are true.\n\nData and features\n\nThe feature set is explicit and ordered.\nFeature meanings and units are documented.\nTraining and test data are separated before fitting.\nThe target encoding and positive class are explicit.\n\n\n\nPipeline and reproducibility\n\nAll required preprocessing is inside the fitted pipeline.\nRandom operations have fixed seeds where appropriate.\nThe environment dependencies can be recreated.\nTraining can run from a script without hidden notebook state.\n\n\n\nEvaluation and intended use\n\nPerformance is measured on untouched test data.\nMetrics reflect the errors that matter for the intended use.\nKnown limitations are documented.\nThe model is not presented as suitable for uses it has not been validated to support.\n\n\n\nDeployment interface\n\nOne raw request can be converted into the expected feature table.\npredict() and predict_proba() work from the same pipeline.\nOutput class labels can be translated into meaningful names.\nInvalid or incomplete inputs can be detected before prediction.\n\nIf any item is unresolved, packaging the model only makes the unresolved assumption harder to see.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#what-this-chapter-established",
+    "href": "02-from-model-training-to-deployment.html#what-this-chapter-established",
+    "title": "From Model Training to Deployment",
+    "section": "What this chapter established",
+    "text": "What this chapter established\nThe deployment candidate is now a complete scikit-learn pipeline with explicit inputs, reproducible preprocessing, a binary classifier, and held-out evaluation evidence. This provides the stable modelling foundation required by the rest of the guide.\nThe next chapter will save this fitted pipeline as a versioned artifact, load it in a separate process, and verify that its predictions remain consistent.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#key-takeaways",
+    "href": "02-from-model-training-to-deployment.html#key-takeaways",
+    "title": "From Model Training to Deployment",
+    "section": "Key takeaways",
+    "text": "Key takeaways\n\nDeployment begins by defining a stable input and output contract.\nThe fitted preprocessing and estimator must travel together.\nTest data must remain outside every fitting step.\nMetric definitions must state which class is treated as positive.\nA reproducible training script is the bridge between experimentation and a deployable artifact.",
     "crumbs": [
       "From Model to Inference",
       "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
@@ -256,7 +377,161 @@
     "href": "03-saving-and-loading-model-pipelines.html",
     "title": "Saving and Loading Model Pipelines",
     "section": "",
-    "text": "ID: MD-L03\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Preserve preprocessing and prediction together\n\n\nThis chapter will serialize, describe, reload, and verify the complete fitted pipeline.",
+    "text": "Learning objectives\nChapter 02 developed a deployment candidate as one fitted scikit-learn Pipeline: an eight-feature input contract, StandardScaler, and logistic regression. The next requirement is persistence—saving that fitted pipeline so another Python process can load it and reproduce the same predictions.\nThis chapter saves the complete fitted pipeline, records the information needed to identify and use it, reloads it in a clean step, and verifies that serialization has not changed its behaviour.\nBy the end of this chapter, you will be able to:",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#learning-objectives",
+    "href": "03-saving-and-loading-model-pipelines.html#learning-objectives",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "",
+    "text": "explain why preprocessing and prediction must be saved together;\ndistinguish a fitted in-memory object from a persistent model artifact;\nsave and load a scikit-learn pipeline with joblib;\nattach version and input-contract metadata to a model artifact;\nverify that predictions and probabilities survive a save–load round trip; and\nrecognize the compatibility and security limits of pickle-based formats.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#from-a-fitted-object-to-a-deployable-artifact",
+    "href": "03-saving-and-loading-model-pipelines.html#from-a-fitted-object-to-a-deployable-artifact",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "From a fitted object to a deployable artifact",
+    "text": "From a fitted object to a deployable artifact\nTraining produces a fitted Python object in memory. That object disappears when the process ends. A deployment service, batch job, or test suite therefore needs a persistent file from which it can reconstruct the fitted object.\nflowchart LR\n    A[Training data] --&gt; B[Fit complete pipeline]\n    B --&gt; C[Save versioned artifact]\n    C --&gt; D[Load in new process]\n    D --&gt; E[Verify predictions]\n    E --&gt; F[Use for inference]\nThe saved file is not merely a convenient copy. It is the exact model candidate that later chapters will use for batch inference and API predictions.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#save-the-complete-pipeline",
+    "href": "03-saving-and-loading-model-pipelines.html#save-the-complete-pipeline",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Save the complete pipeline",
+    "text": "Save the complete pipeline\nThe Chapter 02 candidate contains two fitted steps:\n\nStandardScaler stores the means and scales learned from the training data.\nLogisticRegression stores the fitted coefficients, intercept, and class order.\n\nSaving only the classifier would discard the fitted preprocessing state. A future service might then scale inputs differently—or not scale them at all—and silently produce different predictions.\nThe deployment unit is therefore the complete fitted pipeline:\npipeline = Pipeline(\n    steps=[\n        (\"scale\", StandardScaler()),\n        (\n            \"classifier\",\n            LogisticRegression(max_iter=1000, random_state=42),\n        ),\n    ]\n)\n\npipeline.fit(X_train, y_train)\nAfter fitting, both steps carry learned state. The pipeline also exposes the classifier’s class order through pipeline.classes_. This matters because probability columns must always be resolved from the fitted classes rather than assumed from position.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#define-the-model-artifact",
+    "href": "03-saving-and-loading-model-pipelines.html#define-the-model-artifact",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Define the model artifact",
+    "text": "Define the model artifact\nA model file alone cannot explain its intended inputs, version, or training environment. This guide stores a small artifact bundle containing the fitted pipeline and the metadata needed by downstream code.\nThe bundle contains:\n\n\n\n\n\n\n\nField\nPurpose\n\n\n\n\npipeline\nComplete fitted preprocessing and classification workflow\n\n\nmodel_version\nStable identifier returned with predictions\n\n\nfeature_names\nOrdered eight-feature input contract\n\n\ntarget_names\nMapping from encoded classes to readable labels\n\n\ntrained_at_utc\nUTC timestamp for traceability\n\n\npython_version\nPython version used to create the artifact\n\n\nscikit_learn_version\nscikit-learn version used to fit and save it\n\n\n\nThe feature order remains the contract established in Chapter 02:\nFEATURE_NAMES = [\n    \"mean radius\",\n    \"mean texture\",\n    \"mean perimeter\",\n    \"mean area\",\n    \"mean smoothness\",\n    \"mean compactness\",\n    \"mean concavity\",\n    \"mean concave points\",\n]\nThe target mapping is:\nTARGET_NAMES = {\n    0: \"malignant\",\n    1: \"benign\",\n}\nExplicit metadata prevents later code from having to guess what the artifact expects.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#save-with-joblib",
+    "href": "03-saving-and-loading-model-pipelines.html#save-with-joblib",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Save with joblib",
+    "text": "Save with joblib\njoblib provides a convenient persistence format for Python objects containing large NumPy arrays. It uses Python’s pickle protocol underneath, so it preserves the fitted scikit-learn pipeline as a Python object.\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nimport platform\n\nimport joblib\nimport sklearn\n\n\nMODEL_PATH = Path(\"models/03-breast-cancer-pipeline.joblib\")\nMODEL_VERSION = \"breast-cancer-logistic-v1\"\n\nartifact = {\n    \"pipeline\": pipeline,\n    \"model_version\": MODEL_VERSION,\n    \"feature_names\": FEATURE_NAMES,\n    \"target_names\": TARGET_NAMES,\n    \"trained_at_utc\": datetime.now(timezone.utc).isoformat(),\n    \"python_version\": platform.python_version(),\n    \"scikit_learn_version\": sklearn.__version__,\n}\n\nMODEL_PATH.parent.mkdir(parents=True, exist_ok=True)\njoblib.dump(artifact, MODEL_PATH)\nThe models/ directory is created if necessary. joblib.dump() then serializes the bundle to one file. The timestamp documents when the artifact was created; it does not by itself guarantee reproducibility, so the repository’s dependency lock file and source code must also be retained.\n\n\n\n\n\n\nNote\n\n\n\nThe chapter number in the filename makes the artifact’s origin visible during development. The semantic model_version identifies the model itself and is the value that downstream predictions should report.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#load-and-validate-the-artifact",
+    "href": "03-saving-and-loading-model-pipelines.html#load-and-validate-the-artifact",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Load and validate the artifact",
+    "text": "Load and validate the artifact\nLoading reverses the serialization step:\nloaded_artifact = joblib.load(MODEL_PATH)\nloaded_pipeline = loaded_artifact[\"pipeline\"]\nBefore using the model, validate the artifact structure rather than assuming every required field is present.\nREQUIRED_ARTIFACT_KEYS = {\n    \"pipeline\",\n    \"model_version\",\n    \"feature_names\",\n    \"target_names\",\n    \"trained_at_utc\",\n    \"python_version\",\n    \"scikit_learn_version\",\n}\n\nmissing_keys = REQUIRED_ARTIFACT_KEYS - loaded_artifact.keys()\nif missing_keys:\n    raise ValueError(\n        f\"Model artifact is missing required keys: {sorted(missing_keys)}\"\n    )\n\nif loaded_artifact[\"feature_names\"] != FEATURE_NAMES:\n    raise ValueError(\"Saved feature contract does not match the application contract.\")\nThese checks fail early if a wrong, incomplete, or incompatible artifact is placed at the expected path.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#verify-the-saveload-round-trip",
+    "href": "03-saving-and-loading-model-pipelines.html#verify-the-saveload-round-trip",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Verify the save–load round trip",
+    "text": "Verify the save–load round trip\nA successful file write does not prove that the reloaded artifact behaves correctly. Compare predictions made immediately before saving with predictions made after loading.\nimport numpy as np\n\n\npredictions_before = pipeline.predict(X_test)\nprobabilities_before = pipeline.predict_proba(X_test)\n\npredictions_after = loaded_pipeline.predict(X_test)\nprobabilities_after = loaded_pipeline.predict_proba(X_test)\n\nif not np.array_equal(predictions_before, predictions_after):\n    raise RuntimeError(\"Class predictions changed after serialization.\")\n\nif not np.allclose(probabilities_before, probabilities_after):\n    raise RuntimeError(\"Class probabilities changed after serialization.\")\nnp.array_equal() requires identical class predictions. np.allclose() is appropriate for floating-point probabilities, where numerically negligible representation differences may occur.\nAlso verify that the class labels retained their expected meaning:\nexpected_classes = np.array([0, 1])\n\nif not np.array_equal(loaded_pipeline.classes_, expected_classes):\n    raise RuntimeError(\n        f\"Unexpected fitted class order: {loaded_pipeline.classes_.tolist()}\"\n    )\nThe malignant-class probability can then be selected safely:\nmalignant_class = 0\nmalignant_index = np.where(\n    loaded_pipeline.classes_ == malignant_class\n)[0].item()\n\nmalignant_probability = probabilities_after[:, malignant_index]\nThis repeats an important deployment rule from Chapter 02: resolve a probability column from classes_; never assume its position.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#run-the-complete-persistence-workflow",
+    "href": "03-saving-and-loading-model-pipelines.html#run-the-complete-persistence-workflow",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Run the complete persistence workflow",
+    "text": "Run the complete persistence workflow\nThe executable program for this chapter is:\nscripts/python/03-save-and-load-model-pipeline.py\nIt performs the complete workflow:\n\nloads the same scikit-learn breast cancer dataset used in Chapter 02;\nselects and validates the same eight features;\nrecreates the same stratified training and test split;\nfits the same scaling and logistic regression pipeline;\nsaves the fitted pipeline and its metadata;\nreloads and validates the artifact; and\nconfirms that predictions and probabilities are unchanged.\n\nFrom the repository root, with the project environment activated, run:\npython scripts/python/03-save-and-load-model-pipeline.py\nThe expected artifact is:\nmodels/03-breast-cancer-pipeline.joblib\nInspect the result without trying to print the binary file:\nls -lh models/03-breast-cancer-pipeline.joblib\nThe program should report the saved path, model version, fitted class order, and successful round-trip verification.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#why-the-chapter-script-fits-the-model-again",
+    "href": "03-saving-and-loading-model-pipelines.html#why-the-chapter-script-fits-the-model-again",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Why the chapter script fits the model again",
+    "text": "Why the chapter script fits the model again\nChapter 02 evaluated whether the pipeline was suitable as a deployment candidate. Chapter 03 creates the persistent artifact. The chapter script deliberately rebuilds the candidate from the same deterministic training definition before saving it.\nThis keeps the persistence workflow reproducible from source and avoids depending on an undocumented in-memory object left behind by another process. In a larger production system, training and artifact publication would normally be separate pipeline stages sharing reusable project modules. The compact guide keeps that orchestration visible within one executable program.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#compatibility-is-part-of-the-artifact",
+    "href": "03-saving-and-loading-model-pipelines.html#compatibility-is-part-of-the-artifact",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Compatibility is part of the artifact",
+    "text": "Compatibility is part of the artifact\nPickle-based model files are tied to Python and the libraries that define the stored objects. Loading an artifact under substantially different Python, NumPy, SciPy, or scikit-learn versions may fail or produce unsupported behaviour.\nFor this guide:\n\ncreate and use the repository-specific .venv;\ninstall the project’s declared dependencies;\nretain the dependency lock file used for the build;\nrecord the Python and scikit-learn versions in the artifact; and\nrebuild and revalidate the model when dependencies change.\n\nThe version metadata helps diagnose a mismatch, but it does not make incompatible environments compatible.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#treat-model-files-as-trusted-code",
+    "href": "03-saving-and-loading-model-pipelines.html#treat-model-files-as-trusted-code",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Treat model files as trusted code",
+    "text": "Treat model files as trusted code\n\n\n\n\n\n\nWarning\n\n\n\nNever load an untrusted .joblib, .pkl, or other pickle-based file. Loading can execute arbitrary code embedded in the serialized object. Only load artifacts created by a trusted training workflow and stored in a controlled location.\n\n\nIn a production workflow, access controls, artifact checksums, signed releases, or a model registry can provide stronger provenance. Those controls are outside this guide’s local example, but the trust boundary applies from the beginning.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#common-persistence-mistakes",
+    "href": "03-saving-and-loading-model-pipelines.html#common-persistence-mistakes",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Common persistence mistakes",
+    "text": "Common persistence mistakes\n\nSaving only the classifier\nThis loses the fitted scaler and breaks the relationship between training and inference. Save the complete pipeline.\n\n\nRecreating preprocessing during inference\nHand-written preprocessing can drift from training logic. Call predict() or predict_proba() on the loaded pipeline and let the pipeline apply its stored transformations.\n\n\nDepending on feature position without a contract\nA numeric array can contain the right values in the wrong order. Store the ordered feature names and validate incoming data before prediction.\n\n\nAssuming a probability column\nThe first or second column is not inherently malignant or benign. Resolve the column from loaded_pipeline.classes_.\n\n\nOverwriting an artifact without changing its version\nIf model parameters, training data, preprocessing, or the feature contract changes, publish a new model version. A version should identify one reproducible model definition.\n\n\nLoading across unverified environments\nMatching filenames do not guarantee library compatibility. Record versions and rerun the verification suite after environment changes.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#persistence-checklist",
+    "href": "03-saving-and-loading-model-pipelines.html#persistence-checklist",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Persistence checklist",
+    "text": "Persistence checklist\nBefore an artifact is used for inference, confirm that:\n\nthe complete fitted pipeline was saved;\nthe ordered feature contract is stored and validated;\nthe class-label mapping is explicit;\nthe model has a stable semantic version;\nPython and scikit-learn versions are recorded;\npredictions match before and after loading;\nprobabilities match before and after loading;\nthe fitted class order is checked; and\nthe artifact comes from a trusted source.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#chapter-summary",
+    "href": "03-saving-and-loading-model-pipelines.html#chapter-summary",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Chapter summary",
+    "text": "Chapter summary\nModel persistence is the boundary between training and operational inference. A reliable artifact preserves the complete fitted pipeline, the ordered feature contract, the class meanings, the model version, and enough environment information to diagnose compatibility problems.\nThe round-trip verification provides concrete evidence that the saved and reloaded pipeline behaves like the fitted deployment candidate. Chapter 04 will build on this artifact by creating a reliable inference workflow that validates new records, preserves feature order, and returns structured predictions.",
     "crumbs": [
       "From Model to Inference",
       "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
@@ -267,7 +542,150 @@
     "href": "04-building-a-reliable-inference-workflow.html",
     "title": "Building a Reliable Inference Workflow",
     "section": "",
-    "text": "ID: MD-L04\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Make prediction inputs and outputs explicit\n\n\nThis chapter will build a repeatable batch-inference workflow around the saved pipeline.",
+    "text": "From training to inference\nSaving a trained pipeline is only the beginning of deployment. A useful deployment workflow must also accept new observations, verify that they match the model’s expectations, produce interpretable outputs, and preserve enough context to investigate failures later.\nThis chapter develops a repeatable batch-inference workflow around the pipeline saved in Saving and Loading Model Pipelines. Batch inference is a practical first deployment target because it makes every stage visible: a file arrives, the program validates it, the model produces predictions, and a new file records the results.\nBy the end of the chapter, you will be able to:\nTraining and inference use the same fitted pipeline for different purposes.\nThe separation is important. During inference, the program must call predict() or predict_proba() on the loaded pipeline. Calling fit(), fit_transform(), or fit_predict() would allow new data to change the model and would break reproducibility.\nBecause preprocessing and prediction were saved together, the inference program does not need to reproduce encoding, scaling, or imputation manually. The pipeline applies the fitted transformations in the correct order.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#from-training-to-inference",
+    "href": "04-building-a-reliable-inference-workflow.html#from-training-to-inference",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "",
+    "text": "Stage\nInput\nPipeline behaviour\nOutput\n\n\n\n\nTraining\nHistorical labelled data\nLearns preprocessing parameters and model parameters\nSaved fitted pipeline\n\n\nInference\nNew unlabelled data\nReuses learned parameters without fitting again\nPredictions and supporting metadata\n\n\n\n\n# Correct: reuse the fitted pipeline.\npredictions = pipeline.predict(features)\n\n# Incorrect: never retrain as part of ordinary inference.\npipeline.fit(features, labels)",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#define-the-inference-contract",
+    "href": "04-building-a-reliable-inference-workflow.html#define-the-inference-contract",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Define the inference contract",
+    "text": "Define the inference contract\nAn inference contract states what the program accepts and what it returns. It should be decided before writing the prediction code.\nFor this guide, each incoming record contains:\n\na stable record_id used to connect the output to the source record;\nthe feature columns expected by the saved pipeline; and\nno target column, because the outcome is not yet known at prediction time.\n\nThe prediction file contains:\n\nrecord_id;\nprediction;\nprediction_probability; and\nmodel_version.\n\nThe identifier and version are operational metadata. They are not model features. Keeping them outside the feature matrix prevents accidental leakage while making every prediction traceable.\n\n\n\n\n\n\nImportant\n\n\n\nThe exact column names, meanings, units, and permitted values form part of the model interface. A CSV file is not valid merely because pandas can read it.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#a-reliable-batch-inference-sequence",
+    "href": "04-building-a-reliable-inference-workflow.html#a-reliable-batch-inference-sequence",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "A reliable batch-inference sequence",
+    "text": "A reliable batch-inference sequence\nA robust program follows a short, explicit sequence:\n\nresolve and verify all file paths;\nload the saved pipeline and its metadata;\nread the incoming batch;\nvalidate identifiers, required columns, values, and row counts;\nisolate model features in the expected order;\ngenerate predictions and, where supported, probabilities;\nvalidate the prediction output; and\nwrite the result to a deliberate location.\n\nThis design keeps validation close to the boundary of the system. Invalid input should fail before the model produces a plausible-looking but unreliable result.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#validate-incoming-data",
+    "href": "04-building-a-reliable-inference-workflow.html#validate-incoming-data",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Validate incoming data",
+    "text": "Validate incoming data\nStart with structural checks that produce clear error messages.\ndef validate_input(data, required_features):\n    required_columns = {\"record_id\", *required_features}\n    missing = sorted(required_columns.difference(data.columns))\n\n    if missing:\n        raise ValueError(f\"Missing required columns: {missing}\")\n    if data.empty:\n        raise ValueError(\"The inference batch contains no rows.\")\n    if data[\"record_id\"].isna().any():\n        raise ValueError(\"record_id contains missing values.\")\n    if data[\"record_id\"].duplicated().any():\n        raise ValueError(\"record_id must be unique within a batch.\")\nStructural validation is necessary but not sufficient. Depending on the application, validation may also enforce:\n\nnumeric ranges, such as non-negative counts;\nknown categories or a documented unknown-category policy;\nconsistent units;\nacceptable missingness;\nparseable dates;\nmaximum batch size; and\nprivacy rules that exclude prohibited fields.\n\nThe pipeline can impute missing feature values only if it was trained to do so. Validation should therefore distinguish between expected missingness, which the pipeline knows how to handle, and invalid missingness, which indicates a broken upstream process.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#preserve-identifiers-and-select-features",
+    "href": "04-building-a-reliable-inference-workflow.html#preserve-identifiers-and-select-features",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Preserve identifiers and select features",
+    "text": "Preserve identifiers and select features\nThe incoming table contains both operational fields and model inputs. Separate them deliberately.\nrecord_ids = data[\"record_id\"].copy()\nfeatures = data.loc[:, required_features].copy()\nSelecting features by name is safer than passing the entire table to the model. It prevents identifiers, timestamps, comments, or newly added upstream columns from silently becoming prediction inputs.\nWhen the fitted estimator exposes feature_names_in_, the program can use it as the authoritative feature list:\nrequired_features = pipeline.feature_names_in_.tolist()\nIf the saved object does not expose feature names, store the ordered list in the model metadata created during training. Do not infer the contract from whichever columns happen to arrive.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#generate-predictions-and-probabilities",
+    "href": "04-building-a-reliable-inference-workflow.html#generate-predictions-and-probabilities",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Generate predictions and probabilities",
+    "text": "Generate predictions and probabilities\nLoad the model once per program run, then predict the entire validated batch.\nimport joblib\n\npipeline = joblib.load(\"models/customer-risk-pipeline.joblib\")\npredictions = pipeline.predict(features)\nFor a binary classifier, probabilities provide more information than class labels alone:\nprobabilities = pipeline.predict_proba(features)\npositive_probability = probabilities[:, 1]\nThe expression [:, 1] is safe only when the second probability column is known to represent the intended positive class. A more reliable implementation locates that class explicitly:\npositive_class = 1\nclasses = pipeline.classes_.tolist()\n\nif positive_class not in classes:\n    raise ValueError(f\"Positive class {positive_class!r} not found in {classes}.\")\n\npositive_index = classes.index(positive_class)\npositive_probability = pipeline.predict_proba(features)[:, positive_index]\nThis check prevents a subtle but serious error when class labels or their ordering differ from an assumption in the inference code.\n\n\n\n\n\n\nNote\n\n\n\nNot every estimator implements predict_proba(). Some expose decision_function(), while regression models return continuous predictions directly. The output contract must match the fitted estimator and the decision process that consumes its predictions.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#build-a-stable-prediction-table",
+    "href": "04-building-a-reliable-inference-workflow.html#build-a-stable-prediction-table",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Build a stable prediction table",
+    "text": "Build a stable prediction table\nConstruct the result independently from the feature table so that the output schema remains intentional.\nimport pandas as pd\n\nresults = pd.DataFrame(\n    {\n        \"record_id\": record_ids,\n        \"prediction\": predictions,\n        \"prediction_probability\": positive_probability,\n        \"model_version\": \"1.0.0\",\n    }\n)\nBefore writing the file, validate the output:\nif len(results) != len(data):\n    raise RuntimeError(\"Prediction row count does not match input row count.\")\n\nif results[\"prediction_probability\"].isna().any():\n    raise RuntimeError(\"Prediction probabilities contain missing values.\")\n\nif not results[\"prediction_probability\"].between(0, 1).all():\n    raise RuntimeError(\"Prediction probabilities fall outside [0, 1].\")\nThese checks are inexpensive and protect the boundary between the model and downstream systems.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#the-executable-inference-program",
+    "href": "04-building-a-reliable-inference-workflow.html#the-executable-inference-program",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "The executable inference program",
+    "text": "The executable inference program\nThe complete implementation belongs in:\nscripts/python/04-run-batch-inference.py\nIt should use command-line arguments rather than fixed working-directory assumptions:\npython scripts/python/04-run-batch-inference.py \\\n  --input data/inference/new-records.csv \\\n  --model models/customer-risk-pipeline.joblib \\\n  --metadata models/customer-risk-metadata.json \\\n  --output results/predictions/customer-risk-predictions.csv\nThe program should create the output directory when needed but should not create or guess missing input files. A missing model, metadata file, or inference dataset is an error that requires correction.\nThe corresponding wrapper belongs in:\nscripts/bash/04-run-batch-inference.sh\nand provides a short, repeatable project command:\nbash scripts/bash/04-run-batch-inference.sh\nThe Python command is the direct interface; the Bash wrapper is a convenience that supplies the standard project paths. Both routes execute the same Python workflow and therefore produce the same result.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#fail-clearly-and-safely",
+    "href": "04-building-a-reliable-inference-workflow.html#fail-clearly-and-safely",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Fail clearly and safely",
+    "text": "Fail clearly and safely\nInference failures should be visible. Do not catch every exception and continue with partial or fabricated output.\nUseful failure messages identify:\n\nthe missing or unreadable file;\nmissing, duplicate, or unexpected fields;\ninvalid values and affected columns;\nincompatibility between the model artifact and the runtime;\nunsupported probability behaviour; or\ndisagreement between input and output row counts.\n\nWhen an output file may already exist, choose an explicit policy. For a teaching workflow, overwriting the named result keeps repeated runs simple. In production, versioned or timestamped destinations may be preferable, provided downstream consumers can identify the authoritative result.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#record-operational-evidence",
+    "href": "04-building-a-reliable-inference-workflow.html#record-operational-evidence",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Record operational evidence",
+    "text": "Record operational evidence\nA prediction file should answer more than “what did the model predict?” At minimum, retain or log:\n\nmodel name and version;\nmodel artifact checksum or immutable identifier;\ninference timestamp in UTC;\ninput source or batch identifier;\ninput and output row counts;\nvalidation outcome;\nprediction summary, such as class counts; and\nsoftware or environment version when strict reproducibility is required.\n\nDo not place sensitive source features into logs merely for convenience. Operational evidence should support traceability without duplicating protected data.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#common-failure-patterns",
+    "href": "04-building-a-reliable-inference-workflow.html#common-failure-patterns",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Common failure patterns",
+    "text": "Common failure patterns\n\n\n\n\n\n\n\n\nFailure pattern\nWhy it is unreliable\nBetter approach\n\n\n\n\nRecreating preprocessing in the inference script\nTraining and inference transformations can diverge\nLoad one fitted pipeline\n\n\nPassing every incoming column to the model\nOperational or newly added columns may leak into prediction\nSelect the named feature contract\n\n\nAssuming probability column 1 is always positive\nClass ordering may differ\nLocate the positive class through classes_\n\n\nDropping the record identifier\nPredictions cannot be joined safely to source records\nPreserve a unique identifier outside the features\n\n\nAccepting an empty batch\nA technically successful empty output can hide upstream failure\nReject empty input explicitly\n\n\nWriting results before validation\nInvalid output can reach downstream consumers\nValidate first, then write\n\n\nRefitting during prediction\nNew data changes the model\nUse only prediction methods",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#test-the-workflow-before-automation",
+    "href": "04-building-a-reliable-inference-workflow.html#test-the-workflow-before-automation",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Test the workflow before automation",
+    "text": "Test the workflow before automation\nRun at least four small batches before relying on the program:\n\na valid batch with several records;\na batch missing one required feature;\na batch containing duplicate identifiers; and\nan empty batch.\n\nThe valid batch should produce one output row per input row. Each invalid batch should stop with a specific, understandable error. These cases will become automated tests in a later chapter; running them manually now confirms that the contract is clear enough to test.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#chapter-checkpoint",
+    "href": "04-building-a-reliable-inference-workflow.html#chapter-checkpoint",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Chapter checkpoint",
+    "text": "Chapter checkpoint\nYou now have the design for a reliable batch-inference boundary:\n\nthe fitted pipeline is loaded rather than rebuilt;\nincoming data is checked against an explicit contract;\nidentifiers remain separate from model features;\nclass probabilities are interpreted deliberately;\npredictions follow a stable, traceable schema; and\nfailures stop the workflow before unreliable output is written.\n\nThe next step is to expose the same prediction logic through a service interface. The input and output contracts developed here will transfer directly to request and response models, reducing the amount of new logic required for an API.",
     "crumbs": [
       "From Model to Inference",
       "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
@@ -278,7 +696,183 @@
     "href": "05-serving-predictions-with-fastapi.html",
     "title": "Serving Predictions with FastAPI",
     "section": "",
-    "text": "ID: MD-L05\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Expose the inference contract through an API\n\n\nThis chapter will expose health and prediction endpoints with FastAPI and Pydantic.",
+    "text": "Learning objectives\nA saved model is useful only when another program can send it data and receive a dependable prediction. In this chapter, you will place the inference workflow from Building a Reliable Inference Workflow behind a small HTTP API built with FastAPI.\nThe objective is not merely to make the model reachable. The API must preserve the same input rules, preprocessing steps, output meanings, and failure behaviour that were tested before deployment.\nBy the end of this chapter, you will be able to:",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#learning-objectives",
+    "href": "05-serving-predictions-with-fastapi.html#learning-objectives",
+    "title": "Serving Predictions with FastAPI",
+    "section": "",
+    "text": "explain the role of an API in a model-serving system;\ndefine validated request and response models with Pydantic;\nload a saved pipeline once when a FastAPI application starts;\nexpose health and prediction endpoints;\nsend prediction requests from the command line and Python;\ndistinguish client validation errors from server-side inference failures; and\ntest the API without opening a network connection.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#from-an-inference-function-to-a-service",
+    "href": "05-serving-predictions-with-fastapi.html#from-an-inference-function-to-a-service",
+    "title": "Serving Predictions with FastAPI",
+    "section": "From an inference function to a service",
+    "text": "From an inference function to a service\nChapter 04 established a reliable inference boundary:\nraw request -&gt; validation -&gt; tabular input -&gt; saved pipeline -&gt; prediction -&gt; structured output\nFastAPI adds an HTTP layer around that boundary. A client sends JSON to a URL, the application validates it, and the inference function returns a JSON response.\nThe application should remain thin. It should not reproduce preprocessing logic already stored in the fitted scikit-learn pipeline. Duplicating transformations in the API would create a second implementation that could drift away from training.\nFastAPI uses Python type annotations and Pydantic models to validate request data and generate an OpenAPI description of the service (fastapi2026?). Response models also document and validate the data returned to clients (fastapiResponseModel2026?).",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#the-api-contract",
+    "href": "05-serving-predictions-with-fastapi.html#the-api-contract",
+    "title": "Serving Predictions with FastAPI",
+    "section": "The API contract",
+    "text": "The API contract\nAn API contract specifies what a client may send and what the service promises to return. For this guide, the service exposes two endpoints.\n\n\n\n\n\n\n\n\n\nMethod\nPath\nPurpose\nSuccessful response\n\n\n\n\nGET\n/health\nConfirm that the application and model are ready\nService status and model identifier\n\n\nPOST\n/predict\nValidate one observation and generate a prediction\nPredicted class and probability\n\n\n\nThe health endpoint is operational: monitoring systems can call it without making a prediction. The prediction endpoint is analytical: it implements the inference contract.\n\n\n\n\n\n\nImportant\n\n\n\nThe field names and types in the request model must match the model developed earlier in this guide. Do not rename fields at the API boundary unless an explicit mapping is part of the tested inference workflow.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#define-request-and-response-schemas",
+    "href": "05-serving-predictions-with-fastapi.html#define-request-and-response-schemas",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Define request and response schemas",
+    "text": "Define request and response schemas\nPydantic models turn the informal input description into executable validation rules. The following pattern uses constrained fields, rejects unexpected inputs, and includes an example for the generated API documentation.\nfrom typing import Literal\n\nimport pandas as pd\nfrom pydantic import BaseModel, ConfigDict, Field\n\n\nclass PredictionRequest(BaseModel):\n    model_config = ConfigDict(\n        extra=\"forbid\",\n        json_schema_extra={\n            \"examples\": [\n                {\n                    \"mean_radius\": 17.99,\n                    \"mean_texture\": 10.38,\n                    \"mean_perimeter\": 122.8,\n                    \"mean_area\": 1001.0,\n                    \"mean_smoothness\": 0.1184,\n                    \"mean_compactness\": 0.2776,\n                    \"mean_concavity\": 0.3001,\n                    \"mean_concave_points\": 0.1471,\n                }\n            ]\n        },\n    )\n\n    mean_radius: float = Field(gt=0)\n    mean_texture: float = Field(ge=0)\n    mean_perimeter: float = Field(gt=0)\n    mean_area: float = Field(gt=0)\n    mean_smoothness: float = Field(ge=0)\n    mean_compactness: float = Field(ge=0)\n    mean_concavity: float = Field(ge=0)\n    mean_concave_points: float = Field(ge=0)\n\n    def to_model_frame(self) -&gt; pd.DataFrame:\n        values = self.model_dump()\n        mapping = {\n            \"mean_radius\": \"mean radius\",\n            \"mean_texture\": \"mean texture\",\n            \"mean_perimeter\": \"mean perimeter\",\n            \"mean_area\": \"mean area\",\n            \"mean_smoothness\": \"mean smoothness\",\n            \"mean_compactness\": \"mean compactness\",\n            \"mean_concavity\": \"mean concavity\",\n            \"mean_concave_points\": \"mean concave points\",\n        }\n        row = {model_name: values[api_name]\n               for api_name, model_name in mapping.items()}\n        return pd.DataFrame([row], columns=list(mapping.values()))\n\n\nclass PredictionResponse(BaseModel):\n    prediction: int\n    label: Literal[\"malignant\", \"benign\"]\n    probability_malignant: float = Field(ge=0.0, le=1.0)\n    model_version: str\n\n\nclass HealthResponse(BaseModel):\n    status: Literal[\"ready\"]\n    model_version: str\nThese are the eight features selected in Chapters 02–04. The public API uses JSON-friendly snake-case names and maps them explicitly to the artifact names, such as mean_radius to mean radius. Pydantic’s Field supports numeric constraints and schema metadata, while extra=\"forbid\" prevents misspelled or unknown fields from being silently ignored (pydanticFields2026?).\nRequest validation protects the interface, but it does not prove that an input is meaningful in the real world. For example, an income of zero may be syntactically valid while still requiring business review. Semantic and distributional checks belong in the inference contract and monitoring design.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#build-the-fastapi-application",
+    "href": "05-serving-predictions-with-fastapi.html#build-the-fastapi-application",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Build the FastAPI application",
+    "text": "Build the FastAPI application\nCreate the executable application as:\nscripts/python/05-serving-predictions-api.py\nThe complete application should contain four responsibilities:\n\nlocate and load the model artifact;\nretain the loaded model in application state;\ndefine typed HTTP endpoints; and\ntranslate expected inference failures into appropriate HTTP responses.\n\nThe central pattern is shown below.\nfrom contextlib import asynccontextmanager\nfrom pathlib import Path\n\nimport joblib\nimport pandas as pd\nfrom fastapi import FastAPI, HTTPException, Request\n\n\nMODEL_PATH = Path(\"models/03-breast-cancer-pipeline.joblib\")\nPOSITIVE_CLASS = 0\n\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    artifact = joblib.load(MODEL_PATH)\n    app.state.model = artifact[\"pipeline\"]\n    app.state.model_version = artifact[\"model_version\"]\n    app.state.target_names = artifact[\"target_names\"]\n    yield\n    app.state.model = None\n\n\napp = FastAPI(\n    title=\"CDI Prediction API\",\n    version=\"1.0.0\",\n    lifespan=lifespan,\n)\n\n\n@app.get(\"/health\", response_model=HealthResponse)\ndef health(request: Request) -&gt; HealthResponse:\n    if request.app.state.model is None:\n        raise HTTPException(status_code=503, detail=\"Model is not ready\")\n\n    return HealthResponse(status=\"ready\", model_version=request.app.state.model_version)\n\n\n@app.post(\"/predict\", response_model=PredictionResponse)\ndef predict(payload: PredictionRequest, request: Request) -&gt; PredictionResponse:\n    model = request.app.state.model\n    frame = payload.to_model_frame()\n\n    try:\n        predicted_class = int(model.predict(frame)[0])\n        positive_index = list(model.classes_).index(POSITIVE_CLASS)\n        probability = float(model.predict_proba(frame)[0, positive_index])\n        label = request.app.state.target_names[predicted_class]\n    except (KeyError, TypeError, ValueError) as exc:\n        raise HTTPException(\n            status_code=422,\n            detail=\"Input could not be processed by the model\",\n        ) from exc\n\n    return PredictionResponse(\n        prediction=predicted_class,\n        label=label,\n        probability_malignant=probability,\n        model_version=request.app.state.model_version,\n    )\nFastAPI recommends the application lifespan context for startup and shutdown logic (fastapiLifespan2026?). Loading the artifact before yield has two important consequences:\n\nthe service fails during startup if the model cannot be loaded; and\nthe model is reused across requests instead of being read from disk for every prediction.\n\nLoading once reduces avoidable latency. It also makes readiness honest: the application should not report ready until the artifact is available.\n\n\n\n\n\n\nNote\n\n\n\nThe model path and version should ultimately come from configuration or artifact metadata. They are constants here so the serving boundary remains easy to inspect. Chapter 07 will separate configuration from application code.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#preserve-the-fitted-pipeline",
+    "href": "05-serving-predictions-with-fastapi.html#preserve-the-fitted-pipeline",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Preserve the fitted pipeline",
+    "text": "Preserve the fitted pipeline\nThe request is converted to a one-row pandas.DataFrame before prediction. The executable to_model_frame() method produces the exact eight Chapter 03 columns, in their saved order: mean radius, mean texture, mean perimeter, mean area, mean smoothness, mean compactness, mean concavity, and mean concave points.\nDo not extract numeric values into an unnamed list:\n# Fragile: column names and ordering are implicit.\nvalues = [[payload.mean_radius, payload.mean_texture,\n           payload.mean_perimeter, payload.mean_area]]\nprediction = model.predict(values)\nThis approach makes feature order part of undocumented application code. A named DataFrame keeps the contract visible and allows the pipeline’s column-based preprocessing to work as designed.\nThe API should also call the saved pipeline directly. It should not manually standardize numeric variables, encode categories, or fill missing values. Those transformations belong inside the fitted pipeline saved in Saving and Loading Model Pipelines.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#choose-output-meanings-carefully",
+    "href": "05-serving-predictions-with-fastapi.html#choose-output-meanings-carefully",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Choose output meanings carefully",
+    "text": "Choose output meanings carefully\nFor this classifier, class 0 means malignant and class 1 means benign. Malignant is the operational positive class established in Chapter 02, so the API returns an explicitly named probability_malignant. A fixed probability column is fragile:\nprobability = float(model.predict_proba(frame)[0, 0])  # fragile\nThat assumption must be verified against model.classes_. A safer implementation finds the probability column explicitly:\npositive_class = 0\nclasses = list(model.classes_)\npositive_index = classes.index(positive_class)\nprobability = float(model.predict_proba(frame)[0, positive_index])\nIf the estimator does not implement predict_proba(), return only outputs the model genuinely supports or use a separately validated score. Do not label an arbitrary decision score as a probability.\nThe response includes model_version so predictions can be traced to a deployed artifact. In a larger system, the response or internal logs may also carry a request identifier, deployment version, and inference timestamp. Avoid returning internal filesystem paths, stack traces, or sensitive feature values.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#run-the-api-locally",
+    "href": "05-serving-predictions-with-fastapi.html#run-the-api-locally",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Run the API locally",
+    "text": "Run the API locally\nActivate the repository-specific environment and start the development server from the repository root:\nsource .venv/bin/activate\nfastapi dev scripts/python/05-serving-predictions-api.py\nThe development server reloads when source files change. It is intended for local development, not as the final production process.\nOnce the server starts, open:\n\nhttp://127.0.0.1:8000/docs for Swagger UI;\nhttp://127.0.0.1:8000/redoc for ReDoc; and\nhttp://127.0.0.1:8000/openapi.json for the machine-readable OpenAPI schema.\n\nThe interactive documentation is generated from the route definitions, request models, and response models. It is a useful inspection surface, but it does not replace automated tests.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#call-the-endpoints",
+    "href": "05-serving-predictions-with-fastapi.html#call-the-endpoints",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Call the endpoints",
+    "text": "Call the endpoints\n\nCheck readiness\ncurl --fail --silent http://127.0.0.1:8000/health\nA successful response should resemble:\n{\n  \"status\": \"ready\",\n  \"model_version\": \"breast-cancer-logistic-v1\"\n}\n\n\nRequest a prediction\ncurl --fail --silent \\\n  --request POST \\\n  --url http://127.0.0.1:8000/predict \\\n  --header 'Content-Type: application/json' \\\n  --data '{\n    \"mean_radius\": 17.99,\n    \"mean_texture\": 10.38,\n    \"mean_perimeter\": 122.8,\n    \"mean_area\": 1001.0,\n    \"mean_smoothness\": 0.1184,\n    \"mean_compactness\": 0.2776,\n    \"mean_concavity\": 0.3001,\n    \"mean_concave_points\": 0.1471\n  }'\nA successful response has a stable shape:\n{\n  \"prediction\": 0,\n  \"label\": \"malignant\",\n  \"probability_malignant\": 0.98,\n  \"model_version\": \"breast-cancer-logistic-v1\"\n}\nThe values are illustrative. The important property is that the response fields and their meanings remain stable.\n\n\nCall the service from Python\nimport httpx\n\n\npayload = {\n    \"mean_radius\": 17.99,\n    \"mean_texture\": 10.38,\n    \"mean_perimeter\": 122.8,\n    \"mean_area\": 1001.0,\n    \"mean_smoothness\": 0.1184,\n    \"mean_compactness\": 0.2776,\n    \"mean_concavity\": 0.3001,\n    \"mean_concave_points\": 0.1471,\n}\n\nresponse = httpx.post(\n    \"http://127.0.0.1:8000/predict\",\n    json=payload,\n    timeout=10.0,\n)\nresponse.raise_for_status()\n\nresult = response.json()\nprint(result)\nAn explicit timeout prevents a client from waiting indefinitely. Production clients may also need bounded retries, but automatic retries must be designed carefully to avoid amplifying failures.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#understand-validation-and-http-errors",
+    "href": "05-serving-predictions-with-fastapi.html#understand-validation-and-http-errors",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Understand validation and HTTP errors",
+    "text": "Understand validation and HTTP errors\nFastAPI distinguishes errors raised while validating client input from errors that occur inside the service.\n\n\n\n\n\n\n\n\nSituation\nTypical status\nMeaning\n\n\n\n\nValid request and successful inference\n200\nPrediction returned\n\n\nMissing, malformed, or disallowed field\n422\nRequest does not satisfy the schema\n\n\nValid JSON that violates an inference rule\n422\nInput cannot be processed under the contract\n\n\nModel not loaded or temporarily unavailable\n503\nService is not ready\n\n\nUnexpected application defect\n500\nServer failed unexpectedly\n\n\n\nDo not catch every exception and return 200 with an error message. Clients and monitoring tools depend on HTTP status codes to distinguish success from failure. Likewise, avoid exposing raw exception text because it may reveal implementation details.\nTry an invalid request:\ncurl --silent \\\n  --request POST \\\n  --url http://127.0.0.1:8000/predict \\\n  --header 'Content-Type: application/json' \\\n  --data '{\n    \"mean_radius\": -4,\n    \"mean_texture\": 10.38,\n    \"mean_perimeter\": 122.8,\n    \"mean_area\": 1001.0,\n    \"mean_smoothness\": 0.1184,\n    \"mean_compactness\": 0.2776,\n    \"mean_concavity\": 0.3001,\n    \"mean_concave_points\": 0.1471\n  }'\nThe framework should reject the request before the endpoint calls the model. That is a valuable boundary: invalid input does not enter the inference workflow.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#test-without-starting-a-server",
+    "href": "05-serving-predictions-with-fastapi.html#test-without-starting-a-server",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Test without starting a server",
+    "text": "Test without starting a server\nFastAPI’s TestClient exercises the application directly without opening an HTTP socket (fastapiTesting2026?). Because the model loads in the lifespan context, use TestClient as a context manager so startup and shutdown logic runs during the test (fastapiTestingLifespan2026?).\nCreate:\ntests/test_05_api.py\nThe essential test cases are:\nfrom fastapi.testclient import TestClient\n\nfrom api_import_helper import app\n\n\ndef test_health_reports_ready():\n    with TestClient(app) as client:\n        response = client.get(\"/health\")\n\n    assert response.status_code == 200\n    assert response.json()[\"status\"] == \"ready\"\n\n\ndef test_predict_returns_contract_fields(valid_payload):\n    with TestClient(app) as client:\n        response = client.post(\"/predict\", json=valid_payload)\n\n    assert response.status_code == 200\n    body = response.json()\n    assert set(body) == {\n        \"prediction\", \"label\", \"probability_malignant\", \"model_version\"\n    }\n    assert 0.0 &lt;= body[\"probability_malignant\"] &lt;= 1.0\n\n\ndef test_predict_rejects_missing_feature(valid_payload):\n    invalid_payload = valid_payload.copy()\n    invalid_payload.pop(\"mean_area\")\n\n    with TestClient(app) as client:\n        response = client.post(\"/predict\", json=invalid_payload)\n\n    assert response.status_code == 422\n\n\ndef test_predict_rejects_unknown_field(valid_payload):\n    invalid_payload = valid_payload | {\"unexpected\": 1}\n\n    with TestClient(app) as client:\n        response = client.post(\"/predict\", json=invalid_payload)\n\n    assert response.status_code == 422\napi_import_helper represents a small import adapter for the chapter-prefixed application filename. The repository’s executable test suite should contain that adapter and a reusable valid_payload fixture. Keeping the full runnable implementation outside the .qmd file preserves the guide’s standard: concise examples remain visible here, while executable code lives under scripts/ and tests/.\nRun the tests from the repository root:\npytest -q tests/test_05_api.py\nThe prediction test should verify more than status 200. It should also compare the API result with the previously tested inference function for the same observation. This parity test detects accidental differences introduced at the HTTP boundary.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#common-mistakes",
+    "href": "05-serving-predictions-with-fastapi.html#common-mistakes",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Common mistakes",
+    "text": "Common mistakes\n\nLoading the model inside the endpoint\nReading the artifact for every request adds disk access and deserialization time to every prediction. Load it once during application startup.\n\n\nRebuilding preprocessing in the API\nManual transformations duplicate the fitted pipeline and invite training-serving skew. Pass the named DataFrame to the saved pipeline.\n\n\nAllowing extra fields silently\nA misspelled field can otherwise disappear during validation while the client assumes it was used. Reject unexpected fields unless the contract explicitly permits them.\n\n\nReturning NumPy objects directly\nNumPy scalar types are not always JSON serializable. Convert predictions and probabilities to native Python int and float values at the response boundary.\n\n\nTreating /health as proof of predictive quality\nA health check shows that the service is running and the model is loaded. It does not show that the model remains accurate, calibrated, fair, or appropriate for current data. Those questions require monitoring and evaluation.\n\n\nCalling local development a deployment\nServing on 127.0.0.1 confirms that the API works on one machine. A deployable service still needs dependency control, tests, configuration, logging, containerization, security, and an operating environment.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#a-disciplined-serving-workflow",
+    "href": "05-serving-predictions-with-fastapi.html#a-disciplined-serving-workflow",
+    "title": "Serving Predictions with FastAPI",
+    "section": "A disciplined serving workflow",
+    "text": "A disciplined serving workflow\nThe chapter workflow is:\n\nstart from the tested inference contract;\ndefine strict request and response models;\nload the saved pipeline during application startup;\nconvert validated input into the expected named table;\nreturn JSON-safe, documented outputs;\ntest success, validation failure, and readiness behaviour; and\nconfirm parity between direct inference and API inference.\n\nThis sequence keeps the HTTP layer small and makes failures easier to locate.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#chapter-checkpoint",
+    "href": "05-serving-predictions-with-fastapi.html#chapter-checkpoint",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Chapter checkpoint",
+    "text": "Chapter checkpoint\nYou now have the conceptual and implementation structure for a prediction API with:\n\none model loaded at application startup;\na readiness endpoint;\na validated prediction endpoint;\nexplicit response semantics;\ninteractive OpenAPI documentation; and\ntests that exercise the service without starting an external server.\n\nThe service is locally usable, but it is not yet production-ready. The next chapter will test the API and inference behaviour more systematically before packaging and deployment.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#review-questions",
+    "href": "05-serving-predictions-with-fastapi.html#review-questions",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Review questions",
+    "text": "Review questions\n\nWhy should preprocessing remain inside the saved pipeline rather than the FastAPI endpoint?\nWhat is the difference between request validation and real-world plausibility checking?\nWhy is a named one-row DataFrame safer than an unnamed list of values?\nWhat does the /health endpoint establish, and what does it not establish?\nWhy should a prediction response include a model version?\nWhich test would reveal a mismatch between direct inference and API inference?",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#further-reading",
+    "href": "05-serving-predictions-with-fastapi.html#further-reading",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Further reading",
+    "text": "Further reading\n\nFastAPI request bodies and data validation (fastapiRequestBody2026?)\nFastAPI response models (fastapiResponseModel2026?)\nFastAPI lifespan events (fastapiLifespan2026?)\nFastAPI testing with TestClient (fastapiTesting2026?)\nPydantic fields and validation metadata (pydanticFields2026?)",
     "crumbs": [
       "Serving and Testing Predictions",
       "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"

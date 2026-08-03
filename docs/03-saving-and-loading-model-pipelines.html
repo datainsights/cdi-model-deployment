@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -246,8 +281,35 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives">Learning objectives</a></li>
+  <li><a href="#from-a-fitted-object-to-a-deployable-artifact" id="toc-from-a-fitted-object-to-a-deployable-artifact" class="nav-link" data-scroll-target="#from-a-fitted-object-to-a-deployable-artifact">From a fitted object to a deployable artifact</a></li>
+  <li><a href="#save-the-complete-pipeline" id="toc-save-the-complete-pipeline" class="nav-link" data-scroll-target="#save-the-complete-pipeline">Save the complete pipeline</a></li>
+  <li><a href="#define-the-model-artifact" id="toc-define-the-model-artifact" class="nav-link" data-scroll-target="#define-the-model-artifact">Define the model artifact</a></li>
+  <li><a href="#save-with-joblib" id="toc-save-with-joblib" class="nav-link" data-scroll-target="#save-with-joblib">Save with <code>joblib</code></a></li>
+  <li><a href="#load-and-validate-the-artifact" id="toc-load-and-validate-the-artifact" class="nav-link" data-scroll-target="#load-and-validate-the-artifact">Load and validate the artifact</a></li>
+  <li><a href="#verify-the-saveload-round-trip" id="toc-verify-the-saveload-round-trip" class="nav-link" data-scroll-target="#verify-the-saveload-round-trip">Verify the save–load round trip</a></li>
+  <li><a href="#run-the-complete-persistence-workflow" id="toc-run-the-complete-persistence-workflow" class="nav-link" data-scroll-target="#run-the-complete-persistence-workflow">Run the complete persistence workflow</a></li>
+  <li><a href="#why-the-chapter-script-fits-the-model-again" id="toc-why-the-chapter-script-fits-the-model-again" class="nav-link" data-scroll-target="#why-the-chapter-script-fits-the-model-again">Why the chapter script fits the model again</a></li>
+  <li><a href="#compatibility-is-part-of-the-artifact" id="toc-compatibility-is-part-of-the-artifact" class="nav-link" data-scroll-target="#compatibility-is-part-of-the-artifact">Compatibility is part of the artifact</a></li>
+  <li><a href="#treat-model-files-as-trusted-code" id="toc-treat-model-files-as-trusted-code" class="nav-link" data-scroll-target="#treat-model-files-as-trusted-code">Treat model files as trusted code</a></li>
+  <li><a href="#common-persistence-mistakes" id="toc-common-persistence-mistakes" class="nav-link" data-scroll-target="#common-persistence-mistakes">Common persistence mistakes</a>
+  <ul class="collapse">
+  <li><a href="#saving-only-the-classifier" id="toc-saving-only-the-classifier" class="nav-link" data-scroll-target="#saving-only-the-classifier">Saving only the classifier</a></li>
+  <li><a href="#recreating-preprocessing-during-inference" id="toc-recreating-preprocessing-during-inference" class="nav-link" data-scroll-target="#recreating-preprocessing-during-inference">Recreating preprocessing during inference</a></li>
+  <li><a href="#depending-on-feature-position-without-a-contract" id="toc-depending-on-feature-position-without-a-contract" class="nav-link" data-scroll-target="#depending-on-feature-position-without-a-contract">Depending on feature position without a contract</a></li>
+  <li><a href="#assuming-a-probability-column" id="toc-assuming-a-probability-column" class="nav-link" data-scroll-target="#assuming-a-probability-column">Assuming a probability column</a></li>
+  <li><a href="#overwriting-an-artifact-without-changing-its-version" id="toc-overwriting-an-artifact-without-changing-its-version" class="nav-link" data-scroll-target="#overwriting-an-artifact-without-changing-its-version">Overwriting an artifact without changing its version</a></li>
+  <li><a href="#loading-across-unverified-environments" id="toc-loading-across-unverified-environments" class="nav-link" data-scroll-target="#loading-across-unverified-environments">Loading across unverified environments</a></li>
+  </ul></li>
+  <li><a href="#persistence-checklist" id="toc-persistence-checklist" class="nav-link" data-scroll-target="#persistence-checklist">Persistence checklist</a></li>
+  <li><a href="#chapter-summary" id="toc-chapter-summary" class="nav-link" data-scroll-target="#chapter-summary">Chapter summary</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -280,13 +342,329 @@ ul.task-list li input[type="checkbox"] {
 <div class="cdi-message">
 <ul>
 <li><strong>ID:</strong> MD-L03</li>
-<li><strong>Status:</strong> Scaffolded for chapter-by-chapter development</li>
+<li><strong>Type:</strong> Model persistence</li>
+<li><strong>Audience:</strong> Beginner &amp; Intermediate</li>
 <li><strong>Theme:</strong> Preserve preprocessing and prediction together</li>
 </ul>
 </div>
-<p>This chapter will serialize, describe, reload, and verify the complete fitted pipeline.</p>
+<p>Chapter 02 developed a deployment candidate as one fitted scikit-learn <code>Pipeline</code>: an eight-feature input contract, <code>StandardScaler</code>, and logistic regression. The next requirement is persistence—saving that fitted pipeline so another Python process can load it and reproduce the same predictions.</p>
+<p>This chapter saves the complete fitted pipeline, records the information needed to identify and use it, reloads it in a clean step, and verifies that serialization has not changed its behaviour.</p>
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning objectives</h2>
+<p>By the end of this chapter, you will be able to:</p>
+<ul>
+<li>explain why preprocessing and prediction must be saved together;</li>
+<li>distinguish a fitted in-memory object from a persistent model artifact;</li>
+<li>save and load a scikit-learn pipeline with <code>joblib</code>;</li>
+<li>attach version and input-contract metadata to a model artifact;</li>
+<li>verify that predictions and probabilities survive a save–load round trip; and</li>
+<li>recognize the compatibility and security limits of pickle-based formats.</li>
+</ul>
+</section>
+<section id="from-a-fitted-object-to-a-deployable-artifact" class="level2">
+<h2 class="anchored" data-anchor-id="from-a-fitted-object-to-a-deployable-artifact">From a fitted object to a deployable artifact</h2>
+<p>Training produces a fitted Python object in memory. That object disappears when the process ends. A deployment service, batch job, or test suite therefore needs a persistent file from which it can reconstruct the fitted object.</p>
+<pre class="mermaid"><code>flowchart LR
+    A[Training data] --&gt; B[Fit complete pipeline]
+    B --&gt; C[Save versioned artifact]
+    C --&gt; D[Load in new process]
+    D --&gt; E[Verify predictions]
+    E --&gt; F[Use for inference]</code></pre>
+<p>The saved file is not merely a convenient copy. It is the exact model candidate that later chapters will use for batch inference and API predictions.</p>
+</section>
+<section id="save-the-complete-pipeline" class="level2">
+<h2 class="anchored" data-anchor-id="save-the-complete-pipeline">Save the complete pipeline</h2>
+<p>The Chapter 02 candidate contains two fitted steps:</p>
+<ol type="1">
+<li><code>StandardScaler</code> stores the means and scales learned from the training data.</li>
+<li><code>LogisticRegression</code> stores the fitted coefficients, intercept, and class order.</li>
+</ol>
+<p>Saving only the classifier would discard the fitted preprocessing state. A future service might then scale inputs differently—or not scale them at all—and silently produce different predictions.</p>
+<p>The deployment unit is therefore the complete fitted pipeline:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pipeline <span class="op">=</span> Pipeline(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    steps<span class="op">=</span>[</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"scale"</span>, StandardScaler()),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        (</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">"classifier"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>            LogisticRegression(max_iter<span class="op">=</span><span class="dv">1000</span>, random_state<span class="op">=</span><span class="dv">42</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>pipeline.fit(X_train, y_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>After fitting, both steps carry learned state. The pipeline also exposes the classifier’s class order through <code>pipeline.classes_</code>. This matters because probability columns must always be resolved from the fitted classes rather than assumed from position.</p>
+</section>
+<section id="define-the-model-artifact" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-model-artifact">Define the model artifact</h2>
+<p>A model file alone cannot explain its intended inputs, version, or training environment. This guide stores a small artifact bundle containing the fitted pipeline and the metadata needed by downstream code.</p>
+<p>The bundle contains:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>pipeline</code></td>
+<td>Complete fitted preprocessing and classification workflow</td>
+</tr>
+<tr class="even">
+<td><code>model_version</code></td>
+<td>Stable identifier returned with predictions</td>
+</tr>
+<tr class="odd">
+<td><code>feature_names</code></td>
+<td>Ordered eight-feature input contract</td>
+</tr>
+<tr class="even">
+<td><code>target_names</code></td>
+<td>Mapping from encoded classes to readable labels</td>
+</tr>
+<tr class="odd">
+<td><code>trained_at_utc</code></td>
+<td>UTC timestamp for traceability</td>
+</tr>
+<tr class="even">
+<td><code>python_version</code></td>
+<td>Python version used to create the artifact</td>
+</tr>
+<tr class="odd">
+<td><code>scikit_learn_version</code></td>
+<td>scikit-learn version used to fit and save it</td>
+</tr>
+</tbody>
+</table>
+<p>The feature order remains the contract established in Chapter 02:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>FEATURE_NAMES <span class="op">=</span> [</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean radius"</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean texture"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean perimeter"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean area"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean smoothness"</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean compactness"</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean concavity"</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean concave points"</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The target mapping is:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>TARGET_NAMES <span class="op">=</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span>: <span class="st">"malignant"</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span>: <span class="st">"benign"</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Explicit metadata prevents later code from having to guess what the artifact expects.</p>
+</section>
+<section id="save-with-joblib" class="level2">
+<h2 class="anchored" data-anchor-id="save-with-joblib">Save with <code>joblib</code></h2>
+<p><code>joblib</code> provides a convenient persistence format for Python objects containing large NumPy arrays. It uses Python’s pickle protocol underneath, so it preserves the fitted scikit-learn pipeline as a Python object.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime, timezone</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> platform</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> joblib</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sklearn</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>MODEL_PATH <span class="op">=</span> Path(<span class="st">"models/03-breast-cancer-pipeline.joblib"</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>MODEL_VERSION <span class="op">=</span> <span class="st">"breast-cancer-logistic-v1"</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>artifact <span class="op">=</span> {</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"pipeline"</span>: pipeline,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"model_version"</span>: MODEL_VERSION,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"feature_names"</span>: FEATURE_NAMES,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"target_names"</span>: TARGET_NAMES,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"trained_at_utc"</span>: datetime.now(timezone.utc).isoformat(),</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"python_version"</span>: platform.python_version(),</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"scikit_learn_version"</span>: sklearn.__version__,</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>MODEL_PATH.parent.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>joblib.dump(artifact, MODEL_PATH)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The <code>models/</code> directory is created if necessary. <code>joblib.dump()</code> then serializes the bundle to one file. The timestamp documents when the artifact was created; it does not by itself guarantee reproducibility, so the repository’s dependency lock file and source code must also be retained.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The chapter number in the filename makes the artifact’s origin visible during development. The semantic <code>model_version</code> identifies the model itself and is the value that downstream predictions should report.</p>
+</div>
+</div>
+</section>
+<section id="load-and-validate-the-artifact" class="level2">
+<h2 class="anchored" data-anchor-id="load-and-validate-the-artifact">Load and validate the artifact</h2>
+<p>Loading reverses the serialization step:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>loaded_artifact <span class="op">=</span> joblib.load(MODEL_PATH)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>loaded_pipeline <span class="op">=</span> loaded_artifact[<span class="st">"pipeline"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Before using the model, validate the artifact structure rather than assuming every required field is present.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>REQUIRED_ARTIFACT_KEYS <span class="op">=</span> {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"pipeline"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"model_version"</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"feature_names"</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"target_names"</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"trained_at_utc"</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"python_version"</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"scikit_learn_version"</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>missing_keys <span class="op">=</span> REQUIRED_ARTIFACT_KEYS <span class="op">-</span> loaded_artifact.keys()</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> missing_keys:</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"Model artifact is missing required keys: </span><span class="sc">{</span><span class="bu">sorted</span>(missing_keys)<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> loaded_artifact[<span class="st">"feature_names"</span>] <span class="op">!=</span> FEATURE_NAMES:</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Saved feature contract does not match the application contract."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>These checks fail early if a wrong, incomplete, or incompatible artifact is placed at the expected path.</p>
+</section>
+<section id="verify-the-saveload-round-trip" class="level2">
+<h2 class="anchored" data-anchor-id="verify-the-saveload-round-trip">Verify the save–load round trip</h2>
+<p>A successful file write does not prove that the reloaded artifact behaves correctly. Compare predictions made immediately before saving with predictions made after loading.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>predictions_before <span class="op">=</span> pipeline.predict(X_test)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>probabilities_before <span class="op">=</span> pipeline.predict_proba(X_test)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>predictions_after <span class="op">=</span> loaded_pipeline.predict(X_test)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>probabilities_after <span class="op">=</span> loaded_pipeline.predict_proba(X_test)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> np.array_equal(predictions_before, predictions_after):</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"Class predictions changed after serialization."</span>)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> np.allclose(probabilities_before, probabilities_after):</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"Class probabilities changed after serialization."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>np.array_equal()</code> requires identical class predictions. <code>np.allclose()</code> is appropriate for floating-point probabilities, where numerically negligible representation differences may occur.</p>
+<p>Also verify that the class labels retained their expected meaning:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>expected_classes <span class="op">=</span> np.array([<span class="dv">0</span>, <span class="dv">1</span>])</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> np.array_equal(loaded_pipeline.classes_, expected_classes):</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"Unexpected fitted class order: </span><span class="sc">{</span>loaded_pipeline<span class="sc">.</span>classes_<span class="sc">.</span>tolist()<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The malignant-class probability can then be selected safely:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>malignant_class <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>malignant_index <span class="op">=</span> np.where(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    loaded_pipeline.classes_ <span class="op">==</span> malignant_class</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>)[<span class="dv">0</span>].item()</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>malignant_probability <span class="op">=</span> probabilities_after[:, malignant_index]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This repeats an important deployment rule from Chapter 02: resolve a probability column from <code>classes_</code>; never assume its position.</p>
+</section>
+<section id="run-the-complete-persistence-workflow" class="level2">
+<h2 class="anchored" data-anchor-id="run-the-complete-persistence-workflow">Run the complete persistence workflow</h2>
+<p>The executable program for this chapter is:</p>
+<pre class="text"><code>scripts/python/03-save-and-load-model-pipeline.py</code></pre>
+<p>It performs the complete workflow:</p>
+<ol type="1">
+<li>loads the same scikit-learn breast cancer dataset used in Chapter 02;</li>
+<li>selects and validates the same eight features;</li>
+<li>recreates the same stratified training and test split;</li>
+<li>fits the same scaling and logistic regression pipeline;</li>
+<li>saves the fitted pipeline and its metadata;</li>
+<li>reloads and validates the artifact; and</li>
+<li>confirms that predictions and probabilities are unchanged.</li>
+</ol>
+<p>From the repository root, with the project environment activated, run:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/python/03-save-and-load-model-pipeline.py</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The expected artifact is:</p>
+<pre class="text"><code>models/03-breast-cancer-pipeline.joblib</code></pre>
+<p>Inspect the result without trying to print the binary file:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> models/03-breast-cancer-pipeline.joblib</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The program should report the saved path, model version, fitted class order, and successful round-trip verification.</p>
+</section>
+<section id="why-the-chapter-script-fits-the-model-again" class="level2">
+<h2 class="anchored" data-anchor-id="why-the-chapter-script-fits-the-model-again">Why the chapter script fits the model again</h2>
+<p>Chapter 02 evaluated whether the pipeline was suitable as a deployment candidate. Chapter 03 creates the persistent artifact. The chapter script deliberately rebuilds the candidate from the same deterministic training definition before saving it.</p>
+<p>This keeps the persistence workflow reproducible from source and avoids depending on an undocumented in-memory object left behind by another process. In a larger production system, training and artifact publication would normally be separate pipeline stages sharing reusable project modules. The compact guide keeps that orchestration visible within one executable program.</p>
+</section>
+<section id="compatibility-is-part-of-the-artifact" class="level2">
+<h2 class="anchored" data-anchor-id="compatibility-is-part-of-the-artifact">Compatibility is part of the artifact</h2>
+<p>Pickle-based model files are tied to Python and the libraries that define the stored objects. Loading an artifact under substantially different Python, NumPy, SciPy, or scikit-learn versions may fail or produce unsupported behaviour.</p>
+<p>For this guide:</p>
+<ul>
+<li>create and use the repository-specific <code>.venv</code>;</li>
+<li>install the project’s declared dependencies;</li>
+<li>retain the dependency lock file used for the build;</li>
+<li>record the Python and scikit-learn versions in the artifact; and</li>
+<li>rebuild and revalidate the model when dependencies change.</li>
+</ul>
+<p>The version metadata helps diagnose a mismatch, but it does not make incompatible environments compatible.</p>
+</section>
+<section id="treat-model-files-as-trusted-code" class="level2">
+<h2 class="anchored" data-anchor-id="treat-model-files-as-trusted-code">Treat model files as trusted code</h2>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Never load an untrusted <code>.joblib</code>, <code>.pkl</code>, or other pickle-based file. Loading can execute arbitrary code embedded in the serialized object. Only load artifacts created by a trusted training workflow and stored in a controlled location.</p>
+</div>
+</div>
+<p>In a production workflow, access controls, artifact checksums, signed releases, or a model registry can provide stronger provenance. Those controls are outside this guide’s local example, but the trust boundary applies from the beginning.</p>
+</section>
+<section id="common-persistence-mistakes" class="level2">
+<h2 class="anchored" data-anchor-id="common-persistence-mistakes">Common persistence mistakes</h2>
+<section id="saving-only-the-classifier" class="level3">
+<h3 class="anchored" data-anchor-id="saving-only-the-classifier">Saving only the classifier</h3>
+<p>This loses the fitted scaler and breaks the relationship between training and inference. Save the complete pipeline.</p>
+</section>
+<section id="recreating-preprocessing-during-inference" class="level3">
+<h3 class="anchored" data-anchor-id="recreating-preprocessing-during-inference">Recreating preprocessing during inference</h3>
+<p>Hand-written preprocessing can drift from training logic. Call <code>predict()</code> or <code>predict_proba()</code> on the loaded pipeline and let the pipeline apply its stored transformations.</p>
+</section>
+<section id="depending-on-feature-position-without-a-contract" class="level3">
+<h3 class="anchored" data-anchor-id="depending-on-feature-position-without-a-contract">Depending on feature position without a contract</h3>
+<p>A numeric array can contain the right values in the wrong order. Store the ordered feature names and validate incoming data before prediction.</p>
+</section>
+<section id="assuming-a-probability-column" class="level3">
+<h3 class="anchored" data-anchor-id="assuming-a-probability-column">Assuming a probability column</h3>
+<p>The first or second column is not inherently malignant or benign. Resolve the column from <code>loaded_pipeline.classes_</code>.</p>
+</section>
+<section id="overwriting-an-artifact-without-changing-its-version" class="level3">
+<h3 class="anchored" data-anchor-id="overwriting-an-artifact-without-changing-its-version">Overwriting an artifact without changing its version</h3>
+<p>If model parameters, training data, preprocessing, or the feature contract changes, publish a new model version. A version should identify one reproducible model definition.</p>
+</section>
+<section id="loading-across-unverified-environments" class="level3">
+<h3 class="anchored" data-anchor-id="loading-across-unverified-environments">Loading across unverified environments</h3>
+<p>Matching filenames do not guarantee library compatibility. Record versions and rerun the verification suite after environment changes.</p>
+</section>
+</section>
+<section id="persistence-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="persistence-checklist">Persistence checklist</h2>
+<p>Before an artifact is used for inference, confirm that:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">the complete fitted pipeline was saved;</label></li>
+<li><label><input type="checkbox">the ordered feature contract is stored and validated;</label></li>
+<li><label><input type="checkbox">the class-label mapping is explicit;</label></li>
+<li><label><input type="checkbox">the model has a stable semantic version;</label></li>
+<li><label><input type="checkbox">Python and scikit-learn versions are recorded;</label></li>
+<li><label><input type="checkbox">predictions match before and after loading;</label></li>
+<li><label><input type="checkbox">probabilities match before and after loading;</label></li>
+<li><label><input type="checkbox">the fitted class order is checked; and</label></li>
+<li><label><input type="checkbox">the artifact comes from a trusted source.</label></li>
+</ul>
+</section>
+<section id="chapter-summary" class="level2">
+<h2 class="anchored" data-anchor-id="chapter-summary">Chapter summary</h2>
+<p>Model persistence is the boundary between training and operational inference. A reliable artifact preserves the complete fitted pipeline, the ordered feature contract, the class meanings, the model version, and enough environment information to diagnose compatibility problems.</p>
+<p>The round-trip verification provides concrete evidence that the saved and reloaded pipeline behaves like the fitted deployment candidate. Chapter 04 will build on this artifact by creating a reliable inference workflow that validates new records, preserves feature order, and returns structured predictions.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

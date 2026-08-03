@@ -2,9 +2,250 @@
 
 ::: {.cdi-message}
 - **ID:** MD-L02
-- **Status:** Scaffolded for chapter-by-chapter development
-- **Theme:** Select and test a deployment candidate
+- **Type:** Model development and deployment readiness
+- **Audience:** Intermediate
+- **Theme:** A trained model becomes deployable only when its complete prediction workflow is reproducible
 :::
 
-This chapter will train and evaluate the classification pipeline used throughout the guide.
+Training a model and deploying a model are related, but they are not the same task. During model development, the main question is whether a model performs well on data it has not seen. During deployment, the question becomes broader:
 
+> Can another program provide raw input values and receive a valid, reproducible prediction?
+
+This chapter develops the classification pipeline used throughout the guide. The objective is not to search for the most sophisticated algorithm. It is to establish one dependable prediction workflow that can later be saved, loaded, tested, exposed through an API, and packaged in a container.
+
+## Learning objectives
+
+By the end of this chapter, you should be able to:
+
+- distinguish a fitted estimator from a deployable prediction pipeline;
+- define the input and output contract of a model;
+- prevent preprocessing leakage by fitting transformations inside a pipeline;
+- evaluate a deployment candidate on untouched test data;
+- select metrics that reflect the model's intended use; and
+- identify the artifacts and evidence required before deployment.
+
+## The development-to-deployment transition
+
+A notebook result is not yet a deployed model. Deployment requires the modelling logic to move through a sequence of increasingly strict boundaries.
+
+```{mermaid}
+flowchart TD
+    A[Raw input data] --> B[Validated feature table]
+    B --> C[Preprocessing and model pipeline]
+    C --> D[Evaluation on held-out data]
+    D --> E[Saved model artifact]
+    E --> F[Prediction service]
+    F --> G[Tests and monitoring]
+```
+
+Each boundary introduces a responsibility. The training code must preserve feature definitions. The saved artifact must reproduce the fitted transformations. The service must reject invalid requests. Tests must confirm that predictions remain stable as the surrounding software changes.
+
+This guide therefore treats deployment as a continuation of reproducible model development, not as an export step added at the end.
+
+## The running example
+
+The guide uses the breast cancer diagnostic dataset included with scikit-learn. The task is binary classification: predict whether a tumour is **malignant** or **benign** from measurements derived from a digitized image of a breast mass.
+
+The dataset is useful for teaching deployment because it is:
+
+- bundled with scikit-learn and available without a separate download;
+- small enough to train quickly;
+- entirely numeric, which keeps the first API contract understandable; and
+- realistic enough to demonstrate probability estimates, class imbalance, and careful interpretation.
+
+To keep future prediction requests concise, the guide uses eight explicitly named measurements rather than all available columns.
+
+```python
+FEATURES = [
+    "mean radius",
+    "mean texture",
+    "mean perimeter",
+    "mean area",
+    "mean smoothness",
+    "mean compactness",
+    "mean concavity",
+    "mean concave points",
+]
+```
+
+::: {.callout-warning}
+This dataset supports workflow instruction, not clinical decision-making. A teaching model trained on a public benchmark must not be interpreted as a validated medical device or used to guide patient care.
+:::
+
+## Define the prediction contract first
+
+A deployment contract specifies what the model accepts and what it returns. Writing this contract before training helps expose assumptions that may otherwise remain hidden in a notebook.
+
+For this guide, one prediction request will contain eight numeric measurements with the exact feature names listed above. The eventual service will return:
+
+- the predicted class label;
+- the probability assigned to each class; and
+- the model version used for the prediction.
+
+The first two outputs can already be produced during model evaluation. The model version will be added when the trained pipeline is saved in the next chapter.
+
+Feature names are part of the contract. Their spelling, meaning, units, and expected ranges must remain consistent between training and prediction. A model can execute successfully and still produce an invalid result when these semantics change.
+
+## Separate training data from evaluation data
+
+The test set represents data that the final candidate has not seen during fitting. It must be separated before estimating preprocessing parameters or fitting the classifier.
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    stratify=y,
+    random_state=42,
+)
+```
+
+The arguments have deliberate roles:
+
+- `test_size=0.20` reserves 20% of observations for final evaluation;
+- `stratify=y` preserves the class proportions in both subsets; and
+- `random_state=42` makes the split reproducible.
+
+The test set should not guide repeated model or threshold changes. If extensive comparison is required, use cross-validation within the training data and evaluate the selected candidate on the test set once.
+
+## Keep preprocessing with the model
+
+Logistic regression is sensitive to feature scale. Standardization is therefore part of the prediction workflow, not merely a temporary training convenience.
+
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+pipeline = Pipeline(
+    steps=[
+        ("scale", StandardScaler()),
+        (
+            "classifier",
+            LogisticRegression(
+                max_iter=1000,
+                random_state=42,
+            ),
+        ),
+    ]
+)
+
+pipeline.fit(X_train, y_train)
+```
+
+The scaler is fitted only from `X_train`. At prediction time, the same fitted scaler transforms incoming values before the classifier receives them. Keeping both steps in one pipeline prevents three common errors:
+
+- fitting preprocessing on the full dataset and leaking test information;
+- applying different transformations during training and prediction; and
+- saving the classifier while forgetting the fitted preprocessing object.
+
+From this point forward, the pipeline—not the logistic regression estimator by itself—is the deployment candidate.
+
+## Evaluate the candidate
+
+Accuracy alone can hide important errors. This chapter records several complementary metrics:
+
+| Metric | Question it answers |
+|---|---|
+| Accuracy | What proportion of all predictions is correct? |
+| Precision | When the model predicts the positive class, how often is it correct? |
+| Recall | What proportion of positive cases does the model identify? |
+| F1 score | How well does the model balance precision and recall? |
+| ROC AUC | How well does the model rank the two classes across thresholds? |
+
+In the scikit-learn dataset, target value `0` means malignant and `1` means benign. The training script defines malignant as the operational positive class when calculating precision, recall, and F1. Making that choice explicit prevents a technically correct metric from answering the wrong question.
+
+```python
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    roc_auc_score,
+)
+
+y_pred = pipeline.predict(X_test)
+y_probability_malignant = pipeline.predict_proba(X_test)[:, 0]
+
+metrics = {
+    "accuracy": accuracy_score(y_test, y_pred),
+    "precision_malignant": precision_score(y_test, y_pred, pos_label=0),
+    "recall_malignant": recall_score(y_test, y_pred, pos_label=0),
+    "f1_malignant": f1_score(y_test, y_pred, pos_label=0),
+    "roc_auc_malignant": roc_auc_score(
+        (y_test == 0).astype(int),
+        y_probability_malignant,
+    ),
+}
+```
+
+The code uses probability column `0` because `pipeline.classes_` follows the encoded class order `[0, 1]`. Never assume a probability column represents a particular class without checking `classes_`.
+
+## Run the complete training program
+
+The short examples above explain individual decisions. The executable workflow belongs in a chapter-prefixed Python script:
+
+```bash
+python scripts/python/02-train-deployment-candidate.py
+```
+
+The script should:
+
+1. load the bundled dataset;
+2. select and validate the eight features;
+3. create the stratified train-test split;
+4. fit the complete pipeline;
+5. calculate and print evaluation metrics; and
+6. write the metrics to `results/metrics/02-deployment-candidate-metrics.csv`.
+
+The model is intentionally not saved in this chapter. Chapter @sec-saving-and-loading-model-pipelines will introduce model persistence, metadata, and safe loading as distinct deployment responsibilities.
+
+## Decide whether the model is ready to package
+
+A strong score does not automatically make a model deployable. Before saving the candidate, confirm that the following statements are true.
+
+### Data and features
+
+- The feature set is explicit and ordered.
+- Feature meanings and units are documented.
+- Training and test data are separated before fitting.
+- The target encoding and positive class are explicit.
+
+### Pipeline and reproducibility
+
+- All required preprocessing is inside the fitted pipeline.
+- Random operations have fixed seeds where appropriate.
+- The environment dependencies can be recreated.
+- Training can run from a script without hidden notebook state.
+
+### Evaluation and intended use
+
+- Performance is measured on untouched test data.
+- Metrics reflect the errors that matter for the intended use.
+- Known limitations are documented.
+- The model is not presented as suitable for uses it has not been validated to support.
+
+### Deployment interface
+
+- One raw request can be converted into the expected feature table.
+- `predict()` and `predict_proba()` work from the same pipeline.
+- Output class labels can be translated into meaningful names.
+- Invalid or incomplete inputs can be detected before prediction.
+
+If any item is unresolved, packaging the model only makes the unresolved assumption harder to see.
+
+## What this chapter established
+
+The deployment candidate is now a complete scikit-learn pipeline with explicit inputs, reproducible preprocessing, a binary classifier, and held-out evaluation evidence. This provides the stable modelling foundation required by the rest of the guide.
+
+The next chapter will save this fitted pipeline as a versioned artifact, load it in a separate process, and verify that its predictions remain consistent.
+
+## Key takeaways
+
+- Deployment begins by defining a stable input and output contract.
+- The fitted preprocessing and estimator must travel together.
+- Test data must remain outside every fitting step.
+- Metric definitions must state which class is treated as positive.
+- A reproducible training script is the bridge between experimentation and a deployable artifact.

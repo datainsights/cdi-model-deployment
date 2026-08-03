@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -70,6 +105,10 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<meta name="mermaid-theme" content="forest">
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="assets/css/cdi.css">
@@ -246,8 +285,30 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives">Learning objectives</a></li>
+  <li><a href="#the-development-to-deployment-transition" id="toc-the-development-to-deployment-transition" class="nav-link" data-scroll-target="#the-development-to-deployment-transition">The development-to-deployment transition</a></li>
+  <li><a href="#the-running-example" id="toc-the-running-example" class="nav-link" data-scroll-target="#the-running-example">The running example</a></li>
+  <li><a href="#define-the-prediction-contract-first" id="toc-define-the-prediction-contract-first" class="nav-link" data-scroll-target="#define-the-prediction-contract-first">Define the prediction contract first</a></li>
+  <li><a href="#separate-training-data-from-evaluation-data" id="toc-separate-training-data-from-evaluation-data" class="nav-link" data-scroll-target="#separate-training-data-from-evaluation-data">Separate training data from evaluation data</a></li>
+  <li><a href="#keep-preprocessing-with-the-model" id="toc-keep-preprocessing-with-the-model" class="nav-link" data-scroll-target="#keep-preprocessing-with-the-model">Keep preprocessing with the model</a></li>
+  <li><a href="#evaluate-the-candidate" id="toc-evaluate-the-candidate" class="nav-link" data-scroll-target="#evaluate-the-candidate">Evaluate the candidate</a></li>
+  <li><a href="#run-the-complete-training-program" id="toc-run-the-complete-training-program" class="nav-link" data-scroll-target="#run-the-complete-training-program">Run the complete training program</a></li>
+  <li><a href="#decide-whether-the-model-is-ready-to-package" id="toc-decide-whether-the-model-is-ready-to-package" class="nav-link" data-scroll-target="#decide-whether-the-model-is-ready-to-package">Decide whether the model is ready to package</a>
+  <ul class="collapse">
+  <li><a href="#data-and-features" id="toc-data-and-features" class="nav-link" data-scroll-target="#data-and-features">Data and features</a></li>
+  <li><a href="#pipeline-and-reproducibility" id="toc-pipeline-and-reproducibility" class="nav-link" data-scroll-target="#pipeline-and-reproducibility">Pipeline and reproducibility</a></li>
+  <li><a href="#evaluation-and-intended-use" id="toc-evaluation-and-intended-use" class="nav-link" data-scroll-target="#evaluation-and-intended-use">Evaluation and intended use</a></li>
+  <li><a href="#deployment-interface" id="toc-deployment-interface" class="nav-link" data-scroll-target="#deployment-interface">Deployment interface</a></li>
+  </ul></li>
+  <li><a href="#what-this-chapter-established" id="toc-what-this-chapter-established" class="nav-link" data-scroll-target="#what-this-chapter-established">What this chapter established</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key takeaways</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -280,13 +341,292 @@ ul.task-list li input[type="checkbox"] {
 <div class="cdi-message">
 <ul>
 <li><strong>ID:</strong> MD-L02</li>
-<li><strong>Status:</strong> Scaffolded for chapter-by-chapter development</li>
-<li><strong>Theme:</strong> Select and test a deployment candidate</li>
+<li><strong>Type:</strong> Model development and deployment readiness</li>
+<li><strong>Audience:</strong> Intermediate</li>
+<li><strong>Theme:</strong> A trained model becomes deployable only when its complete prediction workflow is reproducible</li>
 </ul>
 </div>
-<p>This chapter will train and evaluate the classification pipeline used throughout the guide.</p>
+<p>Training a model and deploying a model are related, but they are not the same task. During model development, the main question is whether a model performs well on data it has not seen. During deployment, the question becomes broader:</p>
+<blockquote class="blockquote">
+<p>Can another program provide raw input values and receive a valid, reproducible prediction?</p>
+</blockquote>
+<p>This chapter develops the classification pipeline used throughout the guide. The objective is not to search for the most sophisticated algorithm. It is to establish one dependable prediction workflow that can later be saved, loaded, tested, exposed through an API, and packaged in a container.</p>
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning objectives</h2>
+<p>By the end of this chapter, you should be able to:</p>
+<ul>
+<li>distinguish a fitted estimator from a deployable prediction pipeline;</li>
+<li>define the input and output contract of a model;</li>
+<li>prevent preprocessing leakage by fitting transformations inside a pipeline;</li>
+<li>evaluate a deployment candidate on untouched test data;</li>
+<li>select metrics that reflect the model’s intended use; and</li>
+<li>identify the artifacts and evidence required before deployment.</li>
+</ul>
+</section>
+<section id="the-development-to-deployment-transition" class="level2">
+<h2 class="anchored" data-anchor-id="the-development-to-deployment-transition">The development-to-deployment transition</h2>
+<p>A notebook result is not yet a deployed model. Deployment requires the modelling logic to move through a sequence of increasingly strict boundaries.</p>
+<div class="cell" data-layout-align="default">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>flowchart TD</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    A[Raw input data] --&gt; B[Validated feature table]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    B --&gt; C[Preprocessing and model pipeline]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    C --&gt; D[Evaluation on held-out data]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    D --&gt; E[Saved model artifact]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    E --&gt; F[Prediction service]</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    F --&gt; G[Tests and monitoring]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A[Raw input data] --&gt; B[Validated feature table]
+    B --&gt; C[Preprocessing and model pipeline]
+    C --&gt; D[Evaluation on held-out data]
+    D --&gt; E[Saved model artifact]
+    E --&gt; F[Prediction service]
+    F --&gt; G[Tests and monitoring]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>Each boundary introduces a responsibility. The training code must preserve feature definitions. The saved artifact must reproduce the fitted transformations. The service must reject invalid requests. Tests must confirm that predictions remain stable as the surrounding software changes.</p>
+<p>This guide therefore treats deployment as a continuation of reproducible model development, not as an export step added at the end.</p>
+</section>
+<section id="the-running-example" class="level2">
+<h2 class="anchored" data-anchor-id="the-running-example">The running example</h2>
+<p>The guide uses the breast cancer diagnostic dataset included with scikit-learn. The task is binary classification: predict whether a tumour is <strong>malignant</strong> or <strong>benign</strong> from measurements derived from a digitized image of a breast mass.</p>
+<p>The dataset is useful for teaching deployment because it is:</p>
+<ul>
+<li>bundled with scikit-learn and available without a separate download;</li>
+<li>small enough to train quickly;</li>
+<li>entirely numeric, which keeps the first API contract understandable; and</li>
+<li>realistic enough to demonstrate probability estimates, class imbalance, and careful interpretation.</li>
+</ul>
+<p>To keep future prediction requests concise, the guide uses eight explicitly named measurements rather than all available columns.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>FEATURES <span class="op">=</span> [</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean radius"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean texture"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean perimeter"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean area"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean smoothness"</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean compactness"</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean concavity"</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mean concave points"</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This dataset supports workflow instruction, not clinical decision-making. A teaching model trained on a public benchmark must not be interpreted as a validated medical device or used to guide patient care.</p>
+</div>
+</div>
+</section>
+<section id="define-the-prediction-contract-first" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-prediction-contract-first">Define the prediction contract first</h2>
+<p>A deployment contract specifies what the model accepts and what it returns. Writing this contract before training helps expose assumptions that may otherwise remain hidden in a notebook.</p>
+<p>For this guide, one prediction request will contain eight numeric measurements with the exact feature names listed above. The eventual service will return:</p>
+<ul>
+<li>the predicted class label;</li>
+<li>the probability assigned to each class; and</li>
+<li>the model version used for the prediction.</li>
+</ul>
+<p>The first two outputs can already be produced during model evaluation. The model version will be added when the trained pipeline is saved in the next chapter.</p>
+<p>Feature names are part of the contract. Their spelling, meaning, units, and expected ranges must remain consistent between training and prediction. A model can execute successfully and still produce an invalid result when these semantics change.</p>
+</section>
+<section id="separate-training-data-from-evaluation-data" class="level2">
+<h2 class="anchored" data-anchor-id="separate-training-data-from-evaluation-data">Separate training data from evaluation data</h2>
+<p>The test set represents data that the final candidate has not seen during fitting. It must be separated before estimating preprocessing parameters or fitting the classifier.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    X,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    y,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    test_size<span class="op">=</span><span class="fl">0.20</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    stratify<span class="op">=</span>y,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The arguments have deliberate roles:</p>
+<ul>
+<li><code>test_size=0.20</code> reserves 20% of observations for final evaluation;</li>
+<li><code>stratify=y</code> preserves the class proportions in both subsets; and</li>
+<li><code>random_state=42</code> makes the split reproducible.</li>
+</ul>
+<p>The test set should not guide repeated model or threshold changes. If extensive comparison is required, use cross-validation within the training data and evaluate the selected candidate on the test set once.</p>
+</section>
+<section id="keep-preprocessing-with-the-model" class="level2">
+<h2 class="anchored" data-anchor-id="keep-preprocessing-with-the-model">Keep preprocessing with the model</h2>
+<p>Logistic regression is sensitive to feature scale. Standardization is therefore part of the prediction workflow, not merely a temporary training convenience.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.pipeline <span class="im">import</span> Pipeline</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>pipeline <span class="op">=</span> Pipeline(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    steps<span class="op">=</span>[</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        (<span class="st">"scale"</span>, StandardScaler()),</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        (</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">"classifier"</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>            LogisticRegression(</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                max_iter<span class="op">=</span><span class="dv">1000</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            ),</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>pipeline.fit(X_train, y_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The scaler is fitted only from <code>X_train</code>. At prediction time, the same fitted scaler transforms incoming values before the classifier receives them. Keeping both steps in one pipeline prevents three common errors:</p>
+<ul>
+<li>fitting preprocessing on the full dataset and leaking test information;</li>
+<li>applying different transformations during training and prediction; and</li>
+<li>saving the classifier while forgetting the fitted preprocessing object.</li>
+</ul>
+<p>From this point forward, the pipeline—not the logistic regression estimator by itself—is the deployment candidate.</p>
+</section>
+<section id="evaluate-the-candidate" class="level2">
+<h2 class="anchored" data-anchor-id="evaluate-the-candidate">Evaluate the candidate</h2>
+<p>Accuracy alone can hide important errors. This chapter records several complementary metrics:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Question it answers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Accuracy</td>
+<td>What proportion of all predictions is correct?</td>
+</tr>
+<tr class="even">
+<td>Precision</td>
+<td>When the model predicts the positive class, how often is it correct?</td>
+</tr>
+<tr class="odd">
+<td>Recall</td>
+<td>What proportion of positive cases does the model identify?</td>
+</tr>
+<tr class="even">
+<td>F1 score</td>
+<td>How well does the model balance precision and recall?</td>
+</tr>
+<tr class="odd">
+<td>ROC AUC</td>
+<td>How well does the model rank the two classes across thresholds?</td>
+</tr>
+</tbody>
+</table>
+<p>In the scikit-learn dataset, target value <code>0</code> means malignant and <code>1</code> means benign. The training script defines malignant as the operational positive class when calculating precision, recall, and F1. Making that choice explicit prevents a technically correct metric from answering the wrong question.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> (</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    accuracy_score,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    precision_score,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    recall_score,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    f1_score,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    roc_auc_score,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> pipeline.predict(X_test)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>y_probability_malignant <span class="op">=</span> pipeline.predict_proba(X_test)[:, <span class="dv">0</span>]</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">=</span> {</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"accuracy"</span>: accuracy_score(y_test, y_pred),</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"precision_malignant"</span>: precision_score(y_test, y_pred, pos_label<span class="op">=</span><span class="dv">0</span>),</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"recall_malignant"</span>: recall_score(y_test, y_pred, pos_label<span class="op">=</span><span class="dv">0</span>),</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"f1_malignant"</span>: f1_score(y_test, y_pred, pos_label<span class="op">=</span><span class="dv">0</span>),</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"roc_auc_malignant"</span>: roc_auc_score(</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        (y_test <span class="op">==</span> <span class="dv">0</span>).astype(<span class="bu">int</span>),</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        y_probability_malignant,</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The code uses probability column <code>0</code> because <code>pipeline.classes_</code> follows the encoded class order <code>[0, 1]</code>. Never assume a probability column represents a particular class without checking <code>classes_</code>.</p>
+</section>
+<section id="run-the-complete-training-program" class="level2">
+<h2 class="anchored" data-anchor-id="run-the-complete-training-program">Run the complete training program</h2>
+<p>The short examples above explain individual decisions. The executable workflow belongs in a chapter-prefixed Python script:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/python/02-train-deployment-candidate.py</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The script should:</p>
+<ol type="1">
+<li>load the bundled dataset;</li>
+<li>select and validate the eight features;</li>
+<li>create the stratified train-test split;</li>
+<li>fit the complete pipeline;</li>
+<li>calculate and print evaluation metrics; and</li>
+<li>write the metrics to <code>results/metrics/02-deployment-candidate-metrics.csv</code>.</li>
+</ol>
+<p>The model is intentionally not saved in this chapter. Chapter <a href="03-saving-and-loading-model-pipelines.html" class="quarto-xref"><span>Saving and Loading Model Pipelines</span></a> will introduce model persistence, metadata, and safe loading as distinct deployment responsibilities.</p>
+</section>
+<section id="decide-whether-the-model-is-ready-to-package" class="level2">
+<h2 class="anchored" data-anchor-id="decide-whether-the-model-is-ready-to-package">Decide whether the model is ready to package</h2>
+<p>A strong score does not automatically make a model deployable. Before saving the candidate, confirm that the following statements are true.</p>
+<section id="data-and-features" class="level3">
+<h3 class="anchored" data-anchor-id="data-and-features">Data and features</h3>
+<ul>
+<li>The feature set is explicit and ordered.</li>
+<li>Feature meanings and units are documented.</li>
+<li>Training and test data are separated before fitting.</li>
+<li>The target encoding and positive class are explicit.</li>
+</ul>
+</section>
+<section id="pipeline-and-reproducibility" class="level3">
+<h3 class="anchored" data-anchor-id="pipeline-and-reproducibility">Pipeline and reproducibility</h3>
+<ul>
+<li>All required preprocessing is inside the fitted pipeline.</li>
+<li>Random operations have fixed seeds where appropriate.</li>
+<li>The environment dependencies can be recreated.</li>
+<li>Training can run from a script without hidden notebook state.</li>
+</ul>
+</section>
+<section id="evaluation-and-intended-use" class="level3">
+<h3 class="anchored" data-anchor-id="evaluation-and-intended-use">Evaluation and intended use</h3>
+<ul>
+<li>Performance is measured on untouched test data.</li>
+<li>Metrics reflect the errors that matter for the intended use.</li>
+<li>Known limitations are documented.</li>
+<li>The model is not presented as suitable for uses it has not been validated to support.</li>
+</ul>
+</section>
+<section id="deployment-interface" class="level3">
+<h3 class="anchored" data-anchor-id="deployment-interface">Deployment interface</h3>
+<ul>
+<li>One raw request can be converted into the expected feature table.</li>
+<li><code>predict()</code> and <code>predict_proba()</code> work from the same pipeline.</li>
+<li>Output class labels can be translated into meaningful names.</li>
+<li>Invalid or incomplete inputs can be detected before prediction.</li>
+</ul>
+<p>If any item is unresolved, packaging the model only makes the unresolved assumption harder to see.</p>
+</section>
+</section>
+<section id="what-this-chapter-established" class="level2">
+<h2 class="anchored" data-anchor-id="what-this-chapter-established">What this chapter established</h2>
+<p>The deployment candidate is now a complete scikit-learn pipeline with explicit inputs, reproducible preprocessing, a binary classifier, and held-out evaluation evidence. This provides the stable modelling foundation required by the rest of the guide.</p>
+<p>The next chapter will save this fitted pipeline as a versioned artifact, load it in a separate process, and verify that its predictions remain consistent.</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Key takeaways</h2>
+<ul>
+<li>Deployment begins by defining a stable input and output contract.</li>
+<li>The fitted preprocessing and estimator must travel together.</li>
+<li>Test data must remain outside every fitting step.</li>
+<li>Metric definitions must state which class is treated as positive.</li>
+<li>A reproducible training script is the bridge between experimentation and a deployable artifact.</li>
+</ul>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

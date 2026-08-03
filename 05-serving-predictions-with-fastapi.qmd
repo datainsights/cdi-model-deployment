@@ -2,9 +2,522 @@
 
 ::: {.cdi-message}
 - **ID:** MD-L05
-- **Status:** Scaffolded for chapter-by-chapter development
-- **Theme:** Expose the inference contract through an API
+- **Type:** Applied deployment
+- **Audience:** Intermediate
+- **Theme:** Expose a tested inference contract through an API
 :::
 
-This chapter will expose health and prediction endpoints with FastAPI and Pydantic.
+A saved model is useful only when another program can send it data and receive a dependable prediction. In this chapter, you will place the inference workflow from @sec-building-a-reliable-inference-workflow behind a small HTTP API built with FastAPI.
 
+The objective is not merely to make the model reachable. The API must preserve the same input rules, preprocessing steps, output meanings, and failure behaviour that were tested before deployment.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+- explain the role of an API in a model-serving system;
+- define validated request and response models with Pydantic;
+- load a saved pipeline once when a FastAPI application starts;
+- expose health and prediction endpoints;
+- send prediction requests from the command line and Python;
+- distinguish client validation errors from server-side inference failures; and
+- test the API without opening a network connection.
+
+## From an inference function to a service
+
+Chapter 04 established a reliable inference boundary:
+
+```text
+raw request -> validation -> tabular input -> saved pipeline -> prediction -> structured output
+```
+
+FastAPI adds an HTTP layer around that boundary. A client sends JSON to a URL, the application validates it, and the inference function returns a JSON response.
+
+The application should remain thin. It should not reproduce preprocessing logic already stored in the fitted scikit-learn pipeline. Duplicating transformations in the API would create a second implementation that could drift away from training.
+
+FastAPI uses Python type annotations and Pydantic models to validate request data and generate an OpenAPI description of the service [@fastapi2026]. Response models also document and validate the data returned to clients [@fastapiResponseModel2026].
+
+## The API contract
+
+An API contract specifies what a client may send and what the service promises to return. For this guide, the service exposes two endpoints.
+
+| Method | Path | Purpose | Successful response |
+|---|---|---|---|
+| `GET` | `/health` | Confirm that the application and model are ready | Service status and model identifier |
+| `POST` | `/predict` | Validate one observation and generate a prediction | Predicted class and probability |
+
+The health endpoint is operational: monitoring systems can call it without making a prediction. The prediction endpoint is analytical: it implements the inference contract.
+
+::: {.callout-important}
+The field names and types in the request model must match the model developed earlier in this guide. Do not rename fields at the API boundary unless an explicit mapping is part of the tested inference workflow.
+:::
+
+## Define request and response schemas
+
+Pydantic models turn the informal input description into executable validation rules. The following pattern uses constrained fields, rejects unexpected inputs, and includes an example for the generated API documentation.
+
+```python
+from typing import Literal
+
+import pandas as pd
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class PredictionRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "examples": [
+                {
+                    "mean_radius": 17.99,
+                    "mean_texture": 10.38,
+                    "mean_perimeter": 122.8,
+                    "mean_area": 1001.0,
+                    "mean_smoothness": 0.1184,
+                    "mean_compactness": 0.2776,
+                    "mean_concavity": 0.3001,
+                    "mean_concave_points": 0.1471,
+                }
+            ]
+        },
+    )
+
+    mean_radius: float = Field(gt=0)
+    mean_texture: float = Field(ge=0)
+    mean_perimeter: float = Field(gt=0)
+    mean_area: float = Field(gt=0)
+    mean_smoothness: float = Field(ge=0)
+    mean_compactness: float = Field(ge=0)
+    mean_concavity: float = Field(ge=0)
+    mean_concave_points: float = Field(ge=0)
+
+    def to_model_frame(self) -> pd.DataFrame:
+        values = self.model_dump()
+        mapping = {
+            "mean_radius": "mean radius",
+            "mean_texture": "mean texture",
+            "mean_perimeter": "mean perimeter",
+            "mean_area": "mean area",
+            "mean_smoothness": "mean smoothness",
+            "mean_compactness": "mean compactness",
+            "mean_concavity": "mean concavity",
+            "mean_concave_points": "mean concave points",
+        }
+        row = {model_name: values[api_name]
+               for api_name, model_name in mapping.items()}
+        return pd.DataFrame([row], columns=list(mapping.values()))
+
+
+class PredictionResponse(BaseModel):
+    prediction: int
+    label: Literal["malignant", "benign"]
+    probability_malignant: float = Field(ge=0.0, le=1.0)
+    model_version: str
+
+
+class HealthResponse(BaseModel):
+    status: Literal["ready"]
+    model_version: str
+```
+
+These are the eight features selected in Chapters 02–04. The public API uses JSON-friendly snake-case names and maps them explicitly to the artifact names, such as `mean_radius` to `mean radius`. Pydantic's `Field` supports numeric constraints and schema metadata, while `extra="forbid"` prevents misspelled or unknown fields from being silently ignored [@pydanticFields2026].
+
+Request validation protects the interface, but it does not prove that an input is meaningful in the real world. For example, an income of zero may be syntactically valid while still requiring business review. Semantic and distributional checks belong in the inference contract and monitoring design.
+
+## Build the FastAPI application
+
+Create the executable application as:
+
+```text
+scripts/python/05-serving-predictions-api.py
+```
+
+The complete application should contain four responsibilities:
+
+1. locate and load the model artifact;
+2. retain the loaded model in application state;
+3. define typed HTTP endpoints; and
+4. translate expected inference failures into appropriate HTTP responses.
+
+The central pattern is shown below.
+
+```python
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+import joblib
+import pandas as pd
+from fastapi import FastAPI, HTTPException, Request
+
+
+MODEL_PATH = Path("models/03-breast-cancer-pipeline.joblib")
+POSITIVE_CLASS = 0
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    artifact = joblib.load(MODEL_PATH)
+    app.state.model = artifact["pipeline"]
+    app.state.model_version = artifact["model_version"]
+    app.state.target_names = artifact["target_names"]
+    yield
+    app.state.model = None
+
+
+app = FastAPI(
+    title="CDI Prediction API",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+
+@app.get("/health", response_model=HealthResponse)
+def health(request: Request) -> HealthResponse:
+    if request.app.state.model is None:
+        raise HTTPException(status_code=503, detail="Model is not ready")
+
+    return HealthResponse(status="ready", model_version=request.app.state.model_version)
+
+
+@app.post("/predict", response_model=PredictionResponse)
+def predict(payload: PredictionRequest, request: Request) -> PredictionResponse:
+    model = request.app.state.model
+    frame = payload.to_model_frame()
+
+    try:
+        predicted_class = int(model.predict(frame)[0])
+        positive_index = list(model.classes_).index(POSITIVE_CLASS)
+        probability = float(model.predict_proba(frame)[0, positive_index])
+        label = request.app.state.target_names[predicted_class]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=422,
+            detail="Input could not be processed by the model",
+        ) from exc
+
+    return PredictionResponse(
+        prediction=predicted_class,
+        label=label,
+        probability_malignant=probability,
+        model_version=request.app.state.model_version,
+    )
+```
+
+FastAPI recommends the application `lifespan` context for startup and shutdown logic [@fastapiLifespan2026]. Loading the artifact before `yield` has two important consequences:
+
+- the service fails during startup if the model cannot be loaded; and
+- the model is reused across requests instead of being read from disk for every prediction.
+
+Loading once reduces avoidable latency. It also makes readiness honest: the application should not report `ready` until the artifact is available.
+
+::: {.callout-note}
+The model path and version should ultimately come from configuration or artifact metadata. They are constants here so the serving boundary remains easy to inspect. Chapter 07 will separate configuration from application code.
+:::
+
+## Preserve the fitted pipeline
+
+The request is converted to a one-row `pandas.DataFrame` before prediction. The executable `to_model_frame()` method produces the exact eight Chapter 03 columns, in their saved order: `mean radius`, `mean texture`, `mean perimeter`, `mean area`, `mean smoothness`, `mean compactness`, `mean concavity`, and `mean concave points`.
+
+Do not extract numeric values into an unnamed list:
+
+```python
+# Fragile: column names and ordering are implicit.
+values = [[payload.mean_radius, payload.mean_texture,
+           payload.mean_perimeter, payload.mean_area]]
+prediction = model.predict(values)
+```
+
+This approach makes feature order part of undocumented application code. A named DataFrame keeps the contract visible and allows the pipeline's column-based preprocessing to work as designed.
+
+The API should also call the saved pipeline directly. It should not manually standardize numeric variables, encode categories, or fill missing values. Those transformations belong inside the fitted pipeline saved in @sec-saving-and-loading-model-pipelines.
+
+## Choose output meanings carefully
+
+For this classifier, class `0` means malignant and class `1` means benign. Malignant is the operational positive class established in Chapter 02, so the API returns an explicitly named `probability_malignant`. A fixed probability column is fragile:
+
+```python
+probability = float(model.predict_proba(frame)[0, 0])  # fragile
+```
+
+That assumption must be verified against `model.classes_`. A safer implementation finds the probability column explicitly:
+
+```python
+positive_class = 0
+classes = list(model.classes_)
+positive_index = classes.index(positive_class)
+probability = float(model.predict_proba(frame)[0, positive_index])
+```
+
+If the estimator does not implement `predict_proba()`, return only outputs the model genuinely supports or use a separately validated score. Do not label an arbitrary decision score as a probability.
+
+The response includes `model_version` so predictions can be traced to a deployed artifact. In a larger system, the response or internal logs may also carry a request identifier, deployment version, and inference timestamp. Avoid returning internal filesystem paths, stack traces, or sensitive feature values.
+
+## Run the API locally
+
+Activate the repository-specific environment and start the development server from the repository root:
+
+```bash
+source .venv/bin/activate
+fastapi dev scripts/python/05-serving-predictions-api.py
+```
+
+The development server reloads when source files change. It is intended for local development, not as the final production process.
+
+Once the server starts, open:
+
+- `http://127.0.0.1:8000/docs` for Swagger UI;
+- `http://127.0.0.1:8000/redoc` for ReDoc; and
+- `http://127.0.0.1:8000/openapi.json` for the machine-readable OpenAPI schema.
+
+The interactive documentation is generated from the route definitions, request models, and response models. It is a useful inspection surface, but it does not replace automated tests.
+
+## Call the endpoints
+
+### Check readiness
+
+```bash
+curl --fail --silent http://127.0.0.1:8000/health
+```
+
+A successful response should resemble:
+
+```json
+{
+  "status": "ready",
+  "model_version": "breast-cancer-logistic-v1"
+}
+```
+
+### Request a prediction
+
+```bash
+curl --fail --silent \
+  --request POST \
+  --url http://127.0.0.1:8000/predict \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "mean_radius": 17.99,
+    "mean_texture": 10.38,
+    "mean_perimeter": 122.8,
+    "mean_area": 1001.0,
+    "mean_smoothness": 0.1184,
+    "mean_compactness": 0.2776,
+    "mean_concavity": 0.3001,
+    "mean_concave_points": 0.1471
+  }'
+```
+
+A successful response has a stable shape:
+
+```json
+{
+  "prediction": 0,
+  "label": "malignant",
+  "probability_malignant": 0.98,
+  "model_version": "breast-cancer-logistic-v1"
+}
+```
+
+The values are illustrative. The important property is that the response fields and their meanings remain stable.
+
+### Call the service from Python
+
+```python
+import httpx
+
+
+payload = {
+    "mean_radius": 17.99,
+    "mean_texture": 10.38,
+    "mean_perimeter": 122.8,
+    "mean_area": 1001.0,
+    "mean_smoothness": 0.1184,
+    "mean_compactness": 0.2776,
+    "mean_concavity": 0.3001,
+    "mean_concave_points": 0.1471,
+}
+
+response = httpx.post(
+    "http://127.0.0.1:8000/predict",
+    json=payload,
+    timeout=10.0,
+)
+response.raise_for_status()
+
+result = response.json()
+print(result)
+```
+
+An explicit timeout prevents a client from waiting indefinitely. Production clients may also need bounded retries, but automatic retries must be designed carefully to avoid amplifying failures.
+
+## Understand validation and HTTP errors
+
+FastAPI distinguishes errors raised while validating client input from errors that occur inside the service.
+
+| Situation | Typical status | Meaning |
+|---|---:|---|
+| Valid request and successful inference | `200` | Prediction returned |
+| Missing, malformed, or disallowed field | `422` | Request does not satisfy the schema |
+| Valid JSON that violates an inference rule | `422` | Input cannot be processed under the contract |
+| Model not loaded or temporarily unavailable | `503` | Service is not ready |
+| Unexpected application defect | `500` | Server failed unexpectedly |
+
+Do not catch every exception and return `200` with an error message. Clients and monitoring tools depend on HTTP status codes to distinguish success from failure. Likewise, avoid exposing raw exception text because it may reveal implementation details.
+
+Try an invalid request:
+
+```bash
+curl --silent \
+  --request POST \
+  --url http://127.0.0.1:8000/predict \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "mean_radius": -4,
+    "mean_texture": 10.38,
+    "mean_perimeter": 122.8,
+    "mean_area": 1001.0,
+    "mean_smoothness": 0.1184,
+    "mean_compactness": 0.2776,
+    "mean_concavity": 0.3001,
+    "mean_concave_points": 0.1471
+  }'
+```
+
+The framework should reject the request before the endpoint calls the model. That is a valuable boundary: invalid input does not enter the inference workflow.
+
+## Test without starting a server
+
+FastAPI's `TestClient` exercises the application directly without opening an HTTP socket [@fastapiTesting2026]. Because the model loads in the lifespan context, use `TestClient` as a context manager so startup and shutdown logic runs during the test [@fastapiTestingLifespan2026].
+
+Create:
+
+```text
+tests/test_05_api.py
+```
+
+The essential test cases are:
+
+```python
+from fastapi.testclient import TestClient
+
+from api_import_helper import app
+
+
+def test_health_reports_ready():
+    with TestClient(app) as client:
+        response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
+
+
+def test_predict_returns_contract_fields(valid_payload):
+    with TestClient(app) as client:
+        response = client.post("/predict", json=valid_payload)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert set(body) == {
+        "prediction", "label", "probability_malignant", "model_version"
+    }
+    assert 0.0 <= body["probability_malignant"] <= 1.0
+
+
+def test_predict_rejects_missing_feature(valid_payload):
+    invalid_payload = valid_payload.copy()
+    invalid_payload.pop("mean_area")
+
+    with TestClient(app) as client:
+        response = client.post("/predict", json=invalid_payload)
+
+    assert response.status_code == 422
+
+
+def test_predict_rejects_unknown_field(valid_payload):
+    invalid_payload = valid_payload | {"unexpected": 1}
+
+    with TestClient(app) as client:
+        response = client.post("/predict", json=invalid_payload)
+
+    assert response.status_code == 422
+```
+
+`api_import_helper` represents a small import adapter for the chapter-prefixed application filename. The repository's executable test suite should contain that adapter and a reusable `valid_payload` fixture. Keeping the full runnable implementation outside the `.qmd` file preserves the guide's standard: concise examples remain visible here, while executable code lives under `scripts/` and `tests/`.
+
+Run the tests from the repository root:
+
+```bash
+pytest -q tests/test_05_api.py
+```
+
+The prediction test should verify more than status `200`. It should also compare the API result with the previously tested inference function for the same observation. This parity test detects accidental differences introduced at the HTTP boundary.
+
+## Common mistakes
+
+### Loading the model inside the endpoint
+
+Reading the artifact for every request adds disk access and deserialization time to every prediction. Load it once during application startup.
+
+### Rebuilding preprocessing in the API
+
+Manual transformations duplicate the fitted pipeline and invite training-serving skew. Pass the named DataFrame to the saved pipeline.
+
+### Allowing extra fields silently
+
+A misspelled field can otherwise disappear during validation while the client assumes it was used. Reject unexpected fields unless the contract explicitly permits them.
+
+### Returning NumPy objects directly
+
+NumPy scalar types are not always JSON serializable. Convert predictions and probabilities to native Python `int` and `float` values at the response boundary.
+
+### Treating `/health` as proof of predictive quality
+
+A health check shows that the service is running and the model is loaded. It does not show that the model remains accurate, calibrated, fair, or appropriate for current data. Those questions require monitoring and evaluation.
+
+### Calling local development a deployment
+
+Serving on `127.0.0.1` confirms that the API works on one machine. A deployable service still needs dependency control, tests, configuration, logging, containerization, security, and an operating environment.
+
+## A disciplined serving workflow
+
+The chapter workflow is:
+
+1. start from the tested inference contract;
+2. define strict request and response models;
+3. load the saved pipeline during application startup;
+4. convert validated input into the expected named table;
+5. return JSON-safe, documented outputs;
+6. test success, validation failure, and readiness behaviour; and
+7. confirm parity between direct inference and API inference.
+
+This sequence keeps the HTTP layer small and makes failures easier to locate.
+
+## Chapter checkpoint
+
+You now have the conceptual and implementation structure for a prediction API with:
+
+- one model loaded at application startup;
+- a readiness endpoint;
+- a validated prediction endpoint;
+- explicit response semantics;
+- interactive OpenAPI documentation; and
+- tests that exercise the service without starting an external server.
+
+The service is locally usable, but it is not yet production-ready. The next chapter will test the API and inference behaviour more systematically before packaging and deployment.
+
+## Review questions
+
+1. Why should preprocessing remain inside the saved pipeline rather than the FastAPI endpoint?
+2. What is the difference between request validation and real-world plausibility checking?
+3. Why is a named one-row DataFrame safer than an unnamed list of values?
+4. What does the `/health` endpoint establish, and what does it not establish?
+5. Why should a prediction response include a model version?
+6. Which test would reveal a mismatch between direct inference and API inference?
+
+## Further reading
+
+- FastAPI request bodies and data validation [@fastapiRequestBody2026]
+- FastAPI response models [@fastapiResponseModel2026]
+- FastAPI lifespan events [@fastapiLifespan2026]
+- FastAPI testing with `TestClient` [@fastapiTesting2026]
+- Pydantic fields and validation metadata [@pydanticFields2026]

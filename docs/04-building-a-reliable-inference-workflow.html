@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -246,8 +281,26 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#from-training-to-inference" id="toc-from-training-to-inference" class="nav-link active" data-scroll-target="#from-training-to-inference">From training to inference</a></li>
+  <li><a href="#define-the-inference-contract" id="toc-define-the-inference-contract" class="nav-link" data-scroll-target="#define-the-inference-contract">Define the inference contract</a></li>
+  <li><a href="#a-reliable-batch-inference-sequence" id="toc-a-reliable-batch-inference-sequence" class="nav-link" data-scroll-target="#a-reliable-batch-inference-sequence">A reliable batch-inference sequence</a></li>
+  <li><a href="#validate-incoming-data" id="toc-validate-incoming-data" class="nav-link" data-scroll-target="#validate-incoming-data">Validate incoming data</a></li>
+  <li><a href="#preserve-identifiers-and-select-features" id="toc-preserve-identifiers-and-select-features" class="nav-link" data-scroll-target="#preserve-identifiers-and-select-features">Preserve identifiers and select features</a></li>
+  <li><a href="#generate-predictions-and-probabilities" id="toc-generate-predictions-and-probabilities" class="nav-link" data-scroll-target="#generate-predictions-and-probabilities">Generate predictions and probabilities</a></li>
+  <li><a href="#build-a-stable-prediction-table" id="toc-build-a-stable-prediction-table" class="nav-link" data-scroll-target="#build-a-stable-prediction-table">Build a stable prediction table</a></li>
+  <li><a href="#the-executable-inference-program" id="toc-the-executable-inference-program" class="nav-link" data-scroll-target="#the-executable-inference-program">The executable inference program</a></li>
+  <li><a href="#fail-clearly-and-safely" id="toc-fail-clearly-and-safely" class="nav-link" data-scroll-target="#fail-clearly-and-safely">Fail clearly and safely</a></li>
+  <li><a href="#record-operational-evidence" id="toc-record-operational-evidence" class="nav-link" data-scroll-target="#record-operational-evidence">Record operational evidence</a></li>
+  <li><a href="#common-failure-patterns" id="toc-common-failure-patterns" class="nav-link" data-scroll-target="#common-failure-patterns">Common failure patterns</a></li>
+  <li><a href="#test-the-workflow-before-automation" id="toc-test-the-workflow-before-automation" class="nav-link" data-scroll-target="#test-the-workflow-before-automation">Test the workflow before automation</a></li>
+  <li><a href="#chapter-checkpoint" id="toc-chapter-checkpoint" class="nav-link" data-scroll-target="#chapter-checkpoint">Chapter checkpoint</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -280,13 +333,331 @@ ul.task-list li input[type="checkbox"] {
 <div class="cdi-message">
 <ul>
 <li><strong>ID:</strong> MD-L04</li>
-<li><strong>Status:</strong> Scaffolded for chapter-by-chapter development</li>
-<li><strong>Theme:</strong> Make prediction inputs and outputs explicit</li>
+<li><strong>Type:</strong> Applied workflow</li>
+<li><strong>Audience:</strong> Intermediate</li>
+<li><strong>Theme:</strong> Make prediction inputs, transformations, and outputs explicit</li>
 </ul>
 </div>
-<p>This chapter will build a repeatable batch-inference workflow around the saved pipeline.</p>
+<p>Saving a trained pipeline is only the beginning of deployment. A useful deployment workflow must also accept new observations, verify that they match the model’s expectations, produce interpretable outputs, and preserve enough context to investigate failures later.</p>
+<p>This chapter develops a repeatable <strong>batch-inference workflow</strong> around the pipeline saved in <a href="03-saving-and-loading-model-pipelines.html" class="quarto-xref"><span>Saving and Loading Model Pipelines</span></a>. Batch inference is a practical first deployment target because it makes every stage visible: a file arrives, the program validates it, the model produces predictions, and a new file records the results.</p>
+<p>By the end of the chapter, you will be able to:</p>
+<ul>
+<li>distinguish training from inference;</li>
+<li>define an explicit input contract for new data;</li>
+<li>load a saved pipeline once and use it without refitting;</li>
+<li>preserve record identifiers while selecting model features;</li>
+<li>return predictions and probabilities in a stable output schema;</li>
+<li>detect common data and prediction failures early; and</li>
+<li>run the same inference program directly or through a Bash wrapper.</li>
+</ul>
+<section id="from-training-to-inference" class="level2">
+<h2 class="anchored" data-anchor-id="from-training-to-inference">From training to inference</h2>
+<p>Training and inference use the same fitted pipeline for different purposes.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Stage</th>
+<th>Input</th>
+<th>Pipeline behaviour</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Training</td>
+<td>Historical labelled data</td>
+<td>Learns preprocessing parameters and model parameters</td>
+<td>Saved fitted pipeline</td>
+</tr>
+<tr class="even">
+<td>Inference</td>
+<td>New unlabelled data</td>
+<td>Reuses learned parameters without fitting again</td>
+<td>Predictions and supporting metadata</td>
+</tr>
+</tbody>
+</table>
+<p>The separation is important. During inference, the program must call <code>predict()</code> or <code>predict_proba()</code> on the loaded pipeline. Calling <code>fit()</code>, <code>fit_transform()</code>, or <code>fit_predict()</code> would allow new data to change the model and would break reproducibility.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Correct: reuse the fitted pipeline.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>predictions <span class="op">=</span> pipeline.predict(features)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Incorrect: never retrain as part of ordinary inference.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>pipeline.fit(features, labels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Because preprocessing and prediction were saved together, the inference program does not need to reproduce encoding, scaling, or imputation manually. The pipeline applies the fitted transformations in the correct order.</p>
+</section>
+<section id="define-the-inference-contract" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-inference-contract">Define the inference contract</h2>
+<p>An inference contract states what the program accepts and what it returns. It should be decided before writing the prediction code.</p>
+<p>For this guide, each incoming record contains:</p>
+<ul>
+<li>a stable <code>record_id</code> used to connect the output to the source record;</li>
+<li>the feature columns expected by the saved pipeline; and</li>
+<li>no target column, because the outcome is not yet known at prediction time.</li>
+</ul>
+<p>The prediction file contains:</p>
+<ul>
+<li><code>record_id</code>;</li>
+<li><code>prediction</code>;</li>
+<li><code>prediction_probability</code>; and</li>
+<li><code>model_version</code>.</li>
+</ul>
+<p>The identifier and version are operational metadata. They are not model features. Keeping them outside the feature matrix prevents accidental leakage while making every prediction traceable.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The exact column names, meanings, units, and permitted values form part of the model interface. A CSV file is not valid merely because pandas can read it.</p>
+</div>
+</div>
+</section>
+<section id="a-reliable-batch-inference-sequence" class="level2">
+<h2 class="anchored" data-anchor-id="a-reliable-batch-inference-sequence">A reliable batch-inference sequence</h2>
+<p>A robust program follows a short, explicit sequence:</p>
+<ol type="1">
+<li>resolve and verify all file paths;</li>
+<li>load the saved pipeline and its metadata;</li>
+<li>read the incoming batch;</li>
+<li>validate identifiers, required columns, values, and row counts;</li>
+<li>isolate model features in the expected order;</li>
+<li>generate predictions and, where supported, probabilities;</li>
+<li>validate the prediction output; and</li>
+<li>write the result to a deliberate location.</li>
+</ol>
+<p>This design keeps validation close to the boundary of the system. Invalid input should fail before the model produces a plausible-looking but unreliable result.</p>
+</section>
+<section id="validate-incoming-data" class="level2">
+<h2 class="anchored" data-anchor-id="validate-incoming-data">Validate incoming data</h2>
+<p>Start with structural checks that produce clear error messages.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> validate_input(data, required_features):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    required_columns <span class="op">=</span> {<span class="st">"record_id"</span>, <span class="op">*</span>required_features}</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    missing <span class="op">=</span> <span class="bu">sorted</span>(required_columns.difference(data.columns))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> missing:</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Missing required columns: </span><span class="sc">{</span>missing<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> data.empty:</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"The inference batch contains no rows."</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> data[<span class="st">"record_id"</span>].isna().<span class="bu">any</span>():</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"record_id contains missing values."</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> data[<span class="st">"record_id"</span>].duplicated().<span class="bu">any</span>():</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"record_id must be unique within a batch."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Structural validation is necessary but not sufficient. Depending on the application, validation may also enforce:</p>
+<ul>
+<li>numeric ranges, such as non-negative counts;</li>
+<li>known categories or a documented unknown-category policy;</li>
+<li>consistent units;</li>
+<li>acceptable missingness;</li>
+<li>parseable dates;</li>
+<li>maximum batch size; and</li>
+<li>privacy rules that exclude prohibited fields.</li>
+</ul>
+<p>The pipeline can impute missing feature values only if it was trained to do so. Validation should therefore distinguish between <strong>expected missingness</strong>, which the pipeline knows how to handle, and <strong>invalid missingness</strong>, which indicates a broken upstream process.</p>
+</section>
+<section id="preserve-identifiers-and-select-features" class="level2">
+<h2 class="anchored" data-anchor-id="preserve-identifiers-and-select-features">Preserve identifiers and select features</h2>
+<p>The incoming table contains both operational fields and model inputs. Separate them deliberately.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>record_ids <span class="op">=</span> data[<span class="st">"record_id"</span>].copy()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>features <span class="op">=</span> data.loc[:, required_features].copy()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Selecting features by name is safer than passing the entire table to the model. It prevents identifiers, timestamps, comments, or newly added upstream columns from silently becoming prediction inputs.</p>
+<p>When the fitted estimator exposes <code>feature_names_in_</code>, the program can use it as the authoritative feature list:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>required_features <span class="op">=</span> pipeline.feature_names_in_.tolist()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>If the saved object does not expose feature names, store the ordered list in the model metadata created during training. Do not infer the contract from whichever columns happen to arrive.</p>
+</section>
+<section id="generate-predictions-and-probabilities" class="level2">
+<h2 class="anchored" data-anchor-id="generate-predictions-and-probabilities">Generate predictions and probabilities</h2>
+<p>Load the model once per program run, then predict the entire validated batch.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> joblib</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>pipeline <span class="op">=</span> joblib.load(<span class="st">"models/customer-risk-pipeline.joblib"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>predictions <span class="op">=</span> pipeline.predict(features)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For a binary classifier, probabilities provide more information than class labels alone:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>probabilities <span class="op">=</span> pipeline.predict_proba(features)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>positive_probability <span class="op">=</span> probabilities[:, <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The expression <code>[:, 1]</code> is safe only when the second probability column is known to represent the intended positive class. A more reliable implementation locates that class explicitly:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>positive_class <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>classes <span class="op">=</span> pipeline.classes_.tolist()</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> positive_class <span class="kw">not</span> <span class="kw">in</span> classes:</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Positive class </span><span class="sc">{</span>positive_class<span class="sc">!r}</span><span class="ss"> not found in </span><span class="sc">{</span>classes<span class="sc">}</span><span class="ss">."</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>positive_index <span class="op">=</span> classes.index(positive_class)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>positive_probability <span class="op">=</span> pipeline.predict_proba(features)[:, positive_index]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This check prevents a subtle but serious error when class labels or their ordering differ from an assumption in the inference code.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Not every estimator implements <code>predict_proba()</code>. Some expose <code>decision_function()</code>, while regression models return continuous predictions directly. The output contract must match the fitted estimator and the decision process that consumes its predictions.</p>
+</div>
+</div>
+</section>
+<section id="build-a-stable-prediction-table" class="level2">
+<h2 class="anchored" data-anchor-id="build-a-stable-prediction-table">Build a stable prediction table</h2>
+<p>Construct the result independently from the feature table so that the output schema remains intentional.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> pd.DataFrame(</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"record_id"</span>: record_ids,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"prediction"</span>: predictions,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"prediction_probability"</span>: positive_probability,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"model_version"</span>: <span class="st">"1.0.0"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Before writing the file, validate the output:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span>(results) <span class="op">!=</span> <span class="bu">len</span>(data):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"Prediction row count does not match input row count."</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> results[<span class="st">"prediction_probability"</span>].isna().<span class="bu">any</span>():</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"Prediction probabilities contain missing values."</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> results[<span class="st">"prediction_probability"</span>].between(<span class="dv">0</span>, <span class="dv">1</span>).<span class="bu">all</span>():</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"Prediction probabilities fall outside [0, 1]."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>These checks are inexpensive and protect the boundary between the model and downstream systems.</p>
+</section>
+<section id="the-executable-inference-program" class="level2">
+<h2 class="anchored" data-anchor-id="the-executable-inference-program">The executable inference program</h2>
+<p>The complete implementation belongs in:</p>
+<pre class="text"><code>scripts/python/04-run-batch-inference.py</code></pre>
+<p>It should use command-line arguments rather than fixed working-directory assumptions:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/python/04-run-batch-inference.py <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/inference/new-records.csv <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--model</span> models/customer-risk-pipeline.joblib <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--metadata</span> models/customer-risk-metadata.json <span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> results/predictions/customer-risk-predictions.csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The program should create the output directory when needed but should not create or guess missing input files. A missing model, metadata file, or inference dataset is an error that requires correction.</p>
+<p>The corresponding wrapper belongs in:</p>
+<pre class="text"><code>scripts/bash/04-run-batch-inference.sh</code></pre>
+<p>and provides a short, repeatable project command:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/bash/04-run-batch-inference.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The Python command is the direct interface; the Bash wrapper is a convenience that supplies the standard project paths. Both routes execute the same Python workflow and therefore produce the same result.</p>
+</section>
+<section id="fail-clearly-and-safely" class="level2">
+<h2 class="anchored" data-anchor-id="fail-clearly-and-safely">Fail clearly and safely</h2>
+<p>Inference failures should be visible. Do not catch every exception and continue with partial or fabricated output.</p>
+<p>Useful failure messages identify:</p>
+<ul>
+<li>the missing or unreadable file;</li>
+<li>missing, duplicate, or unexpected fields;</li>
+<li>invalid values and affected columns;</li>
+<li>incompatibility between the model artifact and the runtime;</li>
+<li>unsupported probability behaviour; or</li>
+<li>disagreement between input and output row counts.</li>
+</ul>
+<p>When an output file may already exist, choose an explicit policy. For a teaching workflow, overwriting the named result keeps repeated runs simple. In production, versioned or timestamped destinations may be preferable, provided downstream consumers can identify the authoritative result.</p>
+</section>
+<section id="record-operational-evidence" class="level2">
+<h2 class="anchored" data-anchor-id="record-operational-evidence">Record operational evidence</h2>
+<p>A prediction file should answer more than “what did the model predict?” At minimum, retain or log:</p>
+<ul>
+<li>model name and version;</li>
+<li>model artifact checksum or immutable identifier;</li>
+<li>inference timestamp in UTC;</li>
+<li>input source or batch identifier;</li>
+<li>input and output row counts;</li>
+<li>validation outcome;</li>
+<li>prediction summary, such as class counts; and</li>
+<li>software or environment version when strict reproducibility is required.</li>
+</ul>
+<p>Do not place sensitive source features into logs merely for convenience. Operational evidence should support traceability without duplicating protected data.</p>
+</section>
+<section id="common-failure-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="common-failure-patterns">Common failure patterns</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Failure pattern</th>
+<th>Why it is unreliable</th>
+<th>Better approach</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Recreating preprocessing in the inference script</td>
+<td>Training and inference transformations can diverge</td>
+<td>Load one fitted pipeline</td>
+</tr>
+<tr class="even">
+<td>Passing every incoming column to the model</td>
+<td>Operational or newly added columns may leak into prediction</td>
+<td>Select the named feature contract</td>
+</tr>
+<tr class="odd">
+<td>Assuming probability column 1 is always positive</td>
+<td>Class ordering may differ</td>
+<td>Locate the positive class through <code>classes_</code></td>
+</tr>
+<tr class="even">
+<td>Dropping the record identifier</td>
+<td>Predictions cannot be joined safely to source records</td>
+<td>Preserve a unique identifier outside the features</td>
+</tr>
+<tr class="odd">
+<td>Accepting an empty batch</td>
+<td>A technically successful empty output can hide upstream failure</td>
+<td>Reject empty input explicitly</td>
+</tr>
+<tr class="even">
+<td>Writing results before validation</td>
+<td>Invalid output can reach downstream consumers</td>
+<td>Validate first, then write</td>
+</tr>
+<tr class="odd">
+<td>Refitting during prediction</td>
+<td>New data changes the model</td>
+<td>Use only prediction methods</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="test-the-workflow-before-automation" class="level2">
+<h2 class="anchored" data-anchor-id="test-the-workflow-before-automation">Test the workflow before automation</h2>
+<p>Run at least four small batches before relying on the program:</p>
+<ol type="1">
+<li>a valid batch with several records;</li>
+<li>a batch missing one required feature;</li>
+<li>a batch containing duplicate identifiers; and</li>
+<li>an empty batch.</li>
+</ol>
+<p>The valid batch should produce one output row per input row. Each invalid batch should stop with a specific, understandable error. These cases will become automated tests in a later chapter; running them manually now confirms that the contract is clear enough to test.</p>
+</section>
+<section id="chapter-checkpoint" class="level2">
+<h2 class="anchored" data-anchor-id="chapter-checkpoint">Chapter checkpoint</h2>
+<p>You now have the design for a reliable batch-inference boundary:</p>
+<ul>
+<li>the fitted pipeline is loaded rather than rebuilt;</li>
+<li>incoming data is checked against an explicit contract;</li>
+<li>identifiers remain separate from model features;</li>
+<li>class probabilities are interpreted deliberately;</li>
+<li>predictions follow a stable, traceable schema; and</li>
+<li>failures stop the workflow before unreliable output is written.</li>
+</ul>
+<p>The next step is to expose the same prediction logic through a service interface. The input and output contracts developed here will transfer directly to request and response models, reducing the amount of new logic required for an API.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

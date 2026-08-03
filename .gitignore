@@ -40,6 +40,7 @@ results/figures/*
 results/metrics/*
 results/monitoring/*
 reports/*
+results/predictions/
 
 # Preserve directory documentation
 !data/**/README.md

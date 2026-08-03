@@ -2,9 +2,299 @@
 
 ::: {.cdi-message}
 - **ID:** MD-L04
-- **Status:** Scaffolded for chapter-by-chapter development
-- **Theme:** Make prediction inputs and outputs explicit
+- **Type:** Applied workflow
+- **Audience:** Intermediate
+- **Theme:** Make prediction inputs, transformations, and outputs explicit
 :::
 
-This chapter will build a repeatable batch-inference workflow around the saved pipeline.
+Saving a trained pipeline is only the beginning of deployment. A useful deployment workflow must also accept new observations, verify that they match the model's expectations, produce interpretable outputs, and preserve enough context to investigate failures later.
 
+This chapter develops a repeatable **batch-inference workflow** around the pipeline saved in @sec-saving-and-loading-model-pipelines. Batch inference is a practical first deployment target because it makes every stage visible: a file arrives, the program validates it, the model produces predictions, and a new file records the results.
+
+By the end of the chapter, you will be able to:
+
+- distinguish training from inference;
+- define an explicit input contract for new data;
+- load a saved pipeline once and use it without refitting;
+- preserve record identifiers while selecting model features;
+- return predictions and probabilities in a stable output schema;
+- detect common data and prediction failures early; and
+- run the same inference program directly or through a Bash wrapper.
+
+## From training to inference
+
+Training and inference use the same fitted pipeline for different purposes.
+
+| Stage | Input | Pipeline behaviour | Output |
+|---|---|---|---|
+| Training | Historical labelled data | Learns preprocessing parameters and model parameters | Saved fitted pipeline |
+| Inference | New unlabelled data | Reuses learned parameters without fitting again | Predictions and supporting metadata |
+
+The separation is important. During inference, the program must call `predict()` or `predict_proba()` on the loaded pipeline. Calling `fit()`, `fit_transform()`, or `fit_predict()` would allow new data to change the model and would break reproducibility.
+
+```python
+# Correct: reuse the fitted pipeline.
+predictions = pipeline.predict(features)
+
+# Incorrect: never retrain as part of ordinary inference.
+pipeline.fit(features, labels)
+```
+
+Because preprocessing and prediction were saved together, the inference program does not need to reproduce encoding, scaling, or imputation manually. The pipeline applies the fitted transformations in the correct order.
+
+## Define the inference contract
+
+An inference contract states what the program accepts and what it returns. It should be decided before writing the prediction code.
+
+For this guide, each incoming record contains:
+
+- a stable `record_id` used to connect the output to the source record;
+- the feature columns expected by the saved pipeline; and
+- no target column, because the outcome is not yet known at prediction time.
+
+The prediction file contains:
+
+- `record_id`;
+- `prediction`;
+- `prediction_probability`; and
+- `model_version`.
+
+The identifier and version are operational metadata. They are not model features. Keeping them outside the feature matrix prevents accidental leakage while making every prediction traceable.
+
+::: {.callout-important}
+The exact column names, meanings, units, and permitted values form part of the model interface. A CSV file is not valid merely because pandas can read it.
+:::
+
+## A reliable batch-inference sequence
+
+A robust program follows a short, explicit sequence:
+
+1. resolve and verify all file paths;
+2. load the saved pipeline and its metadata;
+3. read the incoming batch;
+4. validate identifiers, required columns, values, and row counts;
+5. isolate model features in the expected order;
+6. generate predictions and, where supported, probabilities;
+7. validate the prediction output; and
+8. write the result to a deliberate location.
+
+This design keeps validation close to the boundary of the system. Invalid input should fail before the model produces a plausible-looking but unreliable result.
+
+## Validate incoming data
+
+Start with structural checks that produce clear error messages.
+
+```python
+def validate_input(data, required_features):
+    required_columns = {"record_id", *required_features}
+    missing = sorted(required_columns.difference(data.columns))
+
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}")
+    if data.empty:
+        raise ValueError("The inference batch contains no rows.")
+    if data["record_id"].isna().any():
+        raise ValueError("record_id contains missing values.")
+    if data["record_id"].duplicated().any():
+        raise ValueError("record_id must be unique within a batch.")
+```
+
+Structural validation is necessary but not sufficient. Depending on the application, validation may also enforce:
+
+- numeric ranges, such as non-negative counts;
+- known categories or a documented unknown-category policy;
+- consistent units;
+- acceptable missingness;
+- parseable dates;
+- maximum batch size; and
+- privacy rules that exclude prohibited fields.
+
+The pipeline can impute missing feature values only if it was trained to do so. Validation should therefore distinguish between **expected missingness**, which the pipeline knows how to handle, and **invalid missingness**, which indicates a broken upstream process.
+
+## Preserve identifiers and select features
+
+The incoming table contains both operational fields and model inputs. Separate them deliberately.
+
+```python
+record_ids = data["record_id"].copy()
+features = data.loc[:, required_features].copy()
+```
+
+Selecting features by name is safer than passing the entire table to the model. It prevents identifiers, timestamps, comments, or newly added upstream columns from silently becoming prediction inputs.
+
+When the fitted estimator exposes `feature_names_in_`, the program can use it as the authoritative feature list:
+
+```python
+required_features = pipeline.feature_names_in_.tolist()
+```
+
+If the saved object does not expose feature names, store the ordered list in the model metadata created during training. Do not infer the contract from whichever columns happen to arrive.
+
+## Generate predictions and probabilities
+
+Load the model once per program run, then predict the entire validated batch.
+
+```python
+import joblib
+
+pipeline = joblib.load("models/customer-risk-pipeline.joblib")
+predictions = pipeline.predict(features)
+```
+
+For a binary classifier, probabilities provide more information than class labels alone:
+
+```python
+probabilities = pipeline.predict_proba(features)
+positive_probability = probabilities[:, 1]
+```
+
+The expression `[:, 1]` is safe only when the second probability column is known to represent the intended positive class. A more reliable implementation locates that class explicitly:
+
+```python
+positive_class = 1
+classes = pipeline.classes_.tolist()
+
+if positive_class not in classes:
+    raise ValueError(f"Positive class {positive_class!r} not found in {classes}.")
+
+positive_index = classes.index(positive_class)
+positive_probability = pipeline.predict_proba(features)[:, positive_index]
+```
+
+This check prevents a subtle but serious error when class labels or their ordering differ from an assumption in the inference code.
+
+::: {.callout-note}
+Not every estimator implements `predict_proba()`. Some expose `decision_function()`, while regression models return continuous predictions directly. The output contract must match the fitted estimator and the decision process that consumes its predictions.
+:::
+
+## Build a stable prediction table
+
+Construct the result independently from the feature table so that the output schema remains intentional.
+
+```python
+import pandas as pd
+
+results = pd.DataFrame(
+    {
+        "record_id": record_ids,
+        "prediction": predictions,
+        "prediction_probability": positive_probability,
+        "model_version": "1.0.0",
+    }
+)
+```
+
+Before writing the file, validate the output:
+
+```python
+if len(results) != len(data):
+    raise RuntimeError("Prediction row count does not match input row count.")
+
+if results["prediction_probability"].isna().any():
+    raise RuntimeError("Prediction probabilities contain missing values.")
+
+if not results["prediction_probability"].between(0, 1).all():
+    raise RuntimeError("Prediction probabilities fall outside [0, 1].")
+```
+
+These checks are inexpensive and protect the boundary between the model and downstream systems.
+
+## The executable inference program
+
+The complete implementation belongs in:
+
+```text
+scripts/python/04-run-batch-inference.py
+```
+
+It should use command-line arguments rather than fixed working-directory assumptions:
+
+```bash
+python scripts/python/04-run-batch-inference.py \
+  --input data/inference/new-records.csv \
+  --model models/customer-risk-pipeline.joblib \
+  --metadata models/customer-risk-metadata.json \
+  --output results/predictions/customer-risk-predictions.csv
+```
+
+The program should create the output directory when needed but should not create or guess missing input files. A missing model, metadata file, or inference dataset is an error that requires correction.
+
+The corresponding wrapper belongs in:
+
+```text
+scripts/bash/04-run-batch-inference.sh
+```
+
+and provides a short, repeatable project command:
+
+```bash
+bash scripts/bash/04-run-batch-inference.sh
+```
+
+The Python command is the direct interface; the Bash wrapper is a convenience that supplies the standard project paths. Both routes execute the same Python workflow and therefore produce the same result.
+
+## Fail clearly and safely
+
+Inference failures should be visible. Do not catch every exception and continue with partial or fabricated output.
+
+Useful failure messages identify:
+
+- the missing or unreadable file;
+- missing, duplicate, or unexpected fields;
+- invalid values and affected columns;
+- incompatibility between the model artifact and the runtime;
+- unsupported probability behaviour; or
+- disagreement between input and output row counts.
+
+When an output file may already exist, choose an explicit policy. For a teaching workflow, overwriting the named result keeps repeated runs simple. In production, versioned or timestamped destinations may be preferable, provided downstream consumers can identify the authoritative result.
+
+## Record operational evidence
+
+A prediction file should answer more than “what did the model predict?” At minimum, retain or log:
+
+- model name and version;
+- model artifact checksum or immutable identifier;
+- inference timestamp in UTC;
+- input source or batch identifier;
+- input and output row counts;
+- validation outcome;
+- prediction summary, such as class counts; and
+- software or environment version when strict reproducibility is required.
+
+Do not place sensitive source features into logs merely for convenience. Operational evidence should support traceability without duplicating protected data.
+
+## Common failure patterns
+
+| Failure pattern | Why it is unreliable | Better approach |
+|---|---|---|
+| Recreating preprocessing in the inference script | Training and inference transformations can diverge | Load one fitted pipeline |
+| Passing every incoming column to the model | Operational or newly added columns may leak into prediction | Select the named feature contract |
+| Assuming probability column 1 is always positive | Class ordering may differ | Locate the positive class through `classes_` |
+| Dropping the record identifier | Predictions cannot be joined safely to source records | Preserve a unique identifier outside the features |
+| Accepting an empty batch | A technically successful empty output can hide upstream failure | Reject empty input explicitly |
+| Writing results before validation | Invalid output can reach downstream consumers | Validate first, then write |
+| Refitting during prediction | New data changes the model | Use only prediction methods |
+
+## Test the workflow before automation
+
+Run at least four small batches before relying on the program:
+
+1. a valid batch with several records;
+2. a batch missing one required feature;
+3. a batch containing duplicate identifiers; and
+4. an empty batch.
+
+The valid batch should produce one output row per input row. Each invalid batch should stop with a specific, understandable error. These cases will become automated tests in a later chapter; running them manually now confirms that the contract is clear enough to test.
+
+## Chapter checkpoint
+
+You now have the design for a reliable batch-inference boundary:
+
+- the fitted pipeline is loaded rather than rebuilt;
+- incoming data is checked against an explicit contract;
+- identifiers remain separate from model features;
+- class probabilities are interpreted deliberately;
+- predictions follow a stable, traceable schema; and
+- failures stop the workflow before unreliable output is written.
+
+The next step is to expose the same prediction logic through a service interface. The input and output contracts developed here will transfer directly to request and response models, reducing the amount of new logic required for an API.
