@@ -1,0 +1,353 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Model Deployment",
+    "section": "",
+    "text": "Free Guide · Updated Aug 2026",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>index.html</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html",
+    "href": "00-preface.html",
+    "title": "Preface",
+    "section": "",
+    "text": "Why model deployment needs its own guide\nTraining a model answers an important question: can useful patterns be learned from the available data? Deployment introduces a different question: can the same prediction logic be used reliably by people and software outside the development environment?\nA model can perform well during development and still fail when it is used in practice. Incoming fields may be missing, reordered, or represented with unexpected types. Training-time preprocessing may be recreated incorrectly. An API may accept invalid requests, return ambiguous predictions, or load a different artifact from the one that was tested. Even a technically correct service can become unreliable as its input data, dependencies, or operating conditions change.\nModel deployment therefore concerns the complete path from validated inputs to maintained predictions:\nCode\nflowchart TD\n    A[\"Validated training data\"] --&gt; B[\"Preprocessing and model pipeline\"]\n    B --&gt; C[\"Versioned model artifact\"]\n    C --&gt; D[\"Validated inference interface\"]\n    D --&gt; E[\"Tested prediction service\"]\n    E --&gt; F[\"Monitoring and maintenance\"]\n\n\n\n\n\nflowchart TD\n    A[\"Validated training data\"] --&gt; B[\"Preprocessing and model pipeline\"]\n    B --&gt; C[\"Versioned model artifact\"]\n    C --&gt; D[\"Validated inference interface\"]\n    D --&gt; E[\"Tested prediction service\"]\n    E --&gt; F[\"Monitoring and maintenance\"]\nServing a model is one step in this path. Reliable deployment also requires a stable prediction contract, reproducible artifacts, input validation, automated testing, repeatable packaging, and evidence that the service continues to behave as intended.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#the-central-design-decision",
+    "href": "00-preface.html#the-central-design-decision",
+    "title": "Preface",
+    "section": "The central design decision",
+    "text": "The central design decision\nThis guide saves preprocessing and the estimator together as one scikit-learn Pipeline. A pipeline preserves the ordered transformations used during training and applies the same operations during inference, reducing opportunities for training and deployment logic to diverge (scikit-learn developers n.d.).\nThe deployed unit is therefore not an isolated estimator. It is a tested prediction pipeline with clearly defined inputs and outputs.\nThat principle shapes the entire guide:\n\nBuild one prediction path, test that path, and deploy the same path.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#position-in-the-cdi-learning-pathway",
+    "href": "00-preface.html#position-in-the-cdi-learning-pathway",
+    "title": "Preface",
+    "section": "Position in the CDI learning pathway",
+    "text": "Position in the CDI learning pathway\nThis guide assumes that model development already includes appropriate evaluation, validation, and interpretation. It begins when a model has become a plausible deployment candidate—not merely when a training script runs successfully.\nThe progression is deliberate:\n\nData Science Foundations → Advanced Data Science → Model Deployment\n\nData Science Foundations establishes reproducible analysis. Advanced Data Science develops stronger modelling and evaluation decisions. Model Deployment converts a validated pipeline into a usable and maintainable prediction service.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#what-you-should-know-before-starting",
+    "href": "00-preface.html#what-you-should-know-before-starting",
+    "title": "Preface",
+    "section": "What you should know before starting",
+    "text": "What you should know before starting\nReaders should be comfortable with:\n\nrunning Python programs from a terminal;\nworking in a repository-specific virtual environment;\nreading basic pandas and scikit-learn code;\nunderstanding training, validation, and test data;\ninterpreting classification probabilities and decision thresholds; and\nusing Git for ordinary version-control tasks.\n\nPrior experience with FastAPI, Pydantic, pytest, Docker, or production infrastructure is not required. Each is introduced when it becomes necessary.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#what-you-will-build",
+    "href": "00-preface.html#what-you-will-build",
+    "title": "Preface",
+    "section": "What you will build",
+    "text": "What you will build\nEvery implementation chapter extends one compact binary-classification example. The example is small enough to inspect closely but complete enough to include:\n\nnumeric and categorical inputs;\npreprocessing with a ColumnTransformer;\nclassification with a probability-producing estimator;\na versioned serialized pipeline;\nexplicit request and response schemas;\nbatch and HTTP inference;\nautomated unit, integration, and API tests;\na containerized prediction service; and\nbasic monitoring for input and prediction changes.\n\nChanging datasets or estimators in every chapter would hide the deployment logic. Keeping one model, one preprocessing pipeline, and one prediction contract makes each new operational layer visible.\nBy the end of the guide, you should be able to explain and implement the path from reproducible model training to a locally tested, containerized service—and identify what must still be added for a specific production environment.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#how-the-guide-progresses",
+    "href": "00-preface.html#how-the-guide-progresses",
+    "title": "Preface",
+    "section": "How the guide progresses",
+    "text": "How the guide progresses\nThe chapters follow the order in which deployment concerns should be resolved:\n\ncreate and verify a reproducible environment;\ntrain one complete preprocessing and modelling pipeline;\nsave, load, and identify the resulting artifact;\ndefine a stable inference contract;\nexpose predictions through FastAPI;\ntest model, schema, and service behaviour;\npackage the service with Docker; and\nobserve, maintain, and improve the deployed system.\n\nLater chapters depend on the artifacts and decisions established earlier. Readers gain the most from following the guide in sequence before using individual chapters as references.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#teaching-and-code-conventions",
+    "href": "00-preface.html#teaching-and-code-conventions",
+    "title": "Preface",
+    "section": "Teaching and code conventions",
+    "text": "Teaching and code conventions\nThis is a Quarto book following Quarto’s multi-chapter book structure (Quarto n.d.). It uses the CDI guide conventions throughout:\n\nPython is the primary implementation language.\nEvery repository uses its own .venv.\nComplete executable programs belong in scripts/python/.\nBash wrappers belong in scripts/bash/.\nScript names begin with their chapter number.\nShort illustrative snippets use ordinary python fences and are not executed during rendering.\nGenerated data, models, results, and reports are separated from source code.\nTests must pass before an artifact is served or containerized.\nReferences are maintained in library/references.bib.\n\nCommands are presented from the repository root unless a chapter states otherwise. Generated outputs support learning and verification; they are not substitutes for the source programs that created them.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#scope-and-boundaries",
+    "href": "00-preface.html#scope-and-boundaries",
+    "title": "Preface",
+    "section": "Scope and boundaries",
+    "text": "Scope and boundaries\nThe guide teaches portable deployment principles through local Python programs, FastAPI, Pydantic, pytest, and Docker. FastAPI supports typed API development and generates an OpenAPI description and interactive documentation from the application definition (Ramírez n.d.a, n.d.b).\nThe guide does not claim that a local container is automatically production-ready. A real deployment may also require authentication, authorization, encrypted transport, secrets management, managed infrastructure, continuous delivery, scaling, audit controls, incident response, and organization-specific governance.\nCloud-provider configuration, Kubernetes administration, and vendor-specific observability platforms remain outside the core scope. The architecture developed here nevertheless separates the model, contract, service, tests, and packaging so those capabilities can be added without redesigning the prediction interface.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#what-comes-next",
+    "href": "00-preface.html#what-comes-next",
+    "title": "Preface",
+    "section": "What comes next",
+    "text": "What comes next\nChapter 01 creates the repository-specific environment, establishes the project structure, and verifies the tools required for the complete workflow. Chapter 02 then trains the single classification pipeline that every later chapter will test, package, serve, and monitor.\n\n\n\n\nQuarto. n.d. “Creating a Book.” Accessed August 3, 2026. https://quarto.org/docs/books/.\n\n\nRamírez, Sebastián. n.d.a. “FastAPI Tutorial: User Guide.” Accessed August 3, 2026. https://fastapi.tiangolo.com/tutorial/.\n\n\n———. n.d.b. “FastAPI: First Steps.” Accessed August 3, 2026. https://fastapi.tiangolo.com/tutorial/first-steps/.\n\n\nscikit-learn developers. n.d. “Pipelines and Composite Estimators.” Accessed August 3, 2026. https://scikit-learn.org/stable/modules/compose.html.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html",
+    "href": "01-setting-up-environment.html",
+    "title": "Setting Up the Environment",
+    "section": "",
+    "text": "Learning objectives\nAfter completing this chapter, you will be able to:",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#learning-objectives",
+    "href": "01-setting-up-environment.html#learning-objectives",
+    "title": "Setting Up the Environment",
+    "section": "",
+    "text": "distinguish system tools from repository-specific Python packages;\nverify Python, Quarto, Git, and optional Docker installations;\ncreate and activate a repository-specific virtual environment;\ninstall the Python packages used throughout the guide;\nconfirm that Python and pip resolve inside the active .venv;\nexplain the responsibilities of the main project directories; and\nrender the initial Quarto book locally.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#why-environment-setup-matters",
+    "href": "01-setting-up-environment.html#why-environment-setup-matters",
+    "title": "Setting Up the Environment",
+    "section": "Why environment setup matters",
+    "text": "Why environment setup matters\nA model may work during development and still fail during testing, API serving, or containerization if those stages use different software versions or incompatible dependencies. Reproducible deployment therefore begins before model training: the repository must define its tools, dependencies, file locations, and verification steps.\nThis guide uses two environment layers:\n\nSystem tools are installed on the computer and shared across projects. They include Python, Quarto, Git, VS Code, and Docker.\nPython packages are installed inside this repository’s .venv. They include pandas, scikit-learn, FastAPI, Pydantic, HTTPX, and pytest.\n\nKeeping these layers distinct makes the project easier to reproduce and troubleshoot.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#install-the-system-tools",
+    "href": "01-setting-up-environment.html#install-the-system-tools",
+    "title": "Setting Up the Environment",
+    "section": "Install the system tools",
+    "text": "Install the system tools\nInstall these tools before beginning:\n\nPython 3.12 or newer for the guide programs;\nQuarto for rendering the book;\nGit for version control;\nVS Code as the recommended editor; and\nDocker Desktop or Docker Engine before Chapter 07.\n\nDocker is not required for Chapters 01–06. The environment check treats it as optional so you can prepare the local model and API workflow before working with containers.\nVerify the tools that are needed immediately:\npython3 --version\nquarto --version\ngit --version\nIf a command is not found, install that system tool before continuing. Do not install Quarto or Git into .venv; the virtual environment is only for Python packages.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#understand-the-repository",
+    "href": "01-setting-up-environment.html#understand-the-repository",
+    "title": "Setting Up the Environment",
+    "section": "Understand the repository",
+    "text": "Understand the repository\nRun all guide commands from the repository root—the directory containing _quarto.yml and requirements.txt.\nThe project structure separates source code, generated artifacts, tests, and rendered documentation:\nmodel-deployment/\n├── data/\n│   ├── raw/\n│   ├── processed/\n│   ├── reference/\n│   └── inference/\n├── models/\n├── reports/\n├── results/\n│   ├── figures/\n│   ├── metrics/\n│   └── monitoring/\n├── scripts/\n│   ├── bash/\n│   └── python/\n├── tests/\n├── library/\n├── assets/\n├── _quarto.yml\n└── requirements.txt\nThe main responsibilities are:\n\n\n\n\n\n\n\nLocation\nResponsibility\n\n\n\n\ndata/\nInputs used for training, testing, reference checks, and example inference\n\n\nmodels/\nSerialized model pipelines and associated model metadata\n\n\nresults/\nGenerated figures, evaluation metrics, and monitoring outputs\n\n\nreports/\nHuman-readable generated summaries and reports\n\n\nscripts/python/\nExecutable Python programs, prefixed by chapter number\n\n\nscripts/bash/\nReproducible command wrappers, also prefixed by chapter number\n\n\ntests/\nAutomated checks for model behavior, API contracts, and deployment readiness\n\n\nlibrary/\nReferences and supporting source material used by the guide\n\n\nassets/\nStatic book assets such as the cover image and shared styling\n\n\ndocs/\nRendered Quarto website generated during the build\n\n\n\nGenerated artifacts should be recreated by scripts whenever practical. Source programs and configuration belong in version control; .venv/, caches, and other machine-specific files do not.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#create-the-virtual-environment",
+    "href": "01-setting-up-environment.html#create-the-virtual-environment",
+    "title": "Setting Up the Environment",
+    "section": "Create the virtual environment",
+    "text": "Create the virtual environment\nFrom the repository root, create and activate .venv:\npython3 -m venv .venv\nsource .venv/bin/activate\npython -m pip install --upgrade pip\nOn Windows PowerShell, activation is different:\npython -m venv .venv\n.venv\\Scripts\\Activate.ps1\npython -m pip install --upgrade pip\nPython virtual environments isolate a project interpreter and its installed packages (Python Software Foundation n.d.). The .venv/ directory is created locally, excluded through .gitignore, and recreated from the dependency files rather than copied between computers or committed to Git.\nThe terminal prompt normally begins with (.venv) after activation. More importantly, confirm that the interpreter and package installer resolve through this repository:\nwhich python\npython --version\npython -m pip --version\nOn Windows, use where python instead of which python.\n\n\n\n\n\n\nWarning\n\n\n\nDeactivate the current environment before moving between CDI repositories, then activate the .venv belonging to the new repository. The identical (.venv) prompt does not prove that the correct environment is active.\n\n\nTo leave the environment, run:\ndeactivate",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#install-the-guide-dependencies",
+    "href": "01-setting-up-environment.html#install-the-guide-dependencies",
+    "title": "Setting Up the Environment",
+    "section": "Install the guide dependencies",
+    "text": "Install the guide dependencies\nReactivate .venv if necessary, then install the declared packages:\nsource .venv/bin/activate\npython -m pip install -r requirements.txt\nWindows PowerShell users should reactivate with .venv\\Scripts\\Activate.ps1.\nThe dependency set supports data preparation, scikit-learn pipelines, model serialization, API validation and serving, HTTP requests, automated tests, and optional notebook exploration. FastAPI uses Pydantic models for structured validation, while its test client integrates with HTTPX and pytest (Ramírez n.d.).\nUse python -m pip instead of a bare pip command. This makes the relationship between the active Python interpreter and its package installer explicit.\nAfter the environment works and the guide tests pass, record an exact snapshot:\npython -m pip freeze &gt; requirements-lock.txt\nrequirements.txt lists the project’s direct dependencies. requirements-lock.txt captures the complete tested environment, including transitive dependencies and exact versions. Regenerate the lock file intentionally after dependency upgrades and successful verification; do not edit it casually.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#verify-the-environment",
+    "href": "01-setting-up-environment.html#verify-the-environment",
+    "title": "Setting Up the Environment",
+    "section": "Verify the environment",
+    "text": "Verify the environment\nRun the Chapter 01 wrapper from the repository root:\nbash scripts/bash/01-check-environment.sh\nThe wrapper checks the required command-line tools and then runs the Python environment check with the active interpreter. Docker is reported separately because it is not required until Chapter 07.\nYou may run the Python check directly:\npython scripts/python/01-check-environment.py\nA successful result confirms that the expected project packages can be imported and that the environment is ready for the training workflow in Chapter 02. If the check fails, read the first reported error, confirm that .venv is active, and rerun the dependency installation before changing project code.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#configure-vs-code",
+    "href": "01-setting-up-environment.html#configure-vs-code",
+    "title": "Setting Up the Environment",
+    "section": "Configure VS Code",
+    "text": "Configure VS Code\nOpen the repository folder—not an individual file—in VS Code. Then:\n\nOpen the Command Palette.\nSelect Python: Select Interpreter.\nChoose the interpreter inside this repository’s .venv.\nOpen a new terminal and confirm that python points to the same environment.\n\nThe guide uses .py programs in scripts/python/ as the executable source of truth. Short code shown in chapters is illustrative and intentionally non-executable. Jupyter is available for optional exploration, but notebooks are not required for the deployment workflow.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#render-the-book",
+    "href": "01-setting-up-environment.html#render-the-book",
+    "title": "Setting Up the Environment",
+    "section": "Render the book",
+    "text": "Render the book\nRender from the repository root:\nquarto render\nQuarto combines the source files listed in _quarto.yml into the HTML book and writes the rendered site to docs/ (Quarto n.d.b, n.d.a). During development, preview changes with:\nquarto preview\nStop the preview server with Ctrl+C.\nRendering the book verifies the documentation layer. It does not replace the Python environment check or the automated tests introduced later in the guide.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#environment-readiness-checklist",
+    "href": "01-setting-up-environment.html#environment-readiness-checklist",
+    "title": "Setting Up the Environment",
+    "section": "Environment readiness checklist",
+    "text": "Environment readiness checklist\nBefore continuing, confirm that:\n\nthe repository root contains _quarto.yml and requirements.txt;\nthe repository-specific .venv is active;\npython and python -m pip resolve inside that environment;\npython -m pip install -r requirements.txt completes successfully;\nthe Chapter 01 environment check passes;\nquarto render produces the guide under docs/; and\nDocker is installed or scheduled before Chapter 07.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#next-step",
+    "href": "01-setting-up-environment.html#next-step",
+    "title": "Setting Up the Environment",
+    "section": "Next step",
+    "text": "Next step\nChapter 02 will create the guide’s classification dataset, combine preprocessing and classification in one scikit-learn pipeline, evaluate the deployment candidate, and write the first reproducible model artifacts.\n\n\n\n\nPython Software Foundation. n.d. “Venv: Creation of Virtual Environments.” Accessed August 3, 2026. https://docs.python.org/3/library/venv.html.\n\n\nQuarto. n.d.a. “Book Structure.” Accessed August 3, 2026. https://quarto.org/docs/books/book-structure.html.\n\n\n———. n.d.b. “Creating a Book.” Accessed August 3, 2026. https://quarto.org/docs/books/.\n\n\nRamírez, Sebastián. n.d. “Testing FastAPI Applications.” Accessed August 3, 2026. https://fastapi.tiangolo.com/tutorial/testing/.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html",
+    "href": "02-from-model-training-to-deployment.html",
+    "title": "From Model Training to Deployment",
+    "section": "",
+    "text": "ID: MD-L02\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Select and test a deployment candidate\n\n\nThis chapter will train and evaluate the classification pipeline used throughout the guide.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html",
+    "href": "03-saving-and-loading-model-pipelines.html",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "",
+    "text": "ID: MD-L03\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Preserve preprocessing and prediction together\n\n\nThis chapter will serialize, describe, reload, and verify the complete fitted pipeline.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html",
+    "href": "04-building-a-reliable-inference-workflow.html",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "",
+    "text": "ID: MD-L04\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Make prediction inputs and outputs explicit\n\n\nThis chapter will build a repeatable batch-inference workflow around the saved pipeline.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html",
+    "href": "05-serving-predictions-with-fastapi.html",
+    "title": "Serving Predictions with FastAPI",
+    "section": "",
+    "text": "ID: MD-L05\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Expose the inference contract through an API\n\n\nThis chapter will expose health and prediction endpoints with FastAPI and Pydantic.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html",
+    "href": "06-validation-errors-and-api-testing.html",
+    "title": "Validation, Errors, and API Testing",
+    "section": "",
+    "text": "ID: MD-L06\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Test success, invalid input, and failure behaviour\n\n\nThis chapter will develop automated API tests and deliberate error responses.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html",
+    "href": "07-containerizing-the-application.html",
+    "title": "Containerizing the Application",
+    "section": "",
+    "text": "ID: MD-L07\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Package a tested service reproducibly\n\n\nThis chapter will create, build, inspect, and run a Docker image for the application.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html",
+    "href": "08-deployment-monitoring-and-maintenance.html",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "",
+    "text": "ID: MD-L08\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Observe change and maintain confidence after release\n\n\nThis chapter will monitor inference data, predictions, service behaviour, and model lifecycle signals.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html",
+    "href": "09-end-to-end-deployment-case-study.html",
+    "title": "End-to-End Deployment Case Study",
+    "section": "",
+    "text": "ID: MD-L09\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Rebuild and verify the complete deployment path\n\n\nThis chapter will connect training, serialization, inference, testing, containerization, and monitoring into one reproducible case study.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html",
+    "href": "999-appendix.html",
+    "title": "Appendix A — Appendix",
+    "section": "",
+    "text": "ID: MD-A01\nStatus: Scaffolded for chapter-by-chapter development\nTheme: Commands, contracts, and troubleshooting reference\n\n\nThe appendix will collect concise command references, project conventions, schemas, and troubleshooting guidance used across the guide.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-references.html",
+    "href": "999-references.html",
+    "title": "References",
+    "section": "",
+    "text": "Python Software Foundation. n.d. “Venv: Creation of Virtual\nEnvironments.” Accessed August 3, 2026. https://docs.python.org/3/library/venv.html.\n\n\nQuarto. n.d.a. “Book Structure.” Accessed August 3, 2026.\nhttps://quarto.org/docs/books/book-structure.html.\n\n\n———. n.d.b. “Creating a Book.” Accessed August 3, 2026. https://quarto.org/docs/books/.\n\n\nRamírez, Sebastián. n.d.a. “FastAPI Tutorial: User Guide.”\nAccessed August 3, 2026. https://fastapi.tiangolo.com/tutorial/.\n\n\n———. n.d.b. “FastAPI: First Steps.” Accessed August 3,\n2026. https://fastapi.tiangolo.com/tutorial/first-steps/.\n\n\n———. n.d.c. “Testing FastAPI Applications.” Accessed August\n3, 2026. https://fastapi.tiangolo.com/tutorial/testing/.\n\n\nscikit-learn developers. n.d. “Pipelines and Composite\nEstimators.” Accessed August 3, 2026. https://scikit-learn.org/stable/modules/compose.html.",
+    "crumbs": [
+      "Appendices",
+      "References"
+    ]
+  }
+]

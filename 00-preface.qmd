@@ -9,9 +9,11 @@
 
 ## Why model deployment needs its own guide
 
-A model can perform well during development and still fail when other people or systems try to use it. The incoming fields may be missing, reordered, or expressed with unexpected types. Training-time preprocessing may be recreated incorrectly. An API may accept invalid requests, return ambiguous predictions, or load a different artifact from the one that was tested.
+Training a model answers an important question: can useful patterns be learned from the available data? Deployment introduces a different question: can the same prediction logic be used reliably by people and software outside the development environment?
 
-Model deployment addresses the larger system around prediction:
+A model can perform well during development and still fail when it is used in practice. Incoming fields may be missing, reordered, or represented with unexpected types. Training-time preprocessing may be recreated incorrectly. An API may accept invalid requests, return ambiguous predictions, or load a different artifact from the one that was tested. Even a technically correct service can become unreliable as its input data, dependencies, or operating conditions change.
+
+Model deployment therefore concerns the complete path from validated inputs to maintained predictions:
 
 ```{mermaid}
 flowchart TD
@@ -22,40 +24,81 @@ flowchart TD
     E --> F["Monitoring and maintenance"]
 ```
 
-The central design choice in this guide is to save preprocessing and the estimator together as one scikit-learn `Pipeline`. Pipelines encapsulate a fixed sequence of transformations and prediction, reducing opportunities for training and inference to diverge [@scikitPipeline].
+Serving a model is one step in this path. Reliable deployment also requires a stable prediction contract, reproducible artifacts, input validation, automated testing, repeatable packaging, and evidence that the service continues to behave as intended.
+
+## The central design decision
+
+This guide saves preprocessing and the estimator together as one scikit-learn `Pipeline`. A pipeline preserves the ordered transformations used during training and applies the same operations during inference, reducing opportunities for training and deployment logic to diverge [@scikitPipeline].
+
+The deployed unit is therefore not an isolated estimator. It is a tested prediction pipeline with clearly defined inputs and outputs.
+
+That principle shapes the entire guide:
+
+> **Build one prediction path, test that path, and deploy the same path.**
 
 ## Position in the CDI learning pathway
 
-This guide assumes that model development already includes appropriate evaluation, validation, and interpretation. It begins at the point where a model has become a plausible deployment candidate.
+This guide assumes that model development already includes appropriate evaluation, validation, and interpretation. It begins when a model has become a plausible deployment candidate—not merely when a training script runs successfully.
 
-The progression is therefore deliberate:
+The progression is deliberate:
 
 > **Data Science Foundations → Advanced Data Science → Model Deployment**
 
-The first guide establishes reliable analysis, the second develops stronger modelling decisions, and this guide builds the operational path from a validated pipeline to maintained inference.
+Data Science Foundations establishes reproducible analysis. Advanced Data Science develops stronger modelling and evaluation decisions. Model Deployment converts a validated pipeline into a usable and maintainable prediction service.
 
-## A single progressive example
+## What you should know before starting
 
-Every implementation chapter uses one compact binary-classification problem. The example will be small enough to understand, but complete enough to demonstrate:
+Readers should be comfortable with:
+
+- running Python programs from a terminal;
+- working in a repository-specific virtual environment;
+- reading basic pandas and scikit-learn code;
+- understanding training, validation, and test data;
+- interpreting classification probabilities and decision thresholds; and
+- using Git for ordinary version-control tasks.
+
+Prior experience with FastAPI, Pydantic, pytest, Docker, or production infrastructure is not required. Each is introduced when it becomes necessary.
+
+## What you will build
+
+Every implementation chapter extends one compact binary-classification example. The example is small enough to inspect closely but complete enough to include:
 
 - numeric and categorical inputs;
 - preprocessing with a `ColumnTransformer`;
 - classification with a probability-producing estimator;
-- an explicit input and output schema;
-- batch inference and HTTP inference;
-- automated tests;
-- containerization; and
-- basic monitoring for data and prediction changes.
+- a versioned serialized pipeline;
+- explicit request and response schemas;
+- batch and HTTP inference;
+- automated unit, integration, and API tests;
+- a containerized prediction service; and
+- basic monitoring for input and prediction changes.
 
-Changing datasets in every chapter would hide the deployment logic. Keeping one model and one prediction contract makes each new layer visible.
+Changing datasets or estimators in every chapter would hide the deployment logic. Keeping one model, one preprocessing pipeline, and one prediction contract makes each new operational layer visible.
+
+By the end of the guide, you should be able to explain and implement the path from reproducible model training to a locally tested, containerized service—and identify what must still be added for a specific production environment.
+
+## How the guide progresses
+
+The chapters follow the order in which deployment concerns should be resolved:
+
+1. create and verify a reproducible environment;
+2. train one complete preprocessing and modelling pipeline;
+3. save, load, and identify the resulting artifact;
+4. define a stable inference contract;
+5. expose predictions through FastAPI;
+6. test model, schema, and service behaviour;
+7. package the service with Docker; and
+8. observe, maintain, and improve the deployed system.
+
+Later chapters depend on the artifacts and decisions established earlier. Readers gain the most from following the guide in sequence before using individual chapters as references.
 
 ## Teaching and code conventions
 
-This is a Quarto book, following the multi-chapter structure supported by Quarto [@quartoBooks]. It uses these conventions throughout:
+This is a Quarto book following Quarto's multi-chapter book structure [@quartoBooks]. It uses the CDI guide conventions throughout:
 
 - Python is the primary implementation language.
 - Every repository uses its own `.venv`.
-- Complete programs belong in `scripts/python/`.
+- Complete executable programs belong in `scripts/python/`.
 - Bash wrappers belong in `scripts/bash/`.
 - Script names begin with their chapter number.
 - Short illustrative snippets use ordinary `python` fences and are not executed during rendering.
@@ -63,13 +106,16 @@ This is a Quarto book, following the multi-chapter structure supported by Quarto
 - Tests must pass before an artifact is served or containerized.
 - References are maintained in `library/references.bib`.
 
-## Scope
+Commands are presented from the repository root unless a chapter states otherwise. Generated outputs support learning and verification; they are not substitutes for the source programs that created them.
 
-The guide teaches portable deployment principles through local programs, FastAPI, testing, and Docker. FastAPI supports progressive API development and generates an OpenAPI description and interactive documentation from the application definition [@fastapiTutorial; @fastapiFirstSteps].
+## Scope and boundaries
 
-Cloud-provider configuration, Kubernetes administration, authentication systems, secrets platforms, continuous-delivery products, and large-scale observability stacks are outside the core scope. The final architecture will nevertheless be structured so those capabilities can be added later without rewriting the model interface.
+The guide teaches portable deployment principles through local Python programs, FastAPI, Pydantic, pytest, and Docker. FastAPI supports typed API development and generates an OpenAPI description and interactive documentation from the application definition [@fastapiTutorial; @fastapiFirstSteps].
+
+The guide does not claim that a local container is automatically production-ready. A real deployment may also require authentication, authorization, encrypted transport, secrets management, managed infrastructure, continuous delivery, scaling, audit controls, incident response, and organization-specific governance.
+
+Cloud-provider configuration, Kubernetes administration, and vendor-specific observability platforms remain outside the core scope. The architecture developed here nevertheless separates the model, contract, service, tests, and packaging so those capabilities can be added without redesigning the prediction interface.
 
 ## What comes next
 
-Chapter 01 creates the repository-specific environment and verifies the tools needed for the complete workflow. Chapter 02 will then train the single classification pipeline that every later chapter deploys.
-
+Chapter 01 creates the repository-specific environment, establishes the project structure, and verifies the tools required for the complete workflow. Chapter 02 then trains the single classification pipeline that every later chapter will test, package, serve, and monitor.

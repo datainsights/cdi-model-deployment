@@ -1,52 +1,16 @@
 ---
-title: "Model Deployment"
-subtitle: "From Reproducible Training Pipelines to Tested Prediction Services"
-page-layout: full
+title: ""
+engine: knitr
+format:
+  html:
+    body-classes: front-page
 ---
 
-::: {.hero}
-## Move a model beyond the notebook
+<div style="text-align: center; margin-top: 1.5em;">
+  <img src="assets/images/cover/model-deployment-cover.png" width="75%" />
+</div>
 
-Learn how to turn one reproducible scikit-learn classification pipeline into a validated inference program, a tested FastAPI service, and a container-ready application.
-
-**Free Guide · Updated {{< meta date >}}**
-:::
-
-## Where this guide fits
-
-This guide completes the core CDI Data Science progression:
-
-1. **Data Science Foundations** establishes reproducible analysis.
-2. **Advanced Data Science** develops defensible models and analytical decisions.
-3. **Model Deployment** turns a validated model into a dependable prediction service.
-
-Deployment is treated as an extension of reproducible modelling—not as a separate collection of infrastructure tricks. The same compact classification example, feature definitions, preprocessing pipeline, and prediction contract develop across the guide.
-
-## What you will build
-
-By the end of the guide, you will be able to:
-
-- train and evaluate a deployment candidate;
-- save preprocessing and prediction as one scikit-learn `Pipeline`;
-- load the artifact safely for batch and online inference;
-- validate request data with Pydantic;
-- expose predictions through FastAPI;
-- test successful requests, invalid inputs, and failure conditions with `pytest`;
-- package the application in a Docker image; and
-- monitor input data, predictions, and operational behaviour after release.
-
-## How the guide works
-
-Each chapter adds one production concern without replacing the model or inventing a new example. Short code fragments in the chapters explain important ideas. Complete executable programs live under `scripts/python/`, with repeatable command-line wrappers under `scripts/bash/`.
-
-Generated artifacts are kept in predictable locations:
-
-| Directory | Purpose |
-|---|---|
-| `data/` | Raw, processed, reference, and inference data |
-| `models/` | Serialized pipelines and model metadata |
-| `results/` | Metrics, diagnostics, monitoring summaries, and figures |
-| `reports/` | Human-readable deployment and monitoring reports |
-
-Start with the [Preface](00-preface.qmd), then prepare the repository in [Setting Up the Environment](01-setting-up-environment.qmd).
+<div style="text-align: center; font-style: normal; margin-top: 1em;">
+Free Guide · Updated {{< meta date >}}
+</div>
 

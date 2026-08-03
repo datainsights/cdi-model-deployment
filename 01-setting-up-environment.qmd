@@ -3,7 +3,7 @@
 ::: {.cdi-message}
 - **ID:** MD-L01
 - **Type:** Foundation
-- **Audience:** Intermediate
+- **Audience:** Beginner & Intermediate
 - **Theme:** Deployment begins with a reproducible local environment
 :::
 
@@ -11,16 +11,28 @@
 
 After completing this chapter, you will be able to:
 
+- distinguish system tools from repository-specific Python packages;
 - verify Python, Quarto, Git, and optional Docker installations;
 - create and activate a repository-specific virtual environment;
 - install the Python packages used throughout the guide;
-- verify that Python and `pip` resolve inside the active `.venv`;
-- understand the project directories and their responsibilities; and
+- confirm that Python and `pip` resolve inside the active `.venv`;
+- explain the responsibilities of the main project directories; and
 - render the initial Quarto book locally.
 
-## Prerequisites
+## Why environment setup matters
 
-Install these system-level tools before beginning:
+A model may work during development and still fail during testing, API serving, or containerization if those stages use different software versions or incompatible dependencies. Reproducible deployment therefore begins before model training: the repository must define its tools, dependencies, file locations, and verification steps.
+
+This guide uses two environment layers:
+
+1. **System tools** are installed on the computer and shared across projects. They include Python, Quarto, Git, VS Code, and Docker.
+2. **Python packages** are installed inside this repository's `.venv`. They include pandas, scikit-learn, FastAPI, Pydantic, HTTPX, and `pytest`.
+
+Keeping these layers distinct makes the project easier to reproduce and troubleshoot.
+
+## Install the system tools
+
+Install these tools before beginning:
 
 - **Python 3.12 or newer** for the guide programs;
 - **Quarto** for rendering the book;
@@ -28,11 +40,23 @@ Install these system-level tools before beginning:
 - **VS Code** as the recommended editor; and
 - **Docker Desktop or Docker Engine** before Chapter 07.
 
-Docker is not required for Chapters 01–06. The environment check reports it as optional so container work can be prepared later.
+Docker is not required for Chapters 01–06. The environment check treats it as optional so you can prepare the local model and API workflow before working with containers.
+
+Verify the tools that are needed immediately:
+
+```bash
+python3 --version
+quarto --version
+git --version
+```
+
+If a command is not found, install that system tool before continuing. Do not install Quarto or Git into `.venv`; the virtual environment is only for Python packages.
 
 ## Understand the repository
 
-The initial structure separates source code, generated artifacts, tests, and rendered documentation:
+Run all guide commands from the repository root—the directory containing `_quarto.yml` and `requirements.txt`.
+
+The project structure separates source code, generated artifacts, tests, and rendered documentation:
 
 ```text
 model-deployment/
@@ -57,11 +81,26 @@ model-deployment/
 └── requirements.txt
 ```
 
-The `.venv/` directory will be created locally and excluded from Git. Python virtual environments isolate a project interpreter and installed packages, and they should be recreated rather than copied or committed [@pythonVenv].
+The main responsibilities are:
+
+| Location | Responsibility |
+|---|---|
+| `data/` | Inputs used for training, testing, reference checks, and example inference |
+| `models/` | Serialized model pipelines and associated model metadata |
+| `results/` | Generated figures, evaluation metrics, and monitoring outputs |
+| `reports/` | Human-readable generated summaries and reports |
+| `scripts/python/` | Executable Python programs, prefixed by chapter number |
+| `scripts/bash/` | Reproducible command wrappers, also prefixed by chapter number |
+| `tests/` | Automated checks for model behavior, API contracts, and deployment readiness |
+| `library/` | References and supporting source material used by the guide |
+| `assets/` | Static book assets such as the cover image and shared styling |
+| `docs/` | Rendered Quarto website generated during the build |
+
+Generated artifacts should be recreated by scripts whenever practical. Source programs and configuration belong in version control; `.venv/`, caches, and other machine-specific files do not.
 
 ## Create the virtual environment
 
-From the repository root, run:
+From the repository root, create and activate `.venv`:
 
 ```bash
 python3 -m venv .venv
@@ -72,11 +111,14 @@ python -m pip install --upgrade pip
 On Windows PowerShell, activation is different:
 
 ```powershell
+python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 ```
 
-The prompt normally begins with `(.venv)` after activation. More importantly, both commands below should resolve through the repository:
+Python virtual environments isolate a project interpreter and its installed packages [@pythonVenv]. The `.venv/` directory is created locally, excluded through `.gitignore`, and recreated from the dependency files rather than copied between computers or committed to Git.
+
+The terminal prompt normally begins with `(.venv)` after activation. More importantly, confirm that the interpreter and package installer resolve through this repository:
 
 ```bash
 which python
@@ -90,39 +132,52 @@ On Windows, use `where python` instead of `which python`.
 Deactivate the current environment before moving between CDI repositories, then activate the `.venv` belonging to the new repository. The identical `(.venv)` prompt does not prove that the correct environment is active.
 :::
 
-## Install the guide dependencies
-
-With the environment active, install the declared packages:
+To leave the environment, run:
 
 ```bash
+deactivate
+```
+
+## Install the guide dependencies
+
+Reactivate `.venv` if necessary, then install the declared packages:
+
+```bash
+source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-The dependency set supports data preparation, scikit-learn pipelines, serialization, API validation and serving, HTTP tests, and automated testing. FastAPI relies on Pydantic models for structured data validation, while its test client integrates naturally with HTTPX and `pytest` [@fastapiTesting].
+Windows PowerShell users should reactivate with `.venv\Scripts\Activate.ps1`.
 
-After the environment is working and the guide has been tested, an exact snapshot can be recorded:
+The dependency set supports data preparation, scikit-learn pipelines, model serialization, API validation and serving, HTTP requests, automated tests, and optional notebook exploration. FastAPI uses Pydantic models for structured validation, while its test client integrates with HTTPX and `pytest` [@fastapiTesting].
+
+Use `python -m pip` instead of a bare `pip` command. This makes the relationship between the active Python interpreter and its package installer explicit.
+
+After the environment works and the guide tests pass, record an exact snapshot:
 
 ```bash
 python -m pip freeze > requirements-lock.txt
 ```
 
-`requirements.txt` states the direct dependencies needed by the project. `requirements-lock.txt` records the complete tested environment, including transitive dependencies. Regenerate the lock file intentionally after dependency upgrades and successful tests.
+`requirements.txt` lists the project's direct dependencies. `requirements-lock.txt` captures the complete tested environment, including transitive dependencies and exact versions. Regenerate the lock file intentionally after dependency upgrades and successful verification; do not edit it casually.
 
 ## Verify the environment
 
-Run the Chapter 01 wrapper:
+Run the Chapter 01 wrapper from the repository root:
 
 ```bash
 bash scripts/bash/01-check-environment.sh
 ```
 
-The wrapper checks command-line tools and then uses the active Python interpreter to import the project packages. A successful run confirms that the guide is ready for the training workflow in Chapter 02.
+The wrapper checks the required command-line tools and then runs the Python environment check with the active interpreter. Docker is reported separately because it is not required until Chapter 07.
 
-You may also run the Python check directly:
+You may run the Python check directly:
 
 ```bash
 python scripts/python/01-check-environment.py
 ```
+
+A successful result confirms that the expected project packages can be imported and that the environment is ready for the training workflow in Chapter 02. If the check fails, read the first reported error, confirm that `.venv` is active, and rerun the dependency installation before changing project code.
 
 ## Configure VS Code
 
@@ -131,9 +186,9 @@ Open the repository folder—not an individual file—in VS Code. Then:
 1. Open the Command Palette.
 2. Select **Python: Select Interpreter**.
 3. Choose the interpreter inside this repository's `.venv`.
-4. Open a new terminal and confirm `python` points to the same environment.
+4. Open a new terminal and confirm that `python` points to the same environment.
 
-The guide uses `.py` programs as the executable source of truth. Jupyter is included for optional exploration, but notebooks are not required for the deployment workflow.
+The guide uses `.py` programs in `scripts/python/` as the executable source of truth. Short code shown in chapters is illustrative and intentionally non-executable. Jupyter is available for optional exploration, but notebooks are not required for the deployment workflow.
 
 ## Render the book
 
@@ -143,7 +198,7 @@ Render from the repository root:
 quarto render
 ```
 
-Quarto combines the files listed in `_quarto.yml` into the HTML book and writes the result to `docs/` [@quartoBooks; @quartoBookStructure]. During development, preview changes with:
+Quarto combines the source files listed in `_quarto.yml` into the HTML book and writes the rendered site to `docs/` [@quartoBooks; @quartoBookStructure]. During development, preview changes with:
 
 ```bash
 quarto preview
@@ -151,12 +206,15 @@ quarto preview
 
 Stop the preview server with `Ctrl+C`.
 
+Rendering the book verifies the documentation layer. It does not replace the Python environment check or the automated tests introduced later in the guide.
+
 ## Environment readiness checklist
 
 Before continuing, confirm that:
 
+- the repository root contains `_quarto.yml` and `requirements.txt`;
 - the repository-specific `.venv` is active;
-- `python` and `pip` resolve inside that environment;
+- `python` and `python -m pip` resolve inside that environment;
 - `python -m pip install -r requirements.txt` completes successfully;
 - the Chapter 01 environment check passes;
 - `quarto render` produces the guide under `docs/`; and
@@ -164,5 +222,4 @@ Before continuing, confirm that:
 
 ## Next step
 
-Chapter 02 will create the guide's classification dataset, define preprocessing and classification as one pipeline, evaluate the deployment candidate, and write the first reproducible model artifacts.
-
+Chapter 02 will create the guide's classification dataset, combine preprocessing and classification in one scikit-learn pipeline, evaluate the deployment candidate, and write the first reproducible model artifacts.
