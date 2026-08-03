@@ -1,0 +1,35 @@
+:root {
+  --cdi-green: #1f6f50;
+  --cdi-green-dark: #174f3a;
+  --cdi-green-light: #eaf5ef;
+  --cdi-ink: #24312b;
+}
+
+body {
+  color: var(--cdi-ink);
+}
+
+.hero {
+  margin: 1rem 0 2rem;
+  padding: 2rem;
+  border-left: 0.4rem solid var(--cdi-green);
+  border-radius: 0.35rem;
+  background: linear-gradient(135deg, var(--cdi-green-light), #ffffff);
+}
+
+.hero h2 {
+  margin-top: 0;
+  color: var(--cdi-green-dark);
+}
+
+.cdi-message {
+  margin: 1.25rem 0 1.75rem;
+  padding: 0.85rem 1.1rem;
+  border-left: 0.3rem solid var(--cdi-green);
+  background: var(--cdi-green-light);
+}
+
+.cdi-message ul {
+  margin-bottom: 0;
+}
+

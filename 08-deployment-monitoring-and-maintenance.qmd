@@ -1,0 +1,10 @@
+# Deployment Monitoring and Maintenance {#sec-deployment-monitoring-and-maintenance}
+
+::: {.cdi-message}
+- **ID:** MD-L08
+- **Status:** Scaffolded for chapter-by-chapter development
+- **Theme:** Observe change and maintain confidence after release
+:::
+
+This chapter will monitor inference data, predictions, service behaviour, and model lifecycle signals.
+

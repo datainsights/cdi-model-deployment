@@ -1,0 +1,10 @@
+# Appendix {#sec-appendix}
+
+::: {.cdi-message}
+- **ID:** MD-A01
+- **Status:** Scaffolded for chapter-by-chapter development
+- **Theme:** Commands, contracts, and troubleshooting reference
+:::
+
+The appendix will collect concise command references, project conventions, schemas, and troubleshooting guidance used across the guide.
+

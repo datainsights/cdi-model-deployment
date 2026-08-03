@@ -1,0 +1,10 @@
+# Building a Reliable Inference Workflow {#sec-building-a-reliable-inference-workflow}
+
+::: {.cdi-message}
+- **ID:** MD-L04
+- **Status:** Scaffolded for chapter-by-chapter development
+- **Theme:** Make prediction inputs and outputs explicit
+:::
+
+This chapter will build a repeatable batch-inference workflow around the saved pipeline.
+

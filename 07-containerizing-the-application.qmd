@@ -1,0 +1,10 @@
+# Containerizing the Application {#sec-containerizing-the-application}
+
+::: {.cdi-message}
+- **ID:** MD-L07
+- **Status:** Scaffolded for chapter-by-chapter development
+- **Theme:** Package a tested service reproducibly
+:::
+
+This chapter will create, build, inspect, and run a Docker image for the application.
+

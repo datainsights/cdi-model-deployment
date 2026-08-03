@@ -1,7 +1,12 @@
-fastapi==0.115.4
-uvicorn==0.35.0
-joblib==1.4.2
-scikit-learn==1.6.0
-pandas==2.2.3
-# gradio==5.9.1
-streamlit==1.39.0
+fastapi
+httpx
+joblib
+jupyterlab
+matplotlib
+numpy
+pandas
+pydantic
+pytest
+scikit-learn
+uvicorn[standard]
+

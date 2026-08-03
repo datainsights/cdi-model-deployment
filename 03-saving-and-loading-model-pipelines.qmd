@@ -1,0 +1,10 @@
+# Saving and Loading Model Pipelines {#sec-saving-and-loading-model-pipelines}
+
+::: {.cdi-message}
+- **ID:** MD-L03
+- **Status:** Scaffolded for chapter-by-chapter development
+- **Theme:** Preserve preprocessing and prediction together
+:::
+
+This chapter will serialize, describe, reload, and verify the complete fitted pipeline.
+

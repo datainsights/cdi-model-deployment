@@ -1,0 +1,75 @@
+# Preface {#sec-preface}
+
+::: {.cdi-message}
+- **ID:** MD-L00
+- **Type:** Orientation
+- **Audience:** Intermediate
+- **Theme:** A trained model is only one component of a reliable prediction system
+:::
+
+## Why model deployment needs its own guide
+
+A model can perform well during development and still fail when other people or systems try to use it. The incoming fields may be missing, reordered, or expressed with unexpected types. Training-time preprocessing may be recreated incorrectly. An API may accept invalid requests, return ambiguous predictions, or load a different artifact from the one that was tested.
+
+Model deployment addresses the larger system around prediction:
+
+```{mermaid}
+flowchart TD
+    A["Validated training data"] --> B["Preprocessing and model pipeline"]
+    B --> C["Versioned model artifact"]
+    C --> D["Validated inference interface"]
+    D --> E["Tested prediction service"]
+    E --> F["Monitoring and maintenance"]
+```
+
+The central design choice in this guide is to save preprocessing and the estimator together as one scikit-learn `Pipeline`. Pipelines encapsulate a fixed sequence of transformations and prediction, reducing opportunities for training and inference to diverge [@scikitPipeline].
+
+## Position in the CDI learning pathway
+
+This guide assumes that model development already includes appropriate evaluation, validation, and interpretation. It begins at the point where a model has become a plausible deployment candidate.
+
+The progression is therefore deliberate:
+
+> **Data Science Foundations → Advanced Data Science → Model Deployment**
+
+The first guide establishes reliable analysis, the second develops stronger modelling decisions, and this guide builds the operational path from a validated pipeline to maintained inference.
+
+## A single progressive example
+
+Every implementation chapter uses one compact binary-classification problem. The example will be small enough to understand, but complete enough to demonstrate:
+
+- numeric and categorical inputs;
+- preprocessing with a `ColumnTransformer`;
+- classification with a probability-producing estimator;
+- an explicit input and output schema;
+- batch inference and HTTP inference;
+- automated tests;
+- containerization; and
+- basic monitoring for data and prediction changes.
+
+Changing datasets in every chapter would hide the deployment logic. Keeping one model and one prediction contract makes each new layer visible.
+
+## Teaching and code conventions
+
+This is a Quarto book, following the multi-chapter structure supported by Quarto [@quartoBooks]. It uses these conventions throughout:
+
+- Python is the primary implementation language.
+- Every repository uses its own `.venv`.
+- Complete programs belong in `scripts/python/`.
+- Bash wrappers belong in `scripts/bash/`.
+- Script names begin with their chapter number.
+- Short illustrative snippets use ordinary `python` fences and are not executed during rendering.
+- Generated data, models, results, and reports are separated from source code.
+- Tests must pass before an artifact is served or containerized.
+- References are maintained in `library/references.bib`.
+
+## Scope
+
+The guide teaches portable deployment principles through local programs, FastAPI, testing, and Docker. FastAPI supports progressive API development and generates an OpenAPI description and interactive documentation from the application definition [@fastapiTutorial; @fastapiFirstSteps].
+
+Cloud-provider configuration, Kubernetes administration, authentication systems, secrets platforms, continuous-delivery products, and large-scale observability stacks are outside the core scope. The final architecture will nevertheless be structured so those capabilities can be added later without rewriting the model interface.
+
+## What comes next
+
+Chapter 01 creates the repository-specific environment and verifies the tools needed for the complete workflow. Chapter 02 will then train the single classification pipeline that every later chapter deploys.
+

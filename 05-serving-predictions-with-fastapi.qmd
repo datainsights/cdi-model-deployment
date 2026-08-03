@@ -1,0 +1,10 @@
+# Serving Predictions with FastAPI {#sec-serving-predictions-with-fastapi}
+
+::: {.cdi-message}
+- **ID:** MD-L05
+- **Status:** Scaffolded for chapter-by-chapter development
+- **Theme:** Expose the inference contract through an API
+:::
+
+This chapter will expose health and prediction endpoints with FastAPI and Pydantic.
+

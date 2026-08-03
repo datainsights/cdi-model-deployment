@@ -1,0 +1,10 @@
+# From Model Training to Deployment {#sec-from-model-training-to-deployment}
+
+::: {.cdi-message}
+- **ID:** MD-L02
+- **Status:** Scaffolded for chapter-by-chapter development
+- **Theme:** Select and test a deployment candidate
+:::
+
+This chapter will train and evaluate the classification pipeline used throughout the guide.
+

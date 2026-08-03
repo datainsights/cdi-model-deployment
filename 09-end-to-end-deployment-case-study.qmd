@@ -1,0 +1,10 @@
+# End-to-End Deployment Case Study {#sec-end-to-end-deployment-case-study}
+
+::: {.cdi-message}
+- **ID:** MD-L09
+- **Status:** Scaffolded for chapter-by-chapter development
+- **Theme:** Rebuild and verify the complete deployment path
+:::
+
+This chapter will connect training, serialization, inference, testing, containerization, and monitoring into one reproducible case study.
+

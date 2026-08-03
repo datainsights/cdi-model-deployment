@@ -1,0 +1,10 @@
+# Validation, Errors, and API Testing {#sec-validation-errors-and-api-testing}
+
+::: {.cdi-message}
+- **ID:** MD-L06
+- **Status:** Scaffolded for chapter-by-chapter development
+- **Theme:** Test success, invalid input, and failure behaviour
+:::
+
+This chapter will develop automated API tests and deliberate error responses.
+

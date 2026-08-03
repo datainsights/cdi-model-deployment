@@ -1,0 +1,67 @@
+project:
+  type: book
+  output-dir: docs
+
+bibliography: library/references.bib
+
+date: 2026-08-03
+date-format: "MMM YYYY"
+
+book:
+  title: "Model Deployment"
+  subtitle: "From Reproducible Training Pipelines to Tested Prediction Services"
+  author: "Teresia Mrema Buza | Complex Data Insights"
+  chapters:
+    - index.qmd
+
+    - part: "Orientation"
+      chapters:
+        - 00-preface.qmd
+        - 01-setting-up-environment.qmd
+
+    - part: "From Model to Inference"
+      chapters:
+        - 02-from-model-training-to-deployment.qmd
+        - 03-saving-and-loading-model-pipelines.qmd
+        - 04-building-a-reliable-inference-workflow.qmd
+
+    - part: "Serving and Testing Predictions"
+      chapters:
+        - 05-serving-predictions-with-fastapi.qmd
+        - 06-validation-errors-and-api-testing.qmd
+
+    - part: "Containers and Operations"
+      chapters:
+        - 07-containerizing-the-application.qmd
+        - 08-deployment-monitoring-and-maintenance.qmd
+
+    - part: "Case Study"
+      chapters:
+        - 09-end-to-end-deployment-case-study.qmd
+
+  appendices:
+    - 999-appendix.qmd
+    - 999-references.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    number-depth: 2
+    smooth-scroll: true
+    anchor-sections: true
+    link-external-icon: true
+    code-fold: true
+    css: assets/css/cdi.css
+    mermaid:
+      theme: forest
+
+execute:
+  echo: true
+  warning: false
+  message: false
+  freeze: auto
+  working-dir: .
+
