@@ -1,57 +1,64 @@
-# RStudio project files
-.Rproj.user/
-.Rhistory
-.RData
-.Ruserdata
-
-# macOS system files
-.DS_Store
-
-# Python virtual environment
+# Repository-specific Python environment
+.venv/
 venv/
+env/
+.python-version
+.env
+.env.*
+!.env.example
 
-# renv package management
-renv/
-renv/library/
-renv/staging/
-renv/python/
+# Python caches and test output
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.ipynb_checkpoints/
 
-# Bookdown and documentation output
-!docs/                 # GitBook HTML (exclude only if building elsewhere)
-*-bs4/
-*-pdf/
+# Quarto intermediates and local caches
+/.quarto/
+/_freeze/
+/.cache/
+/.jupyter_cache/
+**/*.quarto_ipynb
 
+# Rendered HTML outside the published docs directory
+/*.html
+/*_files/
 
-# Images and data
-# Ignore all files in data/
-data/*
+# Generated deployment artifacts
+data/raw/*
+data/processed/*
+data/reference/*
+data/inference/*
+models/*
+results/figures/*
+results/metrics/*
+results/monitoring/*
+reports/*
 
-# But do not ignore the folder itself
-!data/
-images/*.*
-!docs/images/
+# Preserve directory documentation
+!data/**/README.md
+!models/README.md
+!results/**/README.md
+!reports/README.md
 
-# Intermediate and cache files
-*.utf8.md
-*.knit.md
+# Local Docker configuration
+docker-compose.override.yml
+
+# Packaged releases and archives
+*.zip
+*.tar.gz
+
+# Local and editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 *.log
-*.aux
-*.out
-*.toc
-*.synctex.gz
-*.bbl
-*.blg
-*.fls
-*.fdb_latexmk
-
-# Quarto and Pandoc cache
-_quarto/
-_cache/
-
-# Temporary/Working files
-index.Rmd
-_bookdown.yml
-_bookdown_files
-*_files/figure-html/
-*_files/figure-latex/
-.github/template-assets/project_tree.txt
