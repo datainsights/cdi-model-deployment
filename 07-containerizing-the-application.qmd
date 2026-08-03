@@ -2,9 +2,349 @@
 
 ::: {.cdi-message}
 - **ID:** MD-L07
-- **Status:** Scaffolded for chapter-by-chapter development
+- **Type:** Deployment
+- **Audience:** Intermediate
 - **Theme:** Package a tested service reproducibly
 :::
 
-This chapter will create, build, inspect, and run a Docker image for the application.
+A prediction API is not fully deployable merely because it runs inside the development environment. The operating system, Python runtime, dependencies, application code, and model artifact must reach the target environment together. A container image packages those components into one versioned unit.
+
+This chapter containerizes the FastAPI service developed in @sec-serving-predictions-with-fastapi and tested in @sec-validation-errors-and-api-testing. The objective is not simply to make Docker run. It is to create a small, inspectable image whose behaviour can be verified before it is released.
+
+## Learning objectives
+
+By the end of this chapter, you should be able to:
+
+- explain the difference between an image and a running container;
+- define a minimal Docker build context;
+- write a production-oriented `Dockerfile` for a FastAPI service;
+- build, run, inspect, and stop the container safely;
+- verify the container through the same HTTP contract used outside Docker; and
+- identify common failures involving ports, paths, dependencies, and model artifacts.
+
+## From source code to a running container
+
+The container workflow has two distinct phases. `docker build` creates an immutable image from the project files and instructions. `docker run` starts an isolated process from that image.
+
+```{mermaid}
+flowchart TD
+    A["Application, model, and dependencies"] --> B["Docker build context"]
+    B --> C["Versioned image"]
+    C --> D["Running container"]
+    D --> E["Health and prediction checks"]
+```
+
+An image is a packaged template. A container is a running instance of that template. Several containers can be started from the same image, but runtime changes inside one container do not update the image.
+
+## Prerequisites
+
+Complete the API implementation and tests before containerizing it. At minimum, the repository should contain:
+
+```text
+model-deployment/
+├── app/
+│   ├── __init__.py
+│   └── main.py
+├── models/
+│   └── deployment_pipeline.joblib
+├── scripts/
+│   ├── bash/
+│   └── python/
+├── requirements.txt
+├── Dockerfile
+└── .dockerignore
+```
+
+The examples assume that the FastAPI object is named `app` in `app/main.py`, giving the import string `app.main:app`. If your module differs, change that string consistently in the `Dockerfile` and local commands.
+
+Confirm that Docker is available:
+
+```bash
+docker --version
+docker info
+```
+
+`docker --version` confirms that the client is installed. `docker info` also checks whether the Docker engine is running.
+
+## Define the runtime dependencies
+
+The container must install the packages required at runtime. A focused deployment file avoids pulling notebook and development tools into the image. For a small guide project, the existing `requirements.txt` may be used if it already contains the following runtime dependencies:
+
+```text
+fastapi
+joblib
+numpy
+pandas
+pydantic
+scikit-learn
+uvicorn[standard]
+```
+
+Pinning exact versions in `requirements-lock.txt` improves reproducibility. When a tested lock file exists, substitute it for `requirements.txt` in the `Dockerfile`. Do not generate a lock file from an unrelated virtual environment.
+
+## Create the Dockerfile
+
+At the repository root, create `Dockerfile`:
+
+```dockerfile
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+COPY requirements.txt ./
+RUN python -m pip install --upgrade pip \
+    && python -m pip install -r requirements.txt
+
+COPY app/ ./app/
+COPY models/ ./models/
+
+RUN useradd --create-home --uid 10001 apiuser \
+    && chown -R apiuser:apiuser /app
+USER apiuser
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+Each instruction has a specific deployment purpose:
+
+| Instruction | Purpose |
+|---|---|
+| `FROM python:3.12-slim` | Starts from a compact Python runtime. |
+| `WORKDIR /app` | Makes application paths predictable inside the image. |
+| `COPY requirements.txt` before source code | Allows Docker to reuse the dependency layer when only application code changes. |
+| `COPY app/` and `COPY models/` | Includes only the runtime code and trained artifact. |
+| `USER apiuser` | Avoids running the service as the root user. |
+| `EXPOSE 8000` | Documents the port used by the application. |
+| `--host 0.0.0.0` | Makes Uvicorn reachable outside the container. |
+
+`EXPOSE` documents the intended container port; it does not publish that port to the host. Port publishing happens when the container is started.
+
+## Restrict the build context
+
+Docker sends the build context to the builder. A `.dockerignore` file prevents irrelevant, large, or sensitive files from entering that context.
+
+```gitignore
+.git
+.gitignore
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ipynb_checkpoints
+.DS_Store
+docs
+notebooks
+reports
+results
+tests
+*.log
+.env
+.env.*
+```
+
+Do not exclude `models/` when the application loads its model from that directory. Never bake credentials or production secrets into the image. Supply runtime configuration through the deployment platform or environment variables.
+
+## Build the image
+
+From the repository root, run:
+
+```bash
+docker build --tag cdi-model-api:07 .
+```
+
+The final period selects the current directory as the build context. The explicit tag identifies both the application and the chapter-stage version.
+
+Inspect the result:
+
+```bash
+docker image ls cdi-model-api
+docker image inspect cdi-model-api:07
+```
+
+A successful build proves that the image instructions completed. It does not prove that the service starts correctly or returns valid predictions.
+
+## Run the container
+
+Start the service in the background:
+
+```bash
+docker run \
+  --detach \
+  --name cdi-model-api-07 \
+  --publish 8000:8000 \
+  cdi-model-api:07
+```
+
+The mapping `8000:8000` means `host-port:container-port`. The API should now be available at `http://127.0.0.1:8000`.
+
+Check its state and logs:
+
+```bash
+docker ps --filter name=cdi-model-api-07
+docker logs cdi-model-api-07
+curl --fail --silent http://127.0.0.1:8000/health
+```
+
+Then run the Chapter 06 contract checks against the containerized service:
+
+```bash
+bash scripts/bash/06-test-api.sh
+```
+
+The same tests should pass whether Uvicorn runs from the virtual environment or inside a container. That equivalence is important: containerization should change packaging, not the API contract.
+
+## Automate the smoke test
+
+The companion script builds the image, starts a temporary container, waits for the health endpoint, runs the Chapter 06 API test script when it is available, and removes the container on exit:
+
+```bash
+bash scripts/bash/07-build-and-test-container.sh
+```
+
+Optional environment variables allow the defaults to be changed without editing the script:
+
+```bash
+IMAGE_NAME=cdi-model-api \
+IMAGE_TAG=07 \
+HOST_PORT=8001 \
+bash scripts/bash/07-build-and-test-container.sh
+```
+
+The script deliberately removes only the container it creates. It does not delete the resulting image, so the verified artifact remains available for inspection or later use.
+
+## Add an image health check
+
+An HTTP health endpoint is useful only when the runtime checks it. Python is already present in the image, so a health check can avoid adding another system package. Add the following instruction before `CMD`:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)" || exit 1
+```
+
+Rebuild and run the image, then inspect its status:
+
+```bash
+docker inspect \
+  --format='{{json .State.Health}}' \
+  cdi-model-api-07
+```
+
+The endpoint should confirm that the process can serve requests. If prediction readiness depends on a loaded model, the health logic should also verify that the artifact was loaded successfully.
+
+## Inspect the packaged application
+
+Use read-only inspection when debugging the packaged files:
+
+```bash
+docker run --rm cdi-model-api:07 \
+  python -c "from app.main import app; print(app.title)"
+```
+
+To list the model artifact without opening an interactive shell:
+
+```bash
+docker run --rm cdi-model-api:07 \
+  python -c "from pathlib import Path; print(list(Path('models').glob('*')))"
+```
+
+These checks answer two frequent questions: whether the Python module can be imported and whether the model artifact is present at the path expected by the application.
+
+## Stop and remove the container
+
+When a manually started container is no longer needed:
+
+```bash
+docker stop cdi-model-api-07
+docker rm cdi-model-api-07
+```
+
+Stopping ends the process; removing deletes that container instance. The image remains available. To remove the image later, first confirm that it is no longer needed:
+
+```bash
+docker image rm cdi-model-api:07
+```
+
+## Troubleshooting
+
+### The port is already in use
+
+Map a different host port while leaving the container port unchanged:
+
+```bash
+docker run --rm --publish 8001:8000 cdi-model-api:07
+```
+
+The service is then available at `http://127.0.0.1:8001`.
+
+### The container exits immediately
+
+Inspect all containers and read the logs:
+
+```bash
+docker ps --all --filter name=cdi-model-api-07
+docker logs cdi-model-api-07
+```
+
+Common causes include an invalid import string, a missing package, or a model-loading exception during application startup.
+
+### The model file cannot be found
+
+Relative paths depend on the container working directory. Resolve model paths from the application module or from the known `/app` working directory, and confirm that `.dockerignore` does not exclude the artifact.
+
+### The API works locally but not through Docker
+
+Confirm that Uvicorn binds to `0.0.0.0`, the correct port is published, and the request is sent to the host-side port. Binding to `127.0.0.1` inside the container makes the service unreachable from the host.
+
+### The image is unexpectedly large
+
+Inspect its layers:
+
+```bash
+docker history cdi-model-api:07
+```
+
+Use a slim base image, exclude development files, avoid copying the entire repository, and keep build-only tools out of the final runtime image.
+
+## Reproducibility and security checklist
+
+Before treating the image as a deployment candidate, confirm that:
+
+- the API and model tests pass before the image is built;
+- dependency versions come from the tested project environment;
+- the model artifact is versioned or traceable to its training run;
+- the build context excludes credentials, caches, reports, and local environments;
+- the application runs as a non-root user;
+- the image has a unique, meaningful tag rather than relying only on `latest`;
+- the container passes health and prediction checks; and
+- image metadata, source revision, and evaluation evidence can be connected.
+
+Containerization improves environmental consistency, but it does not validate the model, secure the surrounding platform, or monitor prediction quality. Those responsibilities remain part of the wider deployment system.
+
+## Chapter summary
+
+A deployment-ready container is more than a successful `docker build`. It is a reproducible package containing the required runtime, dependencies, application, and model artifact. Its service must start under container constraints and satisfy the same validated API contract established before packaging.
+
+The workflow is therefore:
+
+1. test the application outside the container;
+2. define a minimal and safe build context;
+3. build a versioned image;
+4. run the image with an explicit port mapping;
+5. verify health and prediction behaviour; and
+6. inspect and retain evidence for the exact image tested.
+
+The next chapter can build on this verified image by adding configuration, release, and operational deployment practices.
+
+## Further reading
+
+- [Dockerfile overview](https://docs.docker.com/build/concepts/dockerfile/)
+- [Docker build context](https://docs.docker.com/build/concepts/context/)
+- [Docker container networking](https://docs.docker.com/engine/network/)
+- [FastAPI deployment with containers](https://fastapi.tiangolo.com/deployment/docker/)
 

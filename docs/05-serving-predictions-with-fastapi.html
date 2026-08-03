@@ -55,7 +55,27 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -375,7 +395,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre class="text"><code>raw request -&gt; validation -&gt; tabular input -&gt; saved pipeline -&gt; prediction -&gt; structured output</code></pre>
 <p>FastAPI adds an HTTP layer around that boundary. A client sends JSON to a URL, the application validates it, and the inference function returns a JSON response.</p>
 <p>The application should remain thin. It should not reproduce preprocessing logic already stored in the fitted scikit-learn pipeline. Duplicating transformations in the API would create a second implementation that could drift away from training.</p>
-<p>FastAPI uses Python type annotations and Pydantic models to validate request data and generate an OpenAPI description of the service <span class="citation" data-cites="fastapi2026">(<a href="999-references.html#ref-fastapi2026" role="doc-biblioref"><strong>fastapi2026?</strong></a>)</span>. Response models also document and validate the data returned to clients <span class="citation" data-cites="fastapiResponseModel2026">(<a href="999-references.html#ref-fastapiResponseModel2026" role="doc-biblioref"><strong>fastapiResponseModel2026?</strong></a>)</span>.</p>
+<p>FastAPI uses Python type annotations and Pydantic models to validate request data and generate an OpenAPI description of the service <span class="citation" data-cites="fastapi2026">(<a href="999-references.html#ref-fastapi2026" role="doc-biblioref">Ramírez n.d.a</a>)</span>. Response models also document and validate the data returned to clients <span class="citation" data-cites="fastapiResponseModel2026">(<a href="999-references.html#ref-fastapiResponseModel2026" role="doc-biblioref">Ramírez n.d.d</a>)</span>.</p>
 </section>
 <section id="the-api-contract" class="level2">
 <h2 class="anchored" data-anchor-id="the-api-contract">The API contract</h2>
@@ -489,7 +509,7 @@ Important
 <span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HealthResponse(BaseModel):</span>
 <span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    status: Literal[<span class="st">"ready"</span>]</span>
 <span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    model_version: <span class="bu">str</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>These are the eight features selected in Chapters 02–04. The public API uses JSON-friendly snake-case names and maps them explicitly to the artifact names, such as <code>mean_radius</code> to <code>mean radius</code>. Pydantic’s <code>Field</code> supports numeric constraints and schema metadata, while <code>extra="forbid"</code> prevents misspelled or unknown fields from being silently ignored <span class="citation" data-cites="pydanticFields2026">(<a href="999-references.html#ref-pydanticFields2026" role="doc-biblioref"><strong>pydanticFields2026?</strong></a>)</span>.</p>
+<p>These are the eight features selected in Chapters 02–04. The public API uses JSON-friendly snake-case names and maps them explicitly to the artifact names, such as <code>mean_radius</code> to <code>mean radius</code>. Pydantic’s <code>Field</code> supports numeric constraints and schema metadata, while <code>extra="forbid"</code> prevents misspelled or unknown fields from being silently ignored <span class="citation" data-cites="pydanticFields2026">(<a href="999-references.html#ref-pydanticFields2026" role="doc-biblioref">Pydantic n.d.</a>)</span>.</p>
 <p>Request validation protects the interface, but it does not prove that an input is meaningful in the real world. For example, an income of zero may be syntactically valid while still requiring business review. Semantic and distributional checks belong in the inference contract and monitoring design.</p>
 </section>
 <section id="build-the-fastapi-application" class="level2">
@@ -563,7 +583,7 @@ Important
 <span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>        probability_malignant<span class="op">=</span>probability,</span>
 <span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>        model_version<span class="op">=</span>request.app.state.model_version,</span>
 <span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>FastAPI recommends the application <code>lifespan</code> context for startup and shutdown logic <span class="citation" data-cites="fastapiLifespan2026">(<a href="999-references.html#ref-fastapiLifespan2026" role="doc-biblioref"><strong>fastapiLifespan2026?</strong></a>)</span>. Loading the artifact before <code>yield</code> has two important consequences:</p>
+<p>FastAPI recommends the application <code>lifespan</code> context for startup and shutdown logic <span class="citation" data-cites="fastapiLifespan2026">(<a href="999-references.html#ref-fastapiLifespan2026" role="doc-biblioref">Ramírez n.d.b</a>)</span>. Loading the artifact before <code>yield</code> has two important consequences:</p>
 <ul>
 <li>the service fails during startup if the model cannot be loaded; and</li>
 <li>the model is reused across requests instead of being read from disk for every prediction.</li>
@@ -748,7 +768,7 @@ Note
 </section>
 <section id="test-without-starting-a-server" class="level2">
 <h2 class="anchored" data-anchor-id="test-without-starting-a-server">Test without starting a server</h2>
-<p>FastAPI’s <code>TestClient</code> exercises the application directly without opening an HTTP socket <span class="citation" data-cites="fastapiTesting2026">(<a href="999-references.html#ref-fastapiTesting2026" role="doc-biblioref"><strong>fastapiTesting2026?</strong></a>)</span>. Because the model loads in the lifespan context, use <code>TestClient</code> as a context manager so startup and shutdown logic runs during the test <span class="citation" data-cites="fastapiTestingLifespan2026">(<a href="999-references.html#ref-fastapiTestingLifespan2026" role="doc-biblioref"><strong>fastapiTestingLifespan2026?</strong></a>)</span>.</p>
+<p>FastAPI’s <code>TestClient</code> exercises the application directly without opening an HTTP socket <span class="citation" data-cites="fastapiTesting2026">(<a href="999-references.html#ref-fastapiTesting2026" role="doc-biblioref">Ramírez n.d.f</a>)</span>. Because the model loads in the lifespan context, use <code>TestClient</code> as a context manager so startup and shutdown logic runs during the test <span class="citation" data-cites="fastapiTestingLifespan2026">(<a href="999-references.html#ref-fastapiTestingLifespan2026" role="doc-biblioref">Ramírez n.d.e</a>)</span>.</p>
 <p>Create:</p>
 <pre class="text"><code>tests/test_05_api.py</code></pre>
 <p>The essential test cases are:</p>
@@ -867,14 +887,37 @@ Note
 <section id="further-reading" class="level2">
 <h2 class="anchored" data-anchor-id="further-reading">Further reading</h2>
 <ul>
-<li>FastAPI request bodies and data validation <span class="citation" data-cites="fastapiRequestBody2026">(<a href="999-references.html#ref-fastapiRequestBody2026" role="doc-biblioref"><strong>fastapiRequestBody2026?</strong></a>)</span></li>
-<li>FastAPI response models <span class="citation" data-cites="fastapiResponseModel2026">(<a href="999-references.html#ref-fastapiResponseModel2026" role="doc-biblioref"><strong>fastapiResponseModel2026?</strong></a>)</span></li>
-<li>FastAPI lifespan events <span class="citation" data-cites="fastapiLifespan2026">(<a href="999-references.html#ref-fastapiLifespan2026" role="doc-biblioref"><strong>fastapiLifespan2026?</strong></a>)</span></li>
-<li>FastAPI testing with <code>TestClient</code> <span class="citation" data-cites="fastapiTesting2026">(<a href="999-references.html#ref-fastapiTesting2026" role="doc-biblioref"><strong>fastapiTesting2026?</strong></a>)</span></li>
-<li>Pydantic fields and validation metadata <span class="citation" data-cites="pydanticFields2026">(<a href="999-references.html#ref-pydanticFields2026" role="doc-biblioref"><strong>pydanticFields2026?</strong></a>)</span></li>
+<li>FastAPI request bodies and data validation <span class="citation" data-cites="fastapiRequestBody2026">(<a href="999-references.html#ref-fastapiRequestBody2026" role="doc-biblioref">Ramírez n.d.c</a>)</span></li>
+<li>FastAPI response models <span class="citation" data-cites="fastapiResponseModel2026">(<a href="999-references.html#ref-fastapiResponseModel2026" role="doc-biblioref">Ramírez n.d.d</a>)</span></li>
+<li>FastAPI lifespan events <span class="citation" data-cites="fastapiLifespan2026">(<a href="999-references.html#ref-fastapiLifespan2026" role="doc-biblioref">Ramírez n.d.b</a>)</span></li>
+<li>FastAPI testing with <code>TestClient</code> <span class="citation" data-cites="fastapiTesting2026">(<a href="999-references.html#ref-fastapiTesting2026" role="doc-biblioref">Ramírez n.d.f</a>)</span></li>
+<li>Pydantic fields and validation metadata <span class="citation" data-cites="pydanticFields2026">(<a href="999-references.html#ref-pydanticFields2026" role="doc-biblioref">Pydantic n.d.</a>)</span></li>
 </ul>
 
 
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-pydanticFields2026" class="csl-entry" role="listitem">
+Pydantic. n.d. <span>“Fields.”</span> Accessed August 4, 2026. <a href="https://docs.pydantic.dev/latest/concepts/fields/">https://docs.pydantic.dev/latest/concepts/fields/</a>.
+</div>
+<div id="ref-fastapi2026" class="csl-entry" role="listitem">
+Ramírez, Sebastián. n.d.a. <span>“FastAPI.”</span> Accessed August 4, 2026. <a href="https://fastapi.tiangolo.com/">https://fastapi.tiangolo.com/</a>.
+</div>
+<div id="ref-fastapiLifespan2026" class="csl-entry" role="listitem">
+———. n.d.b. <span>“Lifespan Events.”</span> Accessed August 4, 2026. <a href="https://fastapi.tiangolo.com/advanced/events/">https://fastapi.tiangolo.com/advanced/events/</a>.
+</div>
+<div id="ref-fastapiRequestBody2026" class="csl-entry" role="listitem">
+———. n.d.c. <span>“Request Body.”</span> Accessed August 4, 2026. <a href="https://fastapi.tiangolo.com/tutorial/body/">https://fastapi.tiangolo.com/tutorial/body/</a>.
+</div>
+<div id="ref-fastapiResponseModel2026" class="csl-entry" role="listitem">
+———. n.d.d. <span>“Response Model: Return Type.”</span> Accessed August 4, 2026. <a href="https://fastapi.tiangolo.com/tutorial/response-model/">https://fastapi.tiangolo.com/tutorial/response-model/</a>.
+</div>
+<div id="ref-fastapiTestingLifespan2026" class="csl-entry" role="listitem">
+———. n.d.e. <span>“Testing Events: Lifespan and Startup–Shutdown.”</span> Accessed August 4, 2026. <a href="https://fastapi.tiangolo.com/advanced/testing-events/">https://fastapi.tiangolo.com/advanced/testing-events/</a>.
+</div>
+<div id="ref-fastapiTesting2026" class="csl-entry" role="listitem">
+———. n.d.f. <span>“Testing FastAPI Applications.”</span> Accessed August 4, 2026. <a href="https://fastapi.tiangolo.com/tutorial/testing/">https://fastapi.tiangolo.com/tutorial/testing/</a>.
+</div>
+</div>
 </section>
 
 </main> <!-- /main -->

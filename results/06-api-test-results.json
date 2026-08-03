@@ -1,0 +1,90 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "passed": 4,
+  "total": 4,
+  "tests": [
+    {
+      "name": "health",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "required_keys": [
+        "status"
+      ],
+      "response": {
+        "status": "ready",
+        "model_version": "breast-cancer-logistic-v1"
+      }
+    },
+    {
+      "name": "valid_prediction",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "required_keys": [
+        "prediction"
+      ],
+      "response": {
+        "prediction": 0,
+        "label": "malignant",
+        "probability_malignant": 0.9994175399800463,
+        "model_version": "breast-cancer-logistic-v1"
+      }
+    },
+    {
+      "name": "missing_required_field",
+      "passed": true,
+      "expected_status": 422,
+      "actual_status": 422,
+      "required_keys": [
+        "detail"
+      ],
+      "response": {
+        "detail": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "mean_texture"
+            ],
+            "msg": "Field required",
+            "input": {
+              "mean_radius": 17.99,
+              "mean_perimeter": 122.8,
+              "mean_area": 1001.0,
+              "mean_smoothness": 0.1184,
+              "mean_compactness": 0.2776,
+              "mean_concavity": 0.3001,
+              "mean_concave_points": 0.1471
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "invalid_boundary",
+      "passed": true,
+      "expected_status": 422,
+      "actual_status": 422,
+      "required_keys": [
+        "detail"
+      ],
+      "response": {
+        "detail": [
+          {
+            "type": "greater_than",
+            "loc": [
+              "body",
+              "mean_radius"
+            ],
+            "msg": "Input should be greater than 0",
+            "input": -1,
+            "ctx": {
+              "gt": 0.0
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
