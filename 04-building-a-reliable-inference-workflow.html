@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Building a Reliable Inference Workflow – Model Deployment</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./05-serving-predictions-with-fastapi.html" rel="next">
+<link href="./03-saving-and-loading-model-pipelines.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-485d01fc63b59abcd3ee1bf1e8e2748d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="assets/css/cdi.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./02-from-model-training-to-deployment.html">From Model to Inference</a></li><li class="breadcrumb-item"><a href="./04-building-a-reliable-inference-workflow.html"><span class="chapter-title">Building a Reliable Inference Workflow</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Model Deployment</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">index.html</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Orientation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./00-preface.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Preface</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-setting-up-environment.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Setting Up the Environment</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">From Model to Inference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-from-model-training-to-deployment.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">From Model Training to Deployment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-saving-and-loading-model-pipelines.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Saving and Loading Model Pipelines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-building-a-reliable-inference-workflow.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Building a Reliable Inference Workflow</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Serving and Testing Predictions</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-serving-predictions-with-fastapi.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Serving Predictions with FastAPI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-validation-errors-and-api-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Validation, Errors, and API Testing</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Containers and Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-containerizing-the-application.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Containerizing the Application</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-deployment-monitoring-and-maintenance.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Deployment Monitoring and Maintenance</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Case Study</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-end-to-end-deployment-case-study.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">End-to-End Deployment Case Study</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./999-appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./999-references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#from-training-to-inference" id="toc-from-training-to-inference" class="nav-link active" data-scroll-target="#from-training-to-inference">From training to inference</a></li>
+  <li><a href="#define-the-inference-contract" id="toc-define-the-inference-contract" class="nav-link" data-scroll-target="#define-the-inference-contract">Define the inference contract</a></li>
+  <li><a href="#a-reliable-batch-inference-sequence" id="toc-a-reliable-batch-inference-sequence" class="nav-link" data-scroll-target="#a-reliable-batch-inference-sequence">A reliable batch-inference sequence</a></li>
+  <li><a href="#validate-incoming-data" id="toc-validate-incoming-data" class="nav-link" data-scroll-target="#validate-incoming-data">Validate incoming data</a></li>
+  <li><a href="#preserve-identifiers-and-select-features" id="toc-preserve-identifiers-and-select-features" class="nav-link" data-scroll-target="#preserve-identifiers-and-select-features">Preserve identifiers and select features</a></li>
+  <li><a href="#generate-predictions-and-probabilities" id="toc-generate-predictions-and-probabilities" class="nav-link" data-scroll-target="#generate-predictions-and-probabilities">Generate predictions and probabilities</a></li>
+  <li><a href="#build-a-stable-prediction-table" id="toc-build-a-stable-prediction-table" class="nav-link" data-scroll-target="#build-a-stable-prediction-table">Build a stable prediction table</a></li>
+  <li><a href="#the-executable-inference-program" id="toc-the-executable-inference-program" class="nav-link" data-scroll-target="#the-executable-inference-program">The executable inference program</a></li>
+  <li><a href="#fail-clearly-and-safely" id="toc-fail-clearly-and-safely" class="nav-link" data-scroll-target="#fail-clearly-and-safely">Fail clearly and safely</a></li>
+  <li><a href="#record-operational-evidence" id="toc-record-operational-evidence" class="nav-link" data-scroll-target="#record-operational-evidence">Record operational evidence</a></li>
+  <li><a href="#common-failure-patterns" id="toc-common-failure-patterns" class="nav-link" data-scroll-target="#common-failure-patterns">Common failure patterns</a></li>
+  <li><a href="#test-the-workflow-before-automation" id="toc-test-the-workflow-before-automation" class="nav-link" data-scroll-target="#test-the-workflow-before-automation">Test the workflow before automation</a></li>
+  <li><a href="#chapter-checkpoint" id="toc-chapter-checkpoint" class="nav-link" data-scroll-target="#chapter-checkpoint">Chapter checkpoint</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./02-from-model-training-to-deployment.html">From Model to Inference</a></li><li class="breadcrumb-item"><a href="./04-building-a-reliable-inference-workflow.html"><span class="chapter-title">Building a Reliable Inference Workflow</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-building-a-reliable-inference-workflow" class="quarto-section-identifier"><span class="chapter-title">Building a Reliable Inference Workflow</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">Aug 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cdi-message">
+<ul>
+<li><strong>ID:</strong> MD-L04</li>
+<li><strong>Type:</strong> Applied workflow</li>
+<li><strong>Audience:</strong> Intermediate</li>
+<li><strong>Theme:</strong> Make prediction inputs, transformations, and outputs explicit</li>
+</ul>
+</div>
+<p>Saving a trained pipeline is only the beginning of deployment. A useful deployment workflow must also accept new observations, verify that they match the model’s expectations, produce interpretable outputs, and preserve enough context to investigate failures later.</p>
+<p>This chapter develops a repeatable <strong>batch-inference workflow</strong> around the pipeline saved in <a href="03-saving-and-loading-model-pipelines.html" class="quarto-xref"><span>Saving and Loading Model Pipelines</span></a>. Batch inference is a practical first deployment target because it makes every stage visible: a file arrives, the program validates it, the model produces predictions, and a new file records the results.</p>
+<p>By the end of the chapter, you will be able to:</p>
+<ul>
+<li>distinguish training from inference;</li>
+<li>define an explicit input contract for new data;</li>
+<li>load a saved pipeline once and use it without refitting;</li>
+<li>preserve record identifiers while selecting model features;</li>
+<li>return predictions and probabilities in a stable output schema;</li>
+<li>detect common data and prediction failures early; and</li>
+<li>run the same inference program directly or through a Bash wrapper.</li>
+</ul>
+<section id="from-training-to-inference" class="level2">
+<h2 class="anchored" data-anchor-id="from-training-to-inference">From training to inference</h2>
+<p>Training and inference use the same fitted pipeline for different purposes.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Stage</th>
+<th>Input</th>
+<th>Pipeline behaviour</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Training</td>
+<td>Historical labelled data</td>
+<td>Learns preprocessing parameters and model parameters</td>
+<td>Saved fitted pipeline</td>
+</tr>
+<tr class="even">
+<td>Inference</td>
+<td>New unlabelled data</td>
+<td>Reuses learned parameters without fitting again</td>
+<td>Predictions and supporting metadata</td>
+</tr>
+</tbody>
+</table>
+<p>The separation is important. During inference, the program must call <code>predict()</code> or <code>predict_proba()</code> on the loaded pipeline. Calling <code>fit()</code>, <code>fit_transform()</code>, or <code>fit_predict()</code> would allow new data to change the model and would break reproducibility.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Correct: reuse the fitted pipeline.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>predictions <span class="op">=</span> pipeline.predict(features)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Incorrect: never retrain as part of ordinary inference.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>pipeline.fit(features, labels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Because preprocessing and prediction were saved together, the inference program does not need to reproduce encoding, scaling, or imputation manually. The pipeline applies the fitted transformations in the correct order.</p>
+</section>
+<section id="define-the-inference-contract" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-inference-contract">Define the inference contract</h2>
+<p>An inference contract states what the program accepts and what it returns. It should be decided before writing the prediction code.</p>
+<p>For this guide, each incoming record contains:</p>
+<ul>
+<li>a stable <code>record_id</code> used to connect the output to the source record;</li>
+<li>the feature columns expected by the saved pipeline; and</li>
+<li>no target column, because the outcome is not yet known at prediction time.</li>
+</ul>
+<p>The prediction file contains:</p>
+<ul>
+<li><code>record_id</code>;</li>
+<li><code>prediction</code>;</li>
+<li><code>prediction_probability</code>; and</li>
+<li><code>model_version</code>.</li>
+</ul>
+<p>The identifier and version are operational metadata. They are not model features. Keeping them outside the feature matrix prevents accidental leakage while making every prediction traceable.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The exact column names, meanings, units, and permitted values form part of the model interface. A CSV file is not valid merely because pandas can read it.</p>
+</div>
+</div>
+</section>
+<section id="a-reliable-batch-inference-sequence" class="level2">
+<h2 class="anchored" data-anchor-id="a-reliable-batch-inference-sequence">A reliable batch-inference sequence</h2>
+<p>A robust program follows a short, explicit sequence:</p>
+<ol type="1">
+<li>resolve and verify all file paths;</li>
+<li>load the saved pipeline and its metadata;</li>
+<li>read the incoming batch;</li>
+<li>validate identifiers, required columns, values, and row counts;</li>
+<li>isolate model features in the expected order;</li>
+<li>generate predictions and, where supported, probabilities;</li>
+<li>validate the prediction output; and</li>
+<li>write the result to a deliberate location.</li>
+</ol>
+<p>This design keeps validation close to the boundary of the system. Invalid input should fail before the model produces a plausible-looking but unreliable result.</p>
+</section>
+<section id="validate-incoming-data" class="level2">
+<h2 class="anchored" data-anchor-id="validate-incoming-data">Validate incoming data</h2>
+<p>Start with structural checks that produce clear error messages.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> validate_input(data, required_features):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    required_columns <span class="op">=</span> {<span class="st">"record_id"</span>, <span class="op">*</span>required_features}</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    missing <span class="op">=</span> <span class="bu">sorted</span>(required_columns.difference(data.columns))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> missing:</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Missing required columns: </span><span class="sc">{</span>missing<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> data.empty:</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"The inference batch contains no rows."</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> data[<span class="st">"record_id"</span>].isna().<span class="bu">any</span>():</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"record_id contains missing values."</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> data[<span class="st">"record_id"</span>].duplicated().<span class="bu">any</span>():</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"record_id must be unique within a batch."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Structural validation is necessary but not sufficient. Depending on the application, validation may also enforce:</p>
+<ul>
+<li>numeric ranges, such as non-negative counts;</li>
+<li>known categories or a documented unknown-category policy;</li>
+<li>consistent units;</li>
+<li>acceptable missingness;</li>
+<li>parseable dates;</li>
+<li>maximum batch size; and</li>
+<li>privacy rules that exclude prohibited fields.</li>
+</ul>
+<p>The pipeline can impute missing feature values only if it was trained to do so. Validation should therefore distinguish between <strong>expected missingness</strong>, which the pipeline knows how to handle, and <strong>invalid missingness</strong>, which indicates a broken upstream process.</p>
+</section>
+<section id="preserve-identifiers-and-select-features" class="level2">
+<h2 class="anchored" data-anchor-id="preserve-identifiers-and-select-features">Preserve identifiers and select features</h2>
+<p>The incoming table contains both operational fields and model inputs. Separate them deliberately.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>record_ids <span class="op">=</span> data[<span class="st">"record_id"</span>].copy()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>features <span class="op">=</span> data.loc[:, required_features].copy()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Selecting features by name is safer than passing the entire table to the model. It prevents identifiers, timestamps, comments, or newly added upstream columns from silently becoming prediction inputs.</p>
+<p>When the fitted estimator exposes <code>feature_names_in_</code>, the program can use it as the authoritative feature list:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>required_features <span class="op">=</span> pipeline.feature_names_in_.tolist()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>If the saved object does not expose feature names, store the ordered list in the model metadata created during training. Do not infer the contract from whichever columns happen to arrive.</p>
+</section>
+<section id="generate-predictions-and-probabilities" class="level2">
+<h2 class="anchored" data-anchor-id="generate-predictions-and-probabilities">Generate predictions and probabilities</h2>
+<p>Load the model once per program run, then predict the entire validated batch.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> joblib</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>pipeline <span class="op">=</span> joblib.load(<span class="st">"models/customer-risk-pipeline.joblib"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>predictions <span class="op">=</span> pipeline.predict(features)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For a binary classifier, probabilities provide more information than class labels alone:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>probabilities <span class="op">=</span> pipeline.predict_proba(features)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>positive_probability <span class="op">=</span> probabilities[:, <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The expression <code>[:, 1]</code> is safe only when the second probability column is known to represent the intended positive class. A more reliable implementation locates that class explicitly:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>positive_class <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>classes <span class="op">=</span> pipeline.classes_.tolist()</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> positive_class <span class="kw">not</span> <span class="kw">in</span> classes:</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Positive class </span><span class="sc">{</span>positive_class<span class="sc">!r}</span><span class="ss"> not found in </span><span class="sc">{</span>classes<span class="sc">}</span><span class="ss">."</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>positive_index <span class="op">=</span> classes.index(positive_class)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>positive_probability <span class="op">=</span> pipeline.predict_proba(features)[:, positive_index]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This check prevents a subtle but serious error when class labels or their ordering differ from an assumption in the inference code.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Not every estimator implements <code>predict_proba()</code>. Some expose <code>decision_function()</code>, while regression models return continuous predictions directly. The output contract must match the fitted estimator and the decision process that consumes its predictions.</p>
+</div>
+</div>
+</section>
+<section id="build-a-stable-prediction-table" class="level2">
+<h2 class="anchored" data-anchor-id="build-a-stable-prediction-table">Build a stable prediction table</h2>
+<p>Construct the result independently from the feature table so that the output schema remains intentional.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> pd.DataFrame(</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"record_id"</span>: record_ids,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"prediction"</span>: predictions,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"prediction_probability"</span>: positive_probability,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"model_version"</span>: <span class="st">"1.0.0"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Before writing the file, validate the output:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span>(results) <span class="op">!=</span> <span class="bu">len</span>(data):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"Prediction row count does not match input row count."</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> results[<span class="st">"prediction_probability"</span>].isna().<span class="bu">any</span>():</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"Prediction probabilities contain missing values."</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> results[<span class="st">"prediction_probability"</span>].between(<span class="dv">0</span>, <span class="dv">1</span>).<span class="bu">all</span>():</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"Prediction probabilities fall outside [0, 1]."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>These checks are inexpensive and protect the boundary between the model and downstream systems.</p>
+</section>
+<section id="the-executable-inference-program" class="level2">
+<h2 class="anchored" data-anchor-id="the-executable-inference-program">The executable inference program</h2>
+<p>The complete implementation belongs in:</p>
+<pre class="text"><code>scripts/python/04-run-batch-inference.py</code></pre>
+<p>It should use command-line arguments rather than fixed working-directory assumptions:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/python/04-run-batch-inference.py <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/inference/new-records.csv <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--model</span> models/customer-risk-pipeline.joblib <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--metadata</span> models/customer-risk-metadata.json <span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> results/predictions/customer-risk-predictions.csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The program should create the output directory when needed but should not create or guess missing input files. A missing model, metadata file, or inference dataset is an error that requires correction.</p>
+<p>The corresponding wrapper belongs in:</p>
+<pre class="text"><code>scripts/bash/04-run-batch-inference.sh</code></pre>
+<p>and provides a short, repeatable project command:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/bash/04-run-batch-inference.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The Python command is the direct interface; the Bash wrapper is a convenience that supplies the standard project paths. Both routes execute the same Python workflow and therefore produce the same result.</p>
+</section>
+<section id="fail-clearly-and-safely" class="level2">
+<h2 class="anchored" data-anchor-id="fail-clearly-and-safely">Fail clearly and safely</h2>
+<p>Inference failures should be visible. Do not catch every exception and continue with partial or fabricated output.</p>
+<p>Useful failure messages identify:</p>
+<ul>
+<li>the missing or unreadable file;</li>
+<li>missing, duplicate, or unexpected fields;</li>
+<li>invalid values and affected columns;</li>
+<li>incompatibility between the model artifact and the runtime;</li>
+<li>unsupported probability behaviour; or</li>
+<li>disagreement between input and output row counts.</li>
+</ul>
+<p>When an output file may already exist, choose an explicit policy. For a teaching workflow, overwriting the named result keeps repeated runs simple. In production, versioned or timestamped destinations may be preferable, provided downstream consumers can identify the authoritative result.</p>
+</section>
+<section id="record-operational-evidence" class="level2">
+<h2 class="anchored" data-anchor-id="record-operational-evidence">Record operational evidence</h2>
+<p>A prediction file should answer more than “what did the model predict?” At minimum, retain or log:</p>
+<ul>
+<li>model name and version;</li>
+<li>model artifact checksum or immutable identifier;</li>
+<li>inference timestamp in UTC;</li>
+<li>input source or batch identifier;</li>
+<li>input and output row counts;</li>
+<li>validation outcome;</li>
+<li>prediction summary, such as class counts; and</li>
+<li>software or environment version when strict reproducibility is required.</li>
+</ul>
+<p>Do not place sensitive source features into logs merely for convenience. Operational evidence should support traceability without duplicating protected data.</p>
+</section>
+<section id="common-failure-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="common-failure-patterns">Common failure patterns</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Failure pattern</th>
+<th>Why it is unreliable</th>
+<th>Better approach</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Recreating preprocessing in the inference script</td>
+<td>Training and inference transformations can diverge</td>
+<td>Load one fitted pipeline</td>
+</tr>
+<tr class="even">
+<td>Passing every incoming column to the model</td>
+<td>Operational or newly added columns may leak into prediction</td>
+<td>Select the named feature contract</td>
+</tr>
+<tr class="odd">
+<td>Assuming probability column 1 is always positive</td>
+<td>Class ordering may differ</td>
+<td>Locate the positive class through <code>classes_</code></td>
+</tr>
+<tr class="even">
+<td>Dropping the record identifier</td>
+<td>Predictions cannot be joined safely to source records</td>
+<td>Preserve a unique identifier outside the features</td>
+</tr>
+<tr class="odd">
+<td>Accepting an empty batch</td>
+<td>A technically successful empty output can hide upstream failure</td>
+<td>Reject empty input explicitly</td>
+</tr>
+<tr class="even">
+<td>Writing results before validation</td>
+<td>Invalid output can reach downstream consumers</td>
+<td>Validate first, then write</td>
+</tr>
+<tr class="odd">
+<td>Refitting during prediction</td>
+<td>New data changes the model</td>
+<td>Use only prediction methods</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="test-the-workflow-before-automation" class="level2">
+<h2 class="anchored" data-anchor-id="test-the-workflow-before-automation">Test the workflow before automation</h2>
+<p>Run at least four small batches before relying on the program:</p>
+<ol type="1">
+<li>a valid batch with several records;</li>
+<li>a batch missing one required feature;</li>
+<li>a batch containing duplicate identifiers; and</li>
+<li>an empty batch.</li>
+</ol>
+<p>The valid batch should produce one output row per input row. Each invalid batch should stop with a specific, understandable error. These cases will become automated tests in a later chapter; running them manually now confirms that the contract is clear enough to test.</p>
+</section>
+<section id="chapter-checkpoint" class="level2">
+<h2 class="anchored" data-anchor-id="chapter-checkpoint">Chapter checkpoint</h2>
+<p>You now have the design for a reliable batch-inference boundary:</p>
+<ul>
+<li>the fitted pipeline is loaded rather than rebuilt;</li>
+<li>incoming data is checked against an explicit contract;</li>
+<li>identifiers remain separate from model features;</li>
+<li>class probabilities are interpreted deliberately;</li>
+<li>predictions follow a stable, traceable schema; and</li>
+<li>failures stop the workflow before unreliable output is written.</li>
+</ul>
+<p>The next step is to expose the same prediction logic through a service interface. The input and output contracts developed here will transfer directly to request and response models, reducing the amount of new logic required for an API.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // default icon
+            link.classList.add("external");
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./03-saving-and-loading-model-pipelines.html" class="pagination-link" aria-label="Saving and Loading Model Pipelines">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Saving and Loading Model Pipelines</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./05-serving-predictions-with-fastapi.html" class="pagination-link" aria-label="Serving Predictions with FastAPI">
+        <span class="nav-page-text"><span class="chapter-title">Serving Predictions with FastAPI</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
