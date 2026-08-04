@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -70,6 +105,10 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<meta name="mermaid-theme" content="forest">
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="assets/css/cdi.css">
@@ -246,8 +285,28 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives">Learning objectives</a></li>
+  <li><a href="#the-case-study" id="toc-the-case-study" class="nav-link" data-scroll-target="#the-case-study">The case study</a></li>
+  <li><a href="#release-acceptance-criteria" id="toc-release-acceptance-criteria" class="nav-link" data-scroll-target="#release-acceptance-criteria">Release acceptance criteria</a></li>
+  <li><a href="#preserve-one-prediction-contract" id="toc-preserve-one-prediction-contract" class="nav-link" data-scroll-target="#preserve-one-prediction-contract">Preserve one prediction contract</a></li>
+  <li><a href="#run-the-complete-workflow" id="toc-run-the-complete-workflow" class="nav-link" data-scroll-target="#run-the-complete-workflow">Run the complete workflow</a></li>
+  <li><a href="#generate-the-verification-report" id="toc-generate-the-verification-report" class="nav-link" data-scroll-target="#generate-the-verification-report">Generate the verification report</a></li>
+  <li><a href="#inspect-failures-by-layer" id="toc-inspect-failures-by-layer" class="nav-link" data-scroll-target="#inspect-failures-by-layer">Inspect failures by layer</a></li>
+  <li><a href="#separate-build-time-and-run-time-verification" id="toc-separate-build-time-and-run-time-verification" class="nav-link" data-scroll-target="#separate-build-time-and-run-time-verification">Separate build-time and run-time verification</a>
+  <ul class="collapse">
+  <li><a href="#build-time-checks" id="toc-build-time-checks" class="nav-link" data-scroll-target="#build-time-checks">Build-time checks</a></li>
+  <li><a href="#run-time-checks" id="toc-run-time-checks" class="nav-link" data-scroll-target="#run-time-checks">Run-time checks</a></li>
+  </ul></li>
+  <li><a href="#reproducibility-checklist" id="toc-reproducibility-checklist" class="nav-link" data-scroll-target="#reproducibility-checklist">Reproducibility checklist</a></li>
+  <li><a href="#what-this-case-study-demonstrates" id="toc-what-this-case-study-demonstrates" class="nav-link" data-scroll-target="#what-this-case-study-demonstrates">What this case study demonstrates</a></li>
+  <li><a href="#chapter-summary" id="toc-chapter-summary" class="nav-link" data-scroll-target="#chapter-summary">Chapter summary</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -280,13 +339,293 @@ ul.task-list li input[type="checkbox"] {
 <div class="cdi-message">
 <ul>
 <li><strong>ID:</strong> MD-L09</li>
-<li><strong>Status:</strong> Scaffolded for chapter-by-chapter development</li>
+<li><strong>Status:</strong> Complete</li>
 <li><strong>Theme:</strong> Rebuild and verify the complete deployment path</li>
 </ul>
 </div>
-<p>This chapter will connect training, serialization, inference, testing, containerization, and monitoring into one reproducible case study.</p>
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning objectives</h2>
+<p>By the end of this chapter, you should be able to:</p>
+<ul>
+<li>connect model training, serialization, inference, API serving, validation, testing, containerization, and monitoring;</li>
+<li>distinguish build-time checks from run-time checks;</li>
+<li>execute the deployment workflow with one reproducible command;</li>
+<li>preserve verification results as machine-readable evidence; and</li>
+<li>decide whether a candidate is ready for release.</li>
+</ul>
+</section>
+<section id="the-case-study" class="level2">
+<h2 class="anchored" data-anchor-id="the-case-study">The case study</h2>
+<p>The earlier chapters developed the deployment system one layer at a time. This chapter treats those layers as one release candidate. The objective is not to build a second application. It is to verify that the same fitted pipeline can move from a saved artifact to a tested service without changing its preprocessing or prediction logic.</p>
+<p>The complete path is:</p>
+<div class="cell" data-layout-align="default">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>flowchart TD</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    A[Training data] --&gt; B[Fit preprocessing and model]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    B --&gt; C[Serialized pipeline]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    C --&gt; D[Inference function]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    D --&gt; E[FastAPI service]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    E --&gt; F[API and contract tests]</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    F --&gt; G[Container image]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    G --&gt; H[Health and prediction probes]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    H --&gt; I[Monitoring evidence]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A[Training data] --&gt; B[Fit preprocessing and model]
+    B --&gt; C[Serialized pipeline]
+    C --&gt; D[Inference function]
+    D --&gt; E[FastAPI service]
+    E --&gt; F[API and contract tests]
+    F --&gt; G[Container image]
+    G --&gt; H[Health and prediction probes]
+    H --&gt; I[Monitoring evidence]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>The serialized pipeline is the boundary between model development and serving. Preprocessing must remain inside that pipeline so that training and inference apply the same transformations.</p>
+</section>
+<section id="release-acceptance-criteria" class="level2">
+<h2 class="anchored" data-anchor-id="release-acceptance-criteria">Release acceptance criteria</h2>
+<p>A deployment candidate is accepted only when all required checks pass.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Layer</th>
+<th>Evidence</th>
+<th>Acceptance criterion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Artifact</td>
+<td>Saved model pipeline</td>
+<td>File exists and loads successfully</td>
+</tr>
+<tr class="even">
+<td>Inference</td>
+<td>Direct Python prediction</td>
+<td>Valid input returns the expected output structure</td>
+</tr>
+<tr class="odd">
+<td>Application</td>
+<td>FastAPI app</td>
+<td>Application imports without startup errors</td>
+</tr>
+<tr class="even">
+<td>Health</td>
+<td><code>/health</code></td>
+<td>HTTP 200 and a healthy status</td>
+</tr>
+<tr class="odd">
+<td>Prediction</td>
+<td><code>/predict</code></td>
+<td>Valid request returns HTTP 200</td>
+</tr>
+<tr class="even">
+<td>Validation</td>
+<td>Invalid requests</td>
+<td>Rejected with HTTP 422</td>
+</tr>
+<tr class="odd">
+<td>Tests</td>
+<td>Automated test suite</td>
+<td>All required tests pass</td>
+</tr>
+<tr class="even">
+<td>Container</td>
+<td>Docker image and container</td>
+<td>Image builds and probes pass</td>
+</tr>
+<tr class="odd">
+<td>Operations</td>
+<td>Structured report</td>
+<td>Results are written for review and monitoring</td>
+</tr>
+</tbody>
+</table>
+<p>The gate is intentionally strict: one failed required check means the candidate is not ready. A successful health response alone does not prove that the model can make predictions.</p>
+</section>
+<section id="preserve-one-prediction-contract" class="level2">
+<h2 class="anchored" data-anchor-id="preserve-one-prediction-contract">Preserve one prediction contract</h2>
+<p>The valid request used in Chapter 06 should remain the canonical smoke-test request. Store it in <code>data/reference/valid-prediction-request.json</code> so that local tests, container tests, and operational probes use the same input.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"feature_1"</span><span class="fu">:</span> <span class="fl">0.25</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"feature_2"</span><span class="fu">:</span> <span class="fl">1.75</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"feature_3"</span><span class="fu">:</span> <span class="fl">8.0</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Replace the illustrative fields above with the fields defined by the application’s Pydantic request model. Do not maintain slightly different payloads in several scripts; contract drift is easier to prevent when there is one reference file.</p>
+</section>
+<section id="run-the-complete-workflow" class="level2">
+<h2 class="anchored" data-anchor-id="run-the-complete-workflow">Run the complete workflow</h2>
+<p>The Bash orchestrator runs the repository’s established chapter scripts in release order. From the repository root, run:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/bash/09-run-end-to-end-deployment.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>By default, the workflow performs local checks. Add <code>--with-container</code> when Docker is available and the release candidate must also be verified in a container:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/bash/09-run-end-to-end-deployment.sh <span class="at">--with-container</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The orchestrator uses existing scripts when they are present rather than duplicating their logic. This preserves the chapter progression:</p>
+<ol type="1">
+<li>verify or create the serialized model;</li>
+<li>run the automated Python tests;</li>
+<li>start the API and wait for readiness;</li>
+<li>execute the Chapter 06 API contract tests;</li>
+<li>optionally build and test the container; and</li>
+<li>summarize the evidence in a report and figure.</li>
+</ol>
+<p>If a required command fails, the script exits immediately. This behaviour makes the workflow suitable for a local release gate and, later, for continuous integration.</p>
+</section>
+<section id="generate-the-verification-report" class="level2">
+<h2 class="anchored" data-anchor-id="generate-the-verification-report">Generate the verification report</h2>
+<p>After the checks finish, the reporting script converts their evidence into a consistent JSON summary and a readiness figure:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/python/09-summarize-deployment-verification.py <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--api-report</span> results/06-api-test-results.json <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> results/09-deployment-verification.json <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--figure</span> results/figures/09-deployment-readiness.png</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The script records each check as <code>passed</code>, <code>failed</code>, <code>skipped</code>, or <code>not_run</code>. Skipped optional container checks remain visible and are not silently reported as successes.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Illustrative structure of the generated report.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>report <span class="op">=</span> {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"overall_status"</span>: <span class="st">"passed"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"checks"</span>: [</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        {<span class="st">"name"</span>: <span class="st">"health"</span>, <span class="st">"status"</span>: <span class="st">"passed"</span>, <span class="st">"http_status"</span>: <span class="dv">200</span>},</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        {<span class="st">"name"</span>: <span class="st">"valid_prediction"</span>, <span class="st">"status"</span>: <span class="st">"passed"</span>, <span class="st">"http_status"</span>: <span class="dv">200</span>},</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        {<span class="st">"name"</span>: <span class="st">"missing_required_field"</span>, <span class="st">"status"</span>: <span class="st">"passed"</span>, <span class="st">"http_status"</span>: <span class="dv">422</span>},</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>When the generated figure exists, include it in the rendered guide:</p>
+<div id="fig-deployment-readiness" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Horizontal status bars summarizing the deployment verification checks.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-deployment-readiness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="results/figures/09-deployment-readiness.png" class="img-fluid figure-img" alt="Horizontal status bars summarizing the deployment verification checks.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-deployment-readiness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11.1: Deployment verification status by check. Green indicates a passed check; red indicates failure; grey indicates a skipped or unavailable check.
+</figcaption>
+</figure>
+</div>
+<p>The figure is a communication aid, while the JSON file is the auditable source. Automated systems should consume the JSON rather than infer status from image colours.</p>
+</section>
+<section id="inspect-failures-by-layer" class="level2">
+<h2 class="anchored" data-anchor-id="inspect-failures-by-layer">Inspect failures by layer</h2>
+<p>An end-to-end failure becomes easier to diagnose when it is assigned to the layer that first failed.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symptom</th>
+<th>Likely layer</th>
+<th>First inspection</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Model file is missing</td>
+<td>Build/artifact</td>
+<td>Training and serialization command</td>
+</tr>
+<tr class="even">
+<td>Model loads locally but API import fails</td>
+<td>Application</td>
+<td>Import path, lifespan code, and configuration</td>
+</tr>
+<tr class="odd">
+<td>Health passes but prediction fails</td>
+<td>Contract or inference</td>
+<td>Request fields, types, feature order, and model input</td>
+</tr>
+<tr class="even">
+<td>Local API passes but container fails</td>
+<td>Packaging</td>
+<td>Docker build context, copied files, paths, and port</td>
+</tr>
+<tr class="odd">
+<td>Valid input returns 422</td>
+<td>Contract</td>
+<td>Reference JSON compared with the Pydantic schema</td>
+</tr>
+<tr class="even">
+<td>Invalid input returns 200</td>
+<td>Validation</td>
+<td>Field constraints and request model</td>
+</tr>
+<tr class="odd">
+<td>Container works but later probes fail</td>
+<td>Operations</td>
+<td>Logs, resource limits, dependency health, and model availability</td>
+</tr>
+</tbody>
+</table>
+<p>Always inspect the earliest failing layer. Later failures are often consequences rather than independent defects.</p>
+</section>
+<section id="separate-build-time-and-run-time-verification" class="level2">
+<h2 class="anchored" data-anchor-id="separate-build-time-and-run-time-verification">Separate build-time and run-time verification</h2>
+<p>Build-time checks answer whether the release candidate was assembled correctly. Run-time checks answer whether the deployed process remains available and useful.</p>
+<section id="build-time-checks" class="level3">
+<h3 class="anchored" data-anchor-id="build-time-checks">Build-time checks</h3>
+<ul>
+<li>dependencies install in the project environment;</li>
+<li>tests pass;</li>
+<li>the model artifact loads;</li>
+<li>the application imports;</li>
+<li>the container image builds; and</li>
+<li>the reference request satisfies the API contract.</li>
+</ul>
+</section>
+<section id="run-time-checks" class="level3">
+<h3 class="anchored" data-anchor-id="run-time-checks">Run-time checks</h3>
+<ul>
+<li>the process remains alive;</li>
+<li>the health endpoint responds;</li>
+<li>predictions succeed within an acceptable latency;</li>
+<li>validation failures are visible but do not crash the service;</li>
+<li>error rates and latency remain within operational thresholds; and</li>
+<li>input or prediction distributions are reviewed for meaningful change.</li>
+</ul>
+<p>The Chapter 09 report is release evidence, not a replacement for continuing monitoring after deployment.</p>
+</section>
+</section>
+<section id="reproducibility-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="reproducibility-checklist">Reproducibility checklist</h2>
+<p>Before declaring the case study complete, confirm that:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">the repository-specific <code>.venv</code> is active;</label></li>
+<li><label><input type="checkbox">dependencies are installed from the repository requirements file;</label></li>
+<li><label><input type="checkbox">the serialized pipeline was produced by the documented training script;</label></li>
+<li><label><input type="checkbox">the application loads the artifact from a stable repository-relative path;</label></li>
+<li><label><input type="checkbox">one canonical valid request is stored under <code>data/reference/</code>;</label></li>
+<li><label><input type="checkbox">direct inference, API tests, and container tests use the same feature contract;</label></li>
+<li><label><input type="checkbox">invalid input produces HTTP 422 rather than an internal server error;</label></li>
+<li><label><input type="checkbox">the container is tested when it is part of the intended release;</label></li>
+<li><label><input type="checkbox">JSON evidence and the readiness figure are regenerated; and</label></li>
+<li><label><input type="checkbox">generated outputs are reviewed before committing or publishing them.</label></li>
+</ul>
+</section>
+<section id="what-this-case-study-demonstrates" class="level2">
+<h2 class="anchored" data-anchor-id="what-this-case-study-demonstrates">What this case study demonstrates</h2>
+<p>Deployment is not the act of placing a model behind an endpoint. It is a chain of contracts: data to pipeline, pipeline to inference function, inference function to API, API to container, and running service to operational evidence. The release is dependable only when those contracts are tested together.</p>
+<p>The workflow in this chapter provides a reproducible minimum release gate. It can later be transferred to continuous integration, a container registry, and a managed deployment platform without changing the underlying principles.</p>
+</section>
+<section id="chapter-summary" class="level2">
+<h2 class="anchored" data-anchor-id="chapter-summary">Chapter summary</h2>
+<p>This chapter rebuilt the full deployment path as one verified release candidate. The Bash orchestrator reuses the earlier chapter scripts, while the Python reporter turns test evidence into JSON and a readiness figure. Required failures block release; optional checks are recorded explicitly; and operational monitoring continues after the release gate has passed.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

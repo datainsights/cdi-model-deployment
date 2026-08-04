@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -71,6 +106,35 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="assets/css/cdi.css">
 </head>
@@ -246,8 +310,27 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives">Learning objectives</a></li>
+  <li><a href="#monitoring-is-a-layered-problem" id="toc-monitoring-is-a-layered-problem" class="nav-link" data-scroll-target="#monitoring-is-a-layered-problem">Monitoring is a layered problem</a></li>
+  <li><a href="#design-an-inference-event" id="toc-design-an-inference-event" class="nav-link" data-scroll-target="#design-an-inference-event">Design an inference event</a></li>
+  <li><a href="#produce-structured-logs-in-fastapi" id="toc-produce-structured-logs-in-fastapi" class="nav-link" data-scroll-target="#produce-structured-logs-in-fastapi">Produce structured logs in FastAPI</a></li>
+  <li><a href="#build-the-chapter-monitoring-demonstration" id="toc-build-the-chapter-monitoring-demonstration" class="nav-link" data-scroll-target="#build-the-chapter-monitoring-demonstration">Build the chapter monitoring demonstration</a></li>
+  <li><a href="#aggregate-signals-over-useful-windows" id="toc-aggregate-signals-over-useful-windows" class="nav-link" data-scroll-target="#aggregate-signals-over-useful-windows">Aggregate signals over useful windows</a></li>
+  <li><a href="#define-alerts-as-testable-rules" id="toc-define-alerts-as-testable-rules" class="nav-link" data-scroll-target="#define-alerts-as-testable-rules">Define alerts as testable rules</a></li>
+  <li><a href="#detect-feature-drift" id="toc-detect-feature-drift" class="nav-link" data-scroll-target="#detect-feature-drift">Detect feature drift</a></li>
+  <li><a href="#drift-concept-drift-and-performance-decay" id="toc-drift-concept-drift-and-performance-decay" class="nav-link" data-scroll-target="#drift-concept-drift-and-performance-decay">Drift, concept drift, and performance decay</a></li>
+  <li><a href="#investigate-before-retraining" id="toc-investigate-before-retraining" class="nav-link" data-scroll-target="#investigate-before-retraining">Investigate before retraining</a></li>
+  <li><a href="#maintain-a-model-lifecycle-record" id="toc-maintain-a-model-lifecycle-record" class="nav-link" data-scroll-target="#maintain-a-model-lifecycle-record">Maintain a model lifecycle record</a></li>
+  <li><a href="#practical-interpretation-checklist" id="toc-practical-interpretation-checklist" class="nav-link" data-scroll-target="#practical-interpretation-checklist">Practical interpretation checklist</a></li>
+  <li><a href="#chapter-summary" id="toc-chapter-summary" class="nav-link" data-scroll-target="#chapter-summary">Chapter summary</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -280,13 +363,350 @@ ul.task-list li input[type="checkbox"] {
 <div class="cdi-message">
 <ul>
 <li><strong>ID:</strong> MD-L08</li>
-<li><strong>Status:</strong> Scaffolded for chapter-by-chapter development</li>
+<li><strong>Type:</strong> Model operations</li>
+<li><strong>Audience:</strong> Intermediate</li>
 <li><strong>Theme:</strong> Observe change and maintain confidence after release</li>
 </ul>
 </div>
-<p>This chapter will monitor inference data, predictions, service behaviour, and model lifecycle signals.</p>
+<p>Deploying a model is not the end of the workflow. It is the point at which assumptions made during development begin to meet changing data, real users, network failures, and operational constraints. A healthy service must therefore be observed continuously and maintained deliberately.</p>
+<p>This chapter develops a small, reproducible monitoring workflow. It records inference events, aggregates service and prediction signals, checks explicit thresholds, examines feature drift, and produces artifacts that can support investigation.</p>
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning objectives</h2>
+<p>By the end of this chapter, you should be able to:</p>
+<ul>
+<li>distinguish service, data, prediction, and performance monitoring;</li>
+<li>design useful inference logs without storing unnecessary sensitive data;</li>
+<li>aggregate raw events into time-windowed monitoring metrics;</li>
+<li>define warning and critical thresholds before incidents occur;</li>
+<li>detect feature drift and interpret it cautiously;</li>
+<li>connect alerts to investigation, rollback, and retraining decisions; and</li>
+<li>maintain a model through a documented lifecycle.</li>
+</ul>
+</section>
+<section id="monitoring-is-a-layered-problem" class="level2">
+<h2 class="anchored" data-anchor-id="monitoring-is-a-layered-problem">Monitoring is a layered problem</h2>
+<p>No single metric can establish that a deployed model is healthy. Monitoring should cover several related layers.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Layer</th>
+<th>Example signals</th>
+<th>Question answered</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Service</td>
+<td>request count, error rate, latency</td>
+<td>Is the API available and responsive?</td>
+</tr>
+<tr class="even">
+<td>Data quality</td>
+<td>missingness, range violations, schema failures</td>
+<td>Are requests usable and structurally valid?</td>
+</tr>
+<tr class="odd">
+<td>Feature distribution</td>
+<td>summary statistics, category proportions, drift scores</td>
+<td>Does current input resemble the reference population?</td>
+</tr>
+<tr class="even">
+<td>Predictions</td>
+<td>class balance, score distribution, abstention rate</td>
+<td>Has model behaviour changed?</td>
+</tr>
+<tr class="odd">
+<td>Model performance</td>
+<td>accuracy, recall, calibration, subgroup metrics</td>
+<td>Is the model still correct when outcomes become available?</td>
+</tr>
+<tr class="even">
+<td>Operations</td>
+<td>model version, deployment age, alert status</td>
+<td>Can a change be traced and acted upon?</td>
+</tr>
+</tbody>
+</table>
+<p>Service health and model quality are different. An API can return HTTP 200 quickly while producing increasingly unreliable predictions. Conversely, a statistically stable model can still be unusable when the service has high latency or frequent failures.</p>
+</section>
+<section id="design-an-inference-event" class="level2">
+<h2 class="anchored" data-anchor-id="design-an-inference-event">Design an inference event</h2>
+<p>A monitoring event should contain enough information to reconstruct what happened without becoming an uncontrolled copy of every request. A practical event might include:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"timestamp"</span><span class="fu">:</span> <span class="st">"2026-08-04T08:15:00Z"</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"request_id"</span><span class="fu">:</span> <span class="st">"req-4a81"</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"model_version"</span><span class="fu">:</span> <span class="st">"churn-pipeline-1.2.0"</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"status_code"</span><span class="fu">:</span> <span class="dv">200</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"latency_ms"</span><span class="fu">:</span> <span class="fl">43.7</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"prediction"</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"probability"</span><span class="fu">:</span> <span class="fl">0.78</span><span class="fu">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"features"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"tenure_months"</span><span class="fu">:</span> <span class="dv">7</span><span class="fu">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"monthly_charges"</span><span class="fu">:</span> <span class="fl">84.5</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In a real system, apply data minimisation. Avoid logging direct identifiers, secrets, free text, or sensitive attributes unless they are genuinely required and protected. A pseudonymous request identifier can support tracing without exposing a person’s identity. Define retention periods and access controls for logs just as carefully as for training data.</p>
+</section>
+<section id="produce-structured-logs-in-fastapi" class="level2">
+<h2 class="anchored" data-anchor-id="produce-structured-logs-in-fastapi">Produce structured logs in FastAPI</h2>
+<p>The endpoint can record one structured event after every prediction. The exact logging backend may vary, but the application should emit machine-readable fields consistently.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> logging</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> uuid <span class="im">import</span> uuid4</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>logger <span class="op">=</span> logging.getLogger(<span class="st">"model_api"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">@app.post</span>(<span class="st">"/predict"</span>, response_model<span class="op">=</span>PredictionResponse)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> predict(payload: PredictionRequest) <span class="op">-&gt;</span> PredictionResponse:</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    started <span class="op">=</span> time.perf_counter()</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    request_id <span class="op">=</span> <span class="bu">str</span>(uuid4())</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    probability <span class="op">=</span> <span class="bu">float</span>(model.predict_proba(payload.to_frame())[<span class="dv">0</span>, <span class="dv">1</span>])</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    prediction <span class="op">=</span> <span class="bu">int</span>(probability <span class="op">&gt;=</span> <span class="fl">0.5</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    latency_ms <span class="op">=</span> (time.perf_counter() <span class="op">-</span> started) <span class="op">*</span> <span class="dv">1_000</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    logger.info(</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">"prediction_completed"</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        extra<span class="op">=</span>{</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">"request_id"</span>: request_id,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            <span class="st">"model_version"</span>: MODEL_VERSION,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">"status_code"</span>: <span class="dv">200</span>,</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>            <span class="st">"latency_ms"</span>: <span class="bu">round</span>(latency_ms, <span class="dv">2</span>),</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>            <span class="st">"prediction"</span>: prediction,</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>            <span class="st">"probability"</span>: <span class="bu">round</span>(probability, <span class="dv">6</span>),</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> PredictionResponse(</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        prediction<span class="op">=</span>prediction,</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        probability<span class="op">=</span>probability,</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        model_version<span class="op">=</span>MODEL_VERSION,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Do not let monitoring failures make the prediction endpoint unreliable. Production logging and metric exporters should use bounded buffers, sensible timeouts, and failure handling appropriate to the service.</p>
+</section>
+<section id="build-the-chapter-monitoring-demonstration" class="level2">
+<h2 class="anchored" data-anchor-id="build-the-chapter-monitoring-demonstration">Build the chapter monitoring demonstration</h2>
+<p>The chapter script simulates fourteen days of inference activity. The final days introduce higher latency, more errors, increased missingness, a change in one feature distribution, and a shift in the positive prediction rate. This creates known behaviour against which the monitoring calculations can be checked.</p>
+<p>Run the workflow from the repository root:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/python/08-monitor-deployment.py</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Alternatively, use the Bash wrapper:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/bash/08-monitor-deployment.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The workflow writes:</p>
+<ul>
+<li><code>results/08-inference-events.csv</code> — simulated request-level records;</li>
+<li><code>results/08-daily-monitoring-metrics.csv</code> — daily aggregates;</li>
+<li><code>results/08-monitoring-alerts.csv</code> — threshold evaluation results;</li>
+<li><code>results/08-drift-summary.csv</code> — feature drift statistics;</li>
+<li><code>results/figures/08-monitoring-dashboard.png</code>; and</li>
+<li><code>results/figures/08-feature-drift.png</code>.</li>
+</ul>
+</section>
+<section id="aggregate-signals-over-useful-windows" class="level2">
+<h2 class="anchored" data-anchor-id="aggregate-signals-over-useful-windows">Aggregate signals over useful windows</h2>
+<p>Individual events are necessary for tracing, but operational decisions are usually based on rolling or fixed windows. For each day, the demonstration calculates:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>daily <span class="op">=</span> events.groupby(<span class="st">"date"</span>, as_index<span class="op">=</span><span class="va">False</span>).agg(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    requests<span class="op">=</span>(<span class="st">"request_id"</span>, <span class="st">"size"</span>),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    error_rate<span class="op">=</span>(<span class="st">"is_error"</span>, <span class="st">"mean"</span>),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    p95_latency_ms<span class="op">=</span>(<span class="st">"latency_ms"</span>, <span class="kw">lambda</span> x: x.quantile(<span class="fl">0.95</span>)),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    missing_rate<span class="op">=</span>(<span class="st">"feature_missing"</span>, <span class="st">"mean"</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    positive_rate<span class="op">=</span>(<span class="st">"prediction"</span>, <span class="st">"mean"</span>),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    mean_probability<span class="op">=</span>(<span class="st">"probability"</span>, <span class="st">"mean"</span>),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The aggregation window should match the decision. A five-minute window may be suitable for service outages; daily or weekly windows may be more stable for population drift. Very small windows can trigger noise, while very large windows can hide abrupt changes.</p>
+<div id="fig-monitoring-dashboard" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four-panel deployment monitoring dashboard with daily request count, error rate, p95 latency, and positive prediction rate.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-monitoring-dashboard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="results/figures/08-monitoring-dashboard.png" class="img-fluid figure-img" alt="Four-panel deployment monitoring dashboard with daily request count, error rate, p95 latency, and positive prediction rate.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-monitoring-dashboard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10.1: Daily monitoring dashboard showing request volume, error rate, latency, and prediction rate. Dashed lines indicate operational thresholds.
+</figcaption>
+</figure>
+</div>
+<p>The dashboard combines related signals without collapsing them into one score. A rise in latency and errors suggests an operational incident. A changed prediction rate without service degradation suggests a data or model-behaviour investigation.</p>
+</section>
+<section id="define-alerts-as-testable-rules" class="level2">
+<h2 class="anchored" data-anchor-id="define-alerts-as-testable-rules">Define alerts as testable rules</h2>
+<p>An alert should identify a condition, severity, observation window, owner, and expected action. Thresholds in this demonstration are deliberately simple:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 40%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th style="text-align: right;">Warning condition</th>
+<th>Example first response</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Error rate</td>
+<td style="text-align: right;">greater than 2%</td>
+<td>inspect API and dependency errors</td>
+</tr>
+<tr class="even">
+<td>p95 latency</td>
+<td style="text-align: right;">greater than 180 ms</td>
+<td>inspect resource use and downstream calls</td>
+</tr>
+<tr class="odd">
+<td>Missing feature rate</td>
+<td style="text-align: right;">greater than 3%</td>
+<td>validate upstream data pipeline</td>
+</tr>
+<tr class="even">
+<td>Positive prediction rate</td>
+<td style="text-align: right;">outside 25%–55%</td>
+<td>compare inputs and score distribution with reference</td>
+</tr>
+</tbody>
+</table>
+<p>Thresholds must reflect the application rather than universal conventions. Establish baselines from representative traffic, account for expected seasonality, and tune rules using the operational cost of missed and false alerts.</p>
+<p>A simple rule evaluator can retain both healthy and breached checks:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>alerts <span class="op">=</span> []</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> row <span class="kw">in</span> daily.itertuples(index<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    alerts.append({</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">"date"</span>: row.date,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"metric"</span>: <span class="st">"error_rate"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"value"</span>: row.error_rate,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"threshold"</span>: <span class="fl">0.02</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"status"</span>: <span class="st">"ALERT"</span> <span class="cf">if</span> row.error_rate <span class="op">&gt;</span> <span class="fl">0.02</span> <span class="cf">else</span> <span class="st">"OK"</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    })</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In production, avoid sending one notification per event. Require a sustained breach, group related alerts, apply cooldown periods, and route notifications to a named owner. Every alert should link to a runbook.</p>
+</section>
+<section id="detect-feature-drift" class="level2">
+<h2 class="anchored" data-anchor-id="detect-feature-drift">Detect feature drift</h2>
+<p>Feature drift occurs when the distribution of inputs changes relative to a reference period. It can be measured even before true outcomes are available. The demonstration compares the first seven days with the final seven days.</p>
+<p>For a numeric feature, the population stability index (PSI) divides the reference distribution into bins and compares reference and current proportions:</p>
+<p><span class="math display">\[
+\operatorname{PSI} = \sum_{i=1}^{k}(p_i-q_i)\log\left(\frac{p_i}{q_i}\right),
+\]</span></p>
+<p>where <span class="math inline">\(p_i\)</span> is the current proportion and <span class="math inline">\(q_i\)</span> is the reference proportion in bin <span class="math inline">\(i\)</span>. Small constants are used in software to avoid taking the logarithm of zero.</p>
+<div id="fig-feature-drift" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two overlapping histograms comparing reference and current feature values and reporting the calculated PSI.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-feature-drift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="results/figures/08-feature-drift.png" class="img-fluid figure-img" alt="Two overlapping histograms comparing reference and current feature values and reporting the calculated PSI.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-feature-drift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10.2: Reference and current distributions for the monitored feature, accompanied by their population stability index.
+</figcaption>
+</figure>
+</div>
+<p>PSI is a diagnostic, not proof that performance has degraded. Its value depends on binning, sample size, and the reference window. Complement it with domain review, distribution plots, missingness checks, and other suitable statistical distances.</p>
+</section>
+<section id="drift-concept-drift-and-performance-decay" class="level2">
+<h2 class="anchored" data-anchor-id="drift-concept-drift-and-performance-decay">Drift, concept drift, and performance decay</h2>
+<p>These conditions should not be treated as synonyms:</p>
+<ul>
+<li><strong>Data drift</strong> means the input distribution has changed.</li>
+<li><strong>Prediction drift</strong> means scores or predicted classes have changed.</li>
+<li><strong>Concept drift</strong> means the relationship between inputs and the target has changed.</li>
+<li><strong>Performance decay</strong> means the model’s measured predictive quality has worsened.</li>
+</ul>
+<p>Input and prediction drift can be observed immediately. Concept drift and performance decay normally require delayed ground-truth outcomes. Therefore, the monitoring system should support later joining predictions to verified outcomes using a safe event key.</p>
+<p>When labels arrive, calculate the same decision-relevant metrics used during evaluation, including subgroup metrics where appropriate. Preserve the prediction, model version, and decision threshold that were active at inference time; otherwise a retrospective evaluation may not represent what the deployed system actually did.</p>
+</section>
+<section id="investigate-before-retraining" class="level2">
+<h2 class="anchored" data-anchor-id="investigate-before-retraining">Investigate before retraining</h2>
+<p>Retraining is only one possible response to an alert. Use a structured sequence:</p>
+<ol type="1">
+<li>Confirm that the alert is genuine and sufficiently sustained.</li>
+<li>Check recent deployments, configuration changes, and dependency failures.</li>
+<li>Validate schemas, missingness, units, categories, and upstream transformations.</li>
+<li>Segment the signal by model version, client, geography, or other safe operational dimensions.</li>
+<li>Compare current features, predictions, and—when available—outcomes with the reference period.</li>
+<li>Decide whether to continue, mitigate, roll back, recalibrate, adjust a threshold, or retrain.</li>
+<li>Record the incident, evidence, decision, owner, and follow-up action.</li>
+</ol>
+<p>Automatic retraining can amplify data-quality failures if it is triggered without validation. A safer workflow uses eligibility checks, reproducible training, evaluation gates, approval, staged deployment, and rollback capability.</p>
+</section>
+<section id="maintain-a-model-lifecycle-record" class="level2">
+<h2 class="anchored" data-anchor-id="maintain-a-model-lifecycle-record">Maintain a model lifecycle record</h2>
+<p>Each production model should have traceable metadata:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Record</th>
+<th>Minimum useful content</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Model version</td>
+<td>immutable identifier and artifact checksum</td>
+</tr>
+<tr class="even">
+<td>Training provenance</td>
+<td>dataset snapshot, code revision, dependencies, parameters</td>
+</tr>
+<tr class="odd">
+<td>Evaluation</td>
+<td>metrics, slices, thresholds, limitations, approval decision</td>
+</tr>
+<tr class="even">
+<td>Deployment</td>
+<td>environment, date, traffic allocation, configuration</td>
+</tr>
+<tr class="odd">
+<td>Monitoring</td>
+<td>baselines, alert rules, dashboards, responsible owner</td>
+</tr>
+<tr class="even">
+<td>Incidents</td>
+<td>symptoms, impact, diagnosis, mitigation, follow-up</td>
+</tr>
+<tr class="odd">
+<td>Retirement</td>
+<td>replacement or withdrawal reason and archive location</td>
+</tr>
+</tbody>
+</table>
+<p>A maintenance schedule should include dependency updates, vulnerability review, backup and rollback tests, model review dates, and confirmation that monitoring still reflects current risks.</p>
+</section>
+<section id="practical-interpretation-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="practical-interpretation-checklist">Practical interpretation checklist</h2>
+<p>Before acting on a monitoring signal, ask:</p>
+<ul>
+<li>Is the metric defined from valid, complete events?</li>
+<li>Is the reference period representative and version-matched?</li>
+<li>Is the change large enough and sustained long enough to matter?</li>
+<li>Could traffic volume, seasonality, or a changed client explain it?</li>
+<li>Does the change affect all requests or a specific segment?</li>
+<li>Are true outcomes available, and are they joined without leakage?</li>
+<li>What is the safest reversible response?</li>
+<li>Who owns the decision and how will it be documented?</li>
+</ul>
+</section>
+<section id="chapter-summary" class="level2">
+<h2 class="anchored" data-anchor-id="chapter-summary">Chapter summary</h2>
+<p>Reliable deployment requires observing both the software service and the statistical system. Structured inference events provide the raw evidence; time-windowed metrics make behaviour interpretable; thresholds make expectations testable; drift analysis identifies distribution changes; and delayed outcomes reveal whether predictive performance still meets its purpose.</p>
+<p>Monitoring creates signals, not automatic conclusions. Effective maintenance combines those signals with investigation, versioned evidence, clear ownership, cautious retraining, and a tested rollback path.</p>
+</section>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
+<ol type="1">
+<li>Add a <code>model_version</code> grouping to the daily monitoring report and compare two simulated versions.</li>
+<li>Require two consecutive daily threshold breaches before an alert becomes critical.</li>
+<li>Add a categorical feature and calculate a distribution-distance measure for it.</li>
+<li>Simulate delayed outcomes and extend the report with daily recall and calibration error.</li>
+<li>Draft a one-page runbook for an increased missing-feature alert.</li>
+</ol>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

@@ -20,7 +20,62 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-</style>
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -246,8 +301,27 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#what-this-guide-establishes" id="toc-what-this-guide-establishes" class="nav-link active" data-scroll-target="#what-this-guide-establishes">What this guide establishes</a></li>
+  <li><a href="#repository-conventions" id="toc-repository-conventions" class="nav-link" data-scroll-target="#repository-conventions">Repository conventions</a></li>
+  <li><a href="#environment-commands" id="toc-environment-commands" class="nav-link" data-scroll-target="#environment-commands">Environment commands</a></li>
+  <li><a href="#application-commands" id="toc-application-commands" class="nav-link" data-scroll-target="#application-commands">Application commands</a></li>
+  <li><a href="#request-and-response-contracts" id="toc-request-and-response-contracts" class="nav-link" data-scroll-target="#request-and-response-contracts">Request and response contracts</a></li>
+  <li><a href="#http-outcomes" id="toc-http-outcomes" class="nav-link" data-scroll-target="#http-outcomes">HTTP outcomes</a></li>
+  <li><a href="#command-line-api-checks" id="toc-command-line-api-checks" class="nav-link" data-scroll-target="#command-line-api-checks">Command-line API checks</a></li>
+  <li><a href="#container-commands" id="toc-container-commands" class="nav-link" data-scroll-target="#container-commands">Container commands</a></li>
+  <li><a href="#artifact-safety-and-compatibility" id="toc-artifact-safety-and-compatibility" class="nav-link" data-scroll-target="#artifact-safety-and-compatibility">Artifact safety and compatibility</a></li>
+  <li><a href="#troubleshooting-sequence" id="toc-troubleshooting-sequence" class="nav-link" data-scroll-target="#troubleshooting-sequence">Troubleshooting sequence</a>
+  <ul class="collapse">
+  <li><a href="#common-failures" id="toc-common-failures" class="nav-link" data-scroll-target="#common-failures">Common failures</a></li>
+  </ul></li>
+  <li><a href="#completion-checklist" id="toc-completion-checklist" class="nav-link" data-scroll-target="#completion-checklist">Completion checklist</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -280,13 +354,372 @@ ul.task-list li input[type="checkbox"] {
 <div class="cdi-message">
 <ul>
 <li><strong>ID:</strong> MD-A01</li>
-<li><strong>Status:</strong> Scaffolded for chapter-by-chapter development</li>
+<li><strong>Status:</strong> Complete</li>
 <li><strong>Theme:</strong> Commands, contracts, and troubleshooting reference</li>
 </ul>
 </div>
-<p>The appendix will collect concise command references, project conventions, schemas, and troubleshooting guidance used across the guide.</p>
+<p>This appendix brings together the commands, interfaces, and diagnostic checks used throughout the guide. It is a reference for repeating the workflow; the explanations and design decisions remain in the main chapters.</p>
+<section id="what-this-guide-establishes" class="level2">
+<h2 class="anchored" data-anchor-id="what-this-guide-establishes">What this guide establishes</h2>
+<p>The completed workflow demonstrates that one fitted preprocessing-and-model pipeline can be:</p>
+<ol type="1">
+<li>trained reproducibly;</li>
+<li>saved and loaded as a single artifact;</li>
+<li>called through a reliable inference function;</li>
+<li>exposed through a validated HTTP API;</li>
+<li>tested with valid and invalid requests;</li>
+<li>packaged and run in a container; and</li>
+<li>checked for basic service health and prediction correctness.</li>
+</ol>
+<p>This is the boundary of <strong>Model Deployment</strong> in the CDI Data Science pathway. A successful JSON request proves the complete prediction pathway, but it does not by itself prove production readiness. CI/CD, infrastructure provisioning, secrets, production observability, scaling, rollback, feedback loops, retraining, governance, and human decision systems belong to the next guide, <strong>From Models to Systems</strong>.</p>
+</section>
+<section id="repository-conventions" class="level2">
+<h2 class="anchored" data-anchor-id="repository-conventions">Repository conventions</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>app/</code></td>
+<td>FastAPI application, schemas, and inference code</td>
+</tr>
+<tr class="even">
+<td><code>data/raw/</code></td>
+<td>Original input data retained without modification</td>
+</tr>
+<tr class="odd">
+<td><code>data/processed/</code></td>
+<td>Reproducible training or testing data derived from raw inputs</td>
+</tr>
+<tr class="even">
+<td><code>models/</code></td>
+<td>Serialized model pipelines and associated metadata</td>
+</tr>
+<tr class="odd">
+<td><code>results/</code></td>
+<td>Machine-readable test and validation outputs</td>
+</tr>
+<tr class="even">
+<td><code>reports/</code></td>
+<td>Human-readable summaries or rendered supporting material</td>
+</tr>
+<tr class="odd">
+<td><code>scripts/python/</code></td>
+<td>Executable Python programs, prefixed by chapter number</td>
+</tr>
+<tr class="even">
+<td><code>scripts/bash/</code></td>
+<td>Repeatable shell entry points, prefixed by chapter number</td>
+</tr>
+<tr class="odd">
+<td><code>tests/</code></td>
+<td>Automated application and API tests</td>
+</tr>
+<tr class="even">
+<td><code>docs/</code></td>
+<td>Rendered Quarto book</td>
+</tr>
+</tbody>
+</table>
+<p>Generated artifacts should not be edited manually. Change the source data or program, then rerun the responsible script.</p>
+</section>
+<section id="environment-commands" class="level2">
+<h2 class="anchored" data-anchor-id="environment-commands">Environment commands</h2>
+<p>Create and activate the repository-specific environment:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> venv .venv</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> .venv/bin/activate</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pip install <span class="at">--upgrade</span> pip</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pip install <span class="at">-r</span> requirements.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Confirm that the active interpreter belongs to this repository:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> python</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">--version</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pip <span class="at">--version</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Deactivate it before moving to another project:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">deactivate</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Python’s <code>venv</code> module creates an isolated environment whose installed packages are separate from the base interpreter <span class="citation" data-cites="pythonVenv">(<a href="999-references.html#ref-pythonVenv" role="doc-biblioref">Python Software Foundation n.d.</a>)</span>.</p>
+</section>
+<section id="application-commands" class="level2">
+<h2 class="anchored" data-anchor-id="application-commands">Application commands</h2>
+<p>Start the API for local development:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> uvicorn app.main:app <span class="at">--reload</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Useful local endpoints are:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Endpoint</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>http://127.0.0.1:8000/health</code></td>
+<td>Service and model-readiness check</td>
+</tr>
+<tr class="even">
+<td><code>http://127.0.0.1:8000/predict</code></td>
+<td>Prediction request</td>
+</tr>
+<tr class="odd">
+<td><code>http://127.0.0.1:8000/docs</code></td>
+<td>Interactive OpenAPI documentation</td>
+</tr>
+<tr class="even">
+<td><code>http://127.0.0.1:8000/openapi.json</code></td>
+<td>Machine-readable API specification</td>
+</tr>
+</tbody>
+</table>
+<p>FastAPI derives request handling and interactive documentation from declared routes and typed schemas <span class="citation" data-cites="fastapiFirstSteps fastapiRequestBody2026">(<a href="999-references.html#ref-fastapiFirstSteps" role="doc-biblioref">Ramírez n.d.a</a>, <a href="999-references.html#ref-fastapiRequestBody2026" role="doc-biblioref">n.d.b</a>)</span>.</p>
+<p>Run the automated tests:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pytest <span class="at">-q</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Using <code>python -m pytest</code> makes the selected Python interpreter explicit. Pytest discovers test modules and reports passing, failing, and erroring tests <span class="citation" data-cites="pytestUsage2026">(<a href="999-references.html#ref-pytestUsage2026" role="doc-biblioref">pytest developers n.d.</a>)</span>.</p>
+</section>
+<section id="request-and-response-contracts" class="level2">
+<h2 class="anchored" data-anchor-id="request-and-response-contracts">Request and response contracts</h2>
+<p>The request body is a contract, not merely an example. Field names, data types, required values, and numeric boundaries must agree with the schema defined in the application. Pydantic field constraints make those requirements explicit <span class="citation" data-cites="pydanticFields2026">(<a href="999-references.html#ref-pydanticFields2026" role="doc-biblioref">Pydantic n.d.</a>)</span>.</p>
+<p>A prediction request has this general form:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"feature_1"</span><span class="fu">:</span> <span class="fl">12.5</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"feature_2"</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"feature_3"</span><span class="fu">:</span> <span class="st">"category_a"</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Use the exact feature names and valid values defined by the project schema. Test with the chapter’s maintained request fixture rather than copying this generic structure into the running application.</p>
+<p>A successful response should expose a stable response schema, for example:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"prediction"</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"probability"</span><span class="fu">:</span> <span class="fl">0.83</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"model_version"</span><span class="fu">:</span> <span class="st">"1.0.0"</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The actual fields are determined by the application’s response model. Declaring a response model allows FastAPI to validate, document, and filter returned data <span class="citation" data-cites="fastapiResponseModel2026">(<a href="999-references.html#ref-fastapiResponseModel2026" role="doc-biblioref">Ramírez n.d.c</a>)</span>.</p>
+</section>
+<section id="http-outcomes" class="level2">
+<h2 class="anchored" data-anchor-id="http-outcomes">HTTP outcomes</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 30%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Status</th>
+<th>Meaning in this workflow</th>
+<th>First check</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;"><code>200</code></td>
+<td>Request completed successfully</td>
+<td>Inspect the returned prediction and metadata</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><code>404</code></td>
+<td>Route was not found</td>
+<td>Confirm the path and HTTP method</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"><code>405</code></td>
+<td>Method is not allowed</td>
+<td>Use <code>POST</code> for the prediction endpoint</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><code>422</code></td>
+<td>Request failed schema validation</td>
+<td>Compare JSON fields, types, and constraints with the schema</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"><code>500</code></td>
+<td>Application failed during processing</td>
+<td>Inspect server logs and the traceback</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"><code>503</code></td>
+<td>Service is running but not ready</td>
+<td>Check model loading and required files</td>
+</tr>
+</tbody>
+</table>
+<p>Validation failures should be tested deliberately. A <code>422</code> response for a malformed request is evidence that the boundary is rejecting invalid input, not that the API is broken.</p>
+</section>
+<section id="command-line-api-checks" class="level2">
+<h2 class="anchored" data-anchor-id="command-line-api-checks">Command-line API checks</h2>
+<p>Check health:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">--silent</span> <span class="at">--show-error</span> <span class="at">--fail</span> <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  http://127.0.0.1:8000/health</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Send a prediction request using the maintained JSON fixture:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">--silent</span> <span class="at">--show-error</span> <span class="at">--fail</span> <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--request</span> POST <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--header</span> <span class="st">"Content-Type: application/json"</span> <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--data</span> @data/reference/prediction-request.json <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  http://127.0.0.1:8000/predict</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The curl options used here suppress progress output, preserve useful error messages, and return a failure exit status for unsuccessful HTTP responses <span class="citation" data-cites="curlManpage2026">(<a href="999-references.html#ref-curlManpage2026" role="doc-biblioref">curl project n.d.</a>)</span>.</p>
+</section>
+<section id="container-commands" class="level2">
+<h2 class="anchored" data-anchor-id="container-commands">Container commands</h2>
+<p>Build the image from the repository root:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">--tag</span> model-deployment:latest .</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Run it and map the container port to the host:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--rm</span> <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--name</span> model-deployment-api <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--publish</span> 8000:8000 <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  model-deployment:latest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Inspect running containers and logs from another terminal:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> ps</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> logs model-deployment-api</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Stop the container when <code>--rm</code> is not being used interactively:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> stop model-deployment-api</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>A Dockerfile defines how the image is assembled, while <code>docker run</code> creates and starts a container from that image <span class="citation" data-cites="dockerfileReference2026 dockerRun2026">(<a href="999-references.html#ref-dockerfileReference2026" role="doc-biblioref">Docker n.d.a</a>, <a href="999-references.html#ref-dockerRun2026" role="doc-biblioref">n.d.b</a>)</span>.</p>
+</section>
+<section id="artifact-safety-and-compatibility" class="level2">
+<h2 class="anchored" data-anchor-id="artifact-safety-and-compatibility">Artifact safety and compatibility</h2>
+<p>The serialized artifact contains the fitted preprocessing and model pipeline. Keep preprocessing inside the pipeline so training and inference apply the same transformations <span class="citation" data-cites="scikitPipeline">(<a href="999-references.html#ref-scikitPipeline" role="doc-biblioref">scikit-learn developers n.d.b</a>)</span>.</p>
+<p><code>pickle</code>-based formats, including <code>joblib</code>, must be loaded only from trusted sources. They can execute arbitrary code during loading, and loading an artifact with different dependency versions is unsupported. Record the training code, dependency versions, data reference, and evaluation results needed to reproduce the artifact <span class="citation" data-cites="scikitModelPersistence2026">(<a href="999-references.html#ref-scikitModelPersistence2026" role="doc-biblioref">scikit-learn developers n.d.a</a>)</span>.</p>
+<p>At minimum, retain:</p>
+<ul>
+<li>the artifact filename and version;</li>
+<li>the feature schema and target definition;</li>
+<li>the training-data reference or immutable snapshot identifier;</li>
+<li>the Python and package versions;</li>
+<li>the training script or source commit;</li>
+<li>the evaluation metrics; and</li>
+<li>the creation date.</li>
+</ul>
+</section>
+<section id="troubleshooting-sequence" class="level2">
+<h2 class="anchored" data-anchor-id="troubleshooting-sequence">Troubleshooting sequence</h2>
+<p>Diagnose failures from the inside out:</p>
+<ol type="1">
+<li><strong>Environment:</strong> Is the repository-specific <code>.venv</code> active and are dependencies installed?</li>
+<li><strong>Artifact:</strong> Does the expected model file exist, and can it be loaded by the current environment?</li>
+<li><strong>Inference:</strong> Does a direct Python call return a prediction for a known valid record?</li>
+<li><strong>Schema:</strong> Does the JSON body match the declared field names, types, and constraints?</li>
+<li><strong>Application:</strong> Does <code>/health</code> report that the service and model are ready?</li>
+<li><strong>HTTP:</strong> Does the maintained valid request return <code>200</code>, while invalid cases return the expected <code>422</code> responses?</li>
+<li><strong>Container:</strong> Does the image contain the artifact and application files, expose the correct port, and start the correct command?</li>
+</ol>
+<section id="common-failures" class="level3">
+<h3 class="anchored" data-anchor-id="common-failures">Common failures</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Corrective action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ModuleNotFoundError</code></td>
+<td>Wrong environment or missing dependency</td>
+<td>Activate <code>.venv</code>; reinstall <code>requirements.txt</code></td>
+</tr>
+<tr class="even">
+<td>Model file not found</td>
+<td>Wrong working directory or image copy path</td>
+<td>Verify the configured path and Docker build context</td>
+</tr>
+<tr class="odd">
+<td>Artifact load warning or failure</td>
+<td>Dependency-version mismatch</td>
+<td>Recreate the recorded environment or rebuild the artifact</td>
+</tr>
+<tr class="even">
+<td>Valid-looking request returns <code>422</code></td>
+<td>Field name, type, or boundary differs from schema</td>
+<td>Compare the body with <code>/docs</code> or <code>openapi.json</code></td>
+</tr>
+<tr class="odd">
+<td>Direct inference works but API fails</td>
+<td>Request-to-dataframe conversion or response serialization issue</td>
+<td>Test the inference adapter separately</td>
+</tr>
+<tr class="even">
+<td>Local API works but container fails</td>
+<td>Missing copied file, wrong command, host binding, or port mapping</td>
+<td>Inspect the Dockerfile, image contents, and container logs</td>
+</tr>
+<tr class="odd">
+<td>Connection refused</td>
+<td>Server is stopped or the wrong port is used</td>
+<td>Start the service and verify host/container port mapping</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="completion-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="completion-checklist">Completion checklist</h2>
+<p>The guide is complete when all of the following are true:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">the repository-specific environment can be recreated from declared dependencies;</label></li>
+<li><label><input type="checkbox">the fitted preprocessing-and-model pipeline can be saved and loaded;</label></li>
+<li><label><input type="checkbox">a known valid record produces the expected direct-inference result;</label></li>
+<li><label><input type="checkbox">the API reports healthy only after the artifact is ready;</label></li>
+<li><label><input type="checkbox">request and response schemas are explicit;</label></li>
+<li><label><input type="checkbox">valid API input returns <code>200</code>;</label></li>
+<li><label><input type="checkbox">missing or invalid input returns the expected validation response;</label></li>
+<li><label><input type="checkbox">automated tests pass;</label></li>
+<li><label><input type="checkbox">the container image builds;</label></li>
+<li><label><input type="checkbox">the container starts and answers health and prediction requests; and</label></li>
+<li><label><input type="checkbox">generated results record the verification outcome.</label></li>
+</ul>
+<p>Passing this checklist establishes a packaged, validated, tested, and containerized model service. Broader production operation begins in <strong>From Models to Systems</strong>.</p>
 
 
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-curlManpage2026" class="csl-entry" role="listitem">
+curl project. n.d. <span>“Curl Manual Page.”</span> Accessed August 4, 2026. <a href="https://curl.se/docs/manpage.html">https://curl.se/docs/manpage.html</a>.
+</div>
+<div id="ref-dockerfileReference2026" class="csl-entry" role="listitem">
+Docker. n.d.a. <span>“Dockerfile Reference.”</span> Accessed August 4, 2026. <a href="https://docs.docker.com/reference/dockerfile/">https://docs.docker.com/reference/dockerfile/</a>.
+</div>
+<div id="ref-dockerRun2026" class="csl-entry" role="listitem">
+———. n.d.b. <span>“Running Containers.”</span> Accessed August 4, 2026. <a href="https://docs.docker.com/engine/containers/run/">https://docs.docker.com/engine/containers/run/</a>.
+</div>
+<div id="ref-pydanticFields2026" class="csl-entry" role="listitem">
+Pydantic. n.d. <span>“Fields.”</span> Accessed August 4, 2026. <a href="https://docs.pydantic.dev/latest/concepts/fields/">https://docs.pydantic.dev/latest/concepts/fields/</a>.
+</div>
+<div id="ref-pytestUsage2026" class="csl-entry" role="listitem">
+pytest developers. n.d. <span>“How to Invoke Pytest.”</span> Accessed August 4, 2026. <a href="https://docs.pytest.org/en/stable/how-to/usage.html">https://docs.pytest.org/en/stable/how-to/usage.html</a>.
+</div>
+<div id="ref-pythonVenv" class="csl-entry" role="listitem">
+Python Software Foundation. n.d. <span>“Venv: Creation of Virtual Environments.”</span> Accessed August 3, 2026. <a href="https://docs.python.org/3/library/venv.html">https://docs.python.org/3/library/venv.html</a>.
+</div>
+<div id="ref-fastapiFirstSteps" class="csl-entry" role="listitem">
+Ramírez, Sebastián. n.d.a. <span>“FastAPI: First Steps.”</span> Accessed August 3, 2026. <a href="https://fastapi.tiangolo.com/tutorial/first-steps/">https://fastapi.tiangolo.com/tutorial/first-steps/</a>.
+</div>
+<div id="ref-fastapiRequestBody2026" class="csl-entry" role="listitem">
+———. n.d.b. <span>“Request Body.”</span> Accessed August 4, 2026. <a href="https://fastapi.tiangolo.com/tutorial/body/">https://fastapi.tiangolo.com/tutorial/body/</a>.
+</div>
+<div id="ref-fastapiResponseModel2026" class="csl-entry" role="listitem">
+———. n.d.c. <span>“Response Model: Return Type.”</span> Accessed August 4, 2026. <a href="https://fastapi.tiangolo.com/tutorial/response-model/">https://fastapi.tiangolo.com/tutorial/response-model/</a>.
+</div>
+<div id="ref-scikitModelPersistence2026" class="csl-entry" role="listitem">
+scikit-learn developers. n.d.a. <span>“Model Persistence.”</span> Accessed August 4, 2026. <a href="https://scikit-learn.org/stable/model_persistence.html">https://scikit-learn.org/stable/model_persistence.html</a>.
+</div>
+<div id="ref-scikitPipeline" class="csl-entry" role="listitem">
+———. n.d.b. <span>“Pipelines and Composite Estimators.”</span> Accessed August 3, 2026. <a href="https://scikit-learn.org/stable/modules/compose.html">https://scikit-learn.org/stable/modules/compose.html</a>.
+</div>
+</div>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

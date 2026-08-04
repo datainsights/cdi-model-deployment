@@ -2,9 +2,245 @@
 
 ::: {.cdi-message}
 - **ID:** MD-A01
-- **Status:** Scaffolded for chapter-by-chapter development
+- **Status:** Complete
 - **Theme:** Commands, contracts, and troubleshooting reference
 :::
 
-The appendix will collect concise command references, project conventions, schemas, and troubleshooting guidance used across the guide.
+This appendix brings together the commands, interfaces, and diagnostic checks used throughout the guide. It is a reference for repeating the workflow; the explanations and design decisions remain in the main chapters.
 
+## What this guide establishes
+
+The completed workflow demonstrates that one fitted preprocessing-and-model pipeline can be:
+
+1. trained reproducibly;
+2. saved and loaded as a single artifact;
+3. called through a reliable inference function;
+4. exposed through a validated HTTP API;
+5. tested with valid and invalid requests;
+6. packaged and run in a container; and
+7. checked for basic service health and prediction correctness.
+
+This is the boundary of **Model Deployment** in the CDI Data Science pathway. A successful JSON request proves the complete prediction pathway, but it does not by itself prove production readiness. CI/CD, infrastructure provisioning, secrets, production observability, scaling, rollback, feedback loops, retraining, governance, and human decision systems belong to the next guide, **From Models to Systems**.
+
+## Repository conventions
+
+| Path | Purpose |
+|---|---|
+| `app/` | FastAPI application, schemas, and inference code |
+| `data/raw/` | Original input data retained without modification |
+| `data/processed/` | Reproducible training or testing data derived from raw inputs |
+| `models/` | Serialized model pipelines and associated metadata |
+| `results/` | Machine-readable test and validation outputs |
+| `reports/` | Human-readable summaries or rendered supporting material |
+| `scripts/python/` | Executable Python programs, prefixed by chapter number |
+| `scripts/bash/` | Repeatable shell entry points, prefixed by chapter number |
+| `tests/` | Automated application and API tests |
+| `docs/` | Rendered Quarto book |
+
+Generated artifacts should not be edited manually. Change the source data or program, then rerun the responsible script.
+
+## Environment commands
+
+Create and activate the repository-specific environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Confirm that the active interpreter belongs to this repository:
+
+```bash
+which python
+python --version
+python -m pip --version
+```
+
+Deactivate it before moving to another project:
+
+```bash
+deactivate
+```
+
+Python's `venv` module creates an isolated environment whose installed packages are separate from the base interpreter [@pythonVenv].
+
+## Application commands
+
+Start the API for local development:
+
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+Useful local endpoints are:
+
+| Endpoint | Purpose |
+|---|---|
+| `http://127.0.0.1:8000/health` | Service and model-readiness check |
+| `http://127.0.0.1:8000/predict` | Prediction request |
+| `http://127.0.0.1:8000/docs` | Interactive OpenAPI documentation |
+| `http://127.0.0.1:8000/openapi.json` | Machine-readable API specification |
+
+FastAPI derives request handling and interactive documentation from declared routes and typed schemas [@fastapiFirstSteps; @fastapiRequestBody2026].
+
+Run the automated tests:
+
+```bash
+python -m pytest -q
+```
+
+Using `python -m pytest` makes the selected Python interpreter explicit. Pytest discovers test modules and reports passing, failing, and erroring tests [@pytestUsage2026].
+
+## Request and response contracts
+
+The request body is a contract, not merely an example. Field names, data types, required values, and numeric boundaries must agree with the schema defined in the application. Pydantic field constraints make those requirements explicit [@pydanticFields2026].
+
+A prediction request has this general form:
+
+```json
+{
+  "feature_1": 12.5,
+  "feature_2": 3,
+  "feature_3": "category_a"
+}
+```
+
+Use the exact feature names and valid values defined by the project schema. Test with the chapter's maintained request fixture rather than copying this generic structure into the running application.
+
+A successful response should expose a stable response schema, for example:
+
+```json
+{
+  "prediction": 1,
+  "probability": 0.83,
+  "model_version": "1.0.0"
+}
+```
+
+The actual fields are determined by the application's response model. Declaring a response model allows FastAPI to validate, document, and filter returned data [@fastapiResponseModel2026].
+
+## HTTP outcomes
+
+| Status | Meaning in this workflow | First check |
+|---:|---|---|
+| `200` | Request completed successfully | Inspect the returned prediction and metadata |
+| `404` | Route was not found | Confirm the path and HTTP method |
+| `405` | Method is not allowed | Use `POST` for the prediction endpoint |
+| `422` | Request failed schema validation | Compare JSON fields, types, and constraints with the schema |
+| `500` | Application failed during processing | Inspect server logs and the traceback |
+| `503` | Service is running but not ready | Check model loading and required files |
+
+Validation failures should be tested deliberately. A `422` response for a malformed request is evidence that the boundary is rejecting invalid input, not that the API is broken.
+
+## Command-line API checks
+
+Check health:
+
+```bash
+curl --silent --show-error --fail \
+  http://127.0.0.1:8000/health
+```
+
+Send a prediction request using the maintained JSON fixture:
+
+```bash
+curl --silent --show-error --fail \
+  --request POST \
+  --header "Content-Type: application/json" \
+  --data @data/reference/prediction-request.json \
+  http://127.0.0.1:8000/predict
+```
+
+The curl options used here suppress progress output, preserve useful error messages, and return a failure exit status for unsuccessful HTTP responses [@curlManpage2026].
+
+## Container commands
+
+Build the image from the repository root:
+
+```bash
+docker build --tag model-deployment:latest .
+```
+
+Run it and map the container port to the host:
+
+```bash
+docker run --rm \
+  --name model-deployment-api \
+  --publish 8000:8000 \
+  model-deployment:latest
+```
+
+Inspect running containers and logs from another terminal:
+
+```bash
+docker ps
+docker logs model-deployment-api
+```
+
+Stop the container when `--rm` is not being used interactively:
+
+```bash
+docker stop model-deployment-api
+```
+
+A Dockerfile defines how the image is assembled, while `docker run` creates and starts a container from that image [@dockerfileReference2026; @dockerRun2026].
+
+## Artifact safety and compatibility
+
+The serialized artifact contains the fitted preprocessing and model pipeline. Keep preprocessing inside the pipeline so training and inference apply the same transformations [@scikitPipeline].
+
+`pickle`-based formats, including `joblib`, must be loaded only from trusted sources. They can execute arbitrary code during loading, and loading an artifact with different dependency versions is unsupported. Record the training code, dependency versions, data reference, and evaluation results needed to reproduce the artifact [@scikitModelPersistence2026].
+
+At minimum, retain:
+
+- the artifact filename and version;
+- the feature schema and target definition;
+- the training-data reference or immutable snapshot identifier;
+- the Python and package versions;
+- the training script or source commit;
+- the evaluation metrics; and
+- the creation date.
+
+## Troubleshooting sequence
+
+Diagnose failures from the inside out:
+
+1. **Environment:** Is the repository-specific `.venv` active and are dependencies installed?
+2. **Artifact:** Does the expected model file exist, and can it be loaded by the current environment?
+3. **Inference:** Does a direct Python call return a prediction for a known valid record?
+4. **Schema:** Does the JSON body match the declared field names, types, and constraints?
+5. **Application:** Does `/health` report that the service and model are ready?
+6. **HTTP:** Does the maintained valid request return `200`, while invalid cases return the expected `422` responses?
+7. **Container:** Does the image contain the artifact and application files, expose the correct port, and start the correct command?
+
+### Common failures
+
+| Symptom | Likely cause | Corrective action |
+|---|---|---|
+| `ModuleNotFoundError` | Wrong environment or missing dependency | Activate `.venv`; reinstall `requirements.txt` |
+| Model file not found | Wrong working directory or image copy path | Verify the configured path and Docker build context |
+| Artifact load warning or failure | Dependency-version mismatch | Recreate the recorded environment or rebuild the artifact |
+| Valid-looking request returns `422` | Field name, type, or boundary differs from schema | Compare the body with `/docs` or `openapi.json` |
+| Direct inference works but API fails | Request-to-dataframe conversion or response serialization issue | Test the inference adapter separately |
+| Local API works but container fails | Missing copied file, wrong command, host binding, or port mapping | Inspect the Dockerfile, image contents, and container logs |
+| Connection refused | Server is stopped or the wrong port is used | Start the service and verify host/container port mapping |
+
+## Completion checklist
+
+The guide is complete when all of the following are true:
+
+- [ ] the repository-specific environment can be recreated from declared dependencies;
+- [ ] the fitted preprocessing-and-model pipeline can be saved and loaded;
+- [ ] a known valid record produces the expected direct-inference result;
+- [ ] the API reports healthy only after the artifact is ready;
+- [ ] request and response schemas are explicit;
+- [ ] valid API input returns `200`;
+- [ ] missing or invalid input returns the expected validation response;
+- [ ] automated tests pass;
+- [ ] the container image builds;
+- [ ] the container starts and answers health and prediction requests; and
+- [ ] generated results record the verification outcome.
+
+Passing this checklist establishes a packaged, validated, tested, and containerized model service. Broader production operation begins in **From Models to Systems**.

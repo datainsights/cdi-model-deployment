@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -70,6 +105,10 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<meta name="mermaid-theme" content="forest">
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="assets/css/cdi.css">
@@ -246,8 +285,36 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives">Learning objectives</a></li>
+  <li><a href="#from-source-code-to-a-running-container" id="toc-from-source-code-to-a-running-container" class="nav-link" data-scroll-target="#from-source-code-to-a-running-container">From source code to a running container</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#define-the-runtime-dependencies" id="toc-define-the-runtime-dependencies" class="nav-link" data-scroll-target="#define-the-runtime-dependencies">Define the runtime dependencies</a></li>
+  <li><a href="#create-the-dockerfile" id="toc-create-the-dockerfile" class="nav-link" data-scroll-target="#create-the-dockerfile">Create the Dockerfile</a></li>
+  <li><a href="#restrict-the-build-context" id="toc-restrict-the-build-context" class="nav-link" data-scroll-target="#restrict-the-build-context">Restrict the build context</a></li>
+  <li><a href="#build-the-image" id="toc-build-the-image" class="nav-link" data-scroll-target="#build-the-image">Build the image</a></li>
+  <li><a href="#run-the-container" id="toc-run-the-container" class="nav-link" data-scroll-target="#run-the-container">Run the container</a></li>
+  <li><a href="#automate-the-smoke-test" id="toc-automate-the-smoke-test" class="nav-link" data-scroll-target="#automate-the-smoke-test">Automate the smoke test</a></li>
+  <li><a href="#add-an-image-health-check" id="toc-add-an-image-health-check" class="nav-link" data-scroll-target="#add-an-image-health-check">Add an image health check</a></li>
+  <li><a href="#inspect-the-packaged-application" id="toc-inspect-the-packaged-application" class="nav-link" data-scroll-target="#inspect-the-packaged-application">Inspect the packaged application</a></li>
+  <li><a href="#stop-and-remove-the-container" id="toc-stop-and-remove-the-container" class="nav-link" data-scroll-target="#stop-and-remove-the-container">Stop and remove the container</a></li>
+  <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a>
+  <ul class="collapse">
+  <li><a href="#the-port-is-already-in-use" id="toc-the-port-is-already-in-use" class="nav-link" data-scroll-target="#the-port-is-already-in-use">The port is already in use</a></li>
+  <li><a href="#the-container-exits-immediately" id="toc-the-container-exits-immediately" class="nav-link" data-scroll-target="#the-container-exits-immediately">The container exits immediately</a></li>
+  <li><a href="#the-model-file-cannot-be-found" id="toc-the-model-file-cannot-be-found" class="nav-link" data-scroll-target="#the-model-file-cannot-be-found">The model file cannot be found</a></li>
+  <li><a href="#the-api-works-locally-but-not-through-docker" id="toc-the-api-works-locally-but-not-through-docker" class="nav-link" data-scroll-target="#the-api-works-locally-but-not-through-docker">The API works locally but not through Docker</a></li>
+  <li><a href="#the-image-is-unexpectedly-large" id="toc-the-image-is-unexpectedly-large" class="nav-link" data-scroll-target="#the-image-is-unexpectedly-large">The image is unexpectedly large</a></li>
+  </ul></li>
+  <li><a href="#reproducibility-and-security-checklist" id="toc-reproducibility-and-security-checklist" class="nav-link" data-scroll-target="#reproducibility-and-security-checklist">Reproducibility and security checklist</a></li>
+  <li><a href="#chapter-summary" id="toc-chapter-summary" class="nav-link" data-scroll-target="#chapter-summary">Chapter summary</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further reading</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -280,13 +347,315 @@ ul.task-list li input[type="checkbox"] {
 <div class="cdi-message">
 <ul>
 <li><strong>ID:</strong> MD-L07</li>
-<li><strong>Status:</strong> Scaffolded for chapter-by-chapter development</li>
+<li><strong>Type:</strong> Deployment</li>
+<li><strong>Audience:</strong> Intermediate</li>
 <li><strong>Theme:</strong> Package a tested service reproducibly</li>
 </ul>
 </div>
-<p>This chapter will create, build, inspect, and run a Docker image for the application.</p>
+<p>A prediction API is not fully deployable merely because it runs inside the development environment. The operating system, Python runtime, dependencies, application code, and model artifact must reach the target environment together. A container image packages those components into one versioned unit.</p>
+<p>This chapter containerizes the FastAPI service developed in <a href="05-serving-predictions-with-fastapi.html" class="quarto-xref"><span>Serving Predictions with FastAPI</span></a> and tested in <a href="06-validation-errors-and-api-testing.html" class="quarto-xref"><span>Validation, Errors, and API Testing</span></a>. The objective is not simply to make Docker run. It is to create a small, inspectable image whose behaviour can be verified before it is released.</p>
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning objectives</h2>
+<p>By the end of this chapter, you should be able to:</p>
+<ul>
+<li>explain the difference between an image and a running container;</li>
+<li>define a minimal Docker build context;</li>
+<li>write a production-oriented <code>Dockerfile</code> for a FastAPI service;</li>
+<li>build, run, inspect, and stop the container safely;</li>
+<li>verify the container through the same HTTP contract used outside Docker; and</li>
+<li>identify common failures involving ports, paths, dependencies, and model artifacts.</li>
+</ul>
+</section>
+<section id="from-source-code-to-a-running-container" class="level2">
+<h2 class="anchored" data-anchor-id="from-source-code-to-a-running-container">From source code to a running container</h2>
+<p>The container workflow has two distinct phases. <code>docker build</code> creates an immutable image from the project files and instructions. <code>docker run</code> starts an isolated process from that image.</p>
+<div class="cell" data-layout-align="default">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>flowchart TD</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    A["Application, model, and dependencies"] --&gt; B["Docker build context"]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    B --&gt; C["Versioned image"]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    C --&gt; D["Running container"]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    D --&gt; E["Health and prediction checks"]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A["Application, model, and dependencies"] --&gt; B["Docker build context"]
+    B --&gt; C["Versioned image"]
+    C --&gt; D["Running container"]
+    D --&gt; E["Health and prediction checks"]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>An image is a packaged template. A container is a running instance of that template. Several containers can be started from the same image, but runtime changes inside one container do not update the image.</p>
+</section>
+<section id="prerequisites" class="level2">
+<h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
+<p>Complete the API implementation and tests before containerizing it. At minimum, the repository should contain:</p>
+<pre class="text"><code>model-deployment/
+├── app/
+│   ├── __init__.py
+│   └── main.py
+├── models/
+│   └── deployment_pipeline.joblib
+├── scripts/
+│   ├── bash/
+│   └── python/
+├── requirements.txt
+├── Dockerfile
+└── .dockerignore</code></pre>
+<p>The examples assume that the FastAPI object is named <code>app</code> in <code>app/main.py</code>, giving the import string <code>app.main:app</code>. If your module differs, change that string consistently in the <code>Dockerfile</code> and local commands.</p>
+<p>Confirm that Docker is available:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> <span class="at">--version</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> info</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>docker --version</code> confirms that the client is installed. <code>docker info</code> also checks whether the Docker engine is running.</p>
+</section>
+<section id="define-the-runtime-dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-runtime-dependencies">Define the runtime dependencies</h2>
+<p>The container must install the packages required at runtime. A focused deployment file avoids pulling notebook and development tools into the image. For a small guide project, the existing <code>requirements.txt</code> may be used if it already contains the following runtime dependencies:</p>
+<pre class="text"><code>fastapi
+joblib
+numpy
+pandas
+pydantic
+scikit-learn
+uvicorn[standard]</code></pre>
+<p>Pinning exact versions in <code>requirements-lock.txt</code> improves reproducibility. When a tested lock file exists, substitute it for <code>requirements.txt</code> in the <code>Dockerfile</code>. Do not generate a lock file from an unrelated virtual environment.</p>
+</section>
+<section id="create-the-dockerfile" class="level2">
+<h2 class="anchored" data-anchor-id="create-the-dockerfile">Create the Dockerfile</h2>
+<p>At the repository root, create <code>Dockerfile</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> python:3.12-slim</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ENV</span> PYTHONDONTWRITEBYTECODE=1 <span class="op">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    PYTHONUNBUFFERED=1 <span class="op">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    PIP_NO_CACHE_DIR=1</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">WORKDIR</span> /app</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> requirements.txt ./</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="ex">python</span> <span class="at">-m</span> pip install <span class="at">--upgrade</span> pip <span class="dt">\</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&amp;&amp;</span> <span class="ex">python</span> <span class="at">-m</span> pip install <span class="at">-r</span> requirements.txt</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> app/ ./app/</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> models/ ./models/</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="ex">useradd</span> <span class="at">--create-home</span> <span class="at">--uid</span> 10001 apiuser <span class="dt">\</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&amp;&amp;</span> <span class="fu">chown</span> <span class="at">-R</span> apiuser:apiuser /app</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="kw">USER</span> apiuser</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="kw">EXPOSE</span> 8000</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="kw">CMD</span> [<span class="st">"uvicorn"</span>, <span class="st">"app.main:app"</span>, <span class="st">"--host"</span>, <span class="st">"0.0.0.0"</span>, <span class="st">"--port"</span>, <span class="st">"8000"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Each instruction has a specific deployment purpose:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Instruction</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>FROM python:3.12-slim</code></td>
+<td>Starts from a compact Python runtime.</td>
+</tr>
+<tr class="even">
+<td><code>WORKDIR /app</code></td>
+<td>Makes application paths predictable inside the image.</td>
+</tr>
+<tr class="odd">
+<td><code>COPY requirements.txt</code> before source code</td>
+<td>Allows Docker to reuse the dependency layer when only application code changes.</td>
+</tr>
+<tr class="even">
+<td><code>COPY app/</code> and <code>COPY models/</code></td>
+<td>Includes only the runtime code and trained artifact.</td>
+</tr>
+<tr class="odd">
+<td><code>USER apiuser</code></td>
+<td>Avoids running the service as the root user.</td>
+</tr>
+<tr class="even">
+<td><code>EXPOSE 8000</code></td>
+<td>Documents the port used by the application.</td>
+</tr>
+<tr class="odd">
+<td><code>--host 0.0.0.0</code></td>
+<td>Makes Uvicorn reachable outside the container.</td>
+</tr>
+</tbody>
+</table>
+<p><code>EXPOSE</code> documents the intended container port; it does not publish that port to the host. Port publishing happens when the container is started.</p>
+</section>
+<section id="restrict-the-build-context" class="level2">
+<h2 class="anchored" data-anchor-id="restrict-the-build-context">Restrict the build context</h2>
+<p>Docker sends the build context to the builder. A <code>.dockerignore</code> file prevents irrelevant, large, or sensitive files from entering that context.</p>
+<pre class="gitignore"><code>.git
+.gitignore
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ipynb_checkpoints
+.DS_Store
+docs
+notebooks
+reports
+results
+tests
+*.log
+.env
+.env.*</code></pre>
+<p>Do not exclude <code>models/</code> when the application loads its model from that directory. Never bake credentials or production secrets into the image. Supply runtime configuration through the deployment platform or environment variables.</p>
+</section>
+<section id="build-the-image" class="level2">
+<h2 class="anchored" data-anchor-id="build-the-image">Build the image</h2>
+<p>From the repository root, run:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">--tag</span> cdi-model-api:07 .</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The final period selects the current directory as the build context. The explicit tag identifies both the application and the chapter-stage version.</p>
+<p>Inspect the result:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> image ls cdi-model-api</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> image inspect cdi-model-api:07</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>A successful build proves that the image instructions completed. It does not prove that the service starts correctly or returns valid predictions.</p>
+</section>
+<section id="run-the-container" class="level2">
+<h2 class="anchored" data-anchor-id="run-the-container">Run the container</h2>
+<p>Start the service in the background:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--detach</span> <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--name</span> cdi-model-api-07 <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--publish</span> 8000:8000 <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  cdi-model-api:07</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The mapping <code>8000:8000</code> means <code>host-port:container-port</code>. The API should now be available at <code>http://127.0.0.1:8000</code>.</p>
+<p>Check its state and logs:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> ps <span class="at">--filter</span> name=cdi-model-api-07</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> logs cdi-model-api-07</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">--fail</span> <span class="at">--silent</span> http://127.0.0.1:8000/health</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Then run the Chapter 06 contract checks against the containerized service:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/bash/06-test-api.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The same tests should pass whether Uvicorn runs from the virtual environment or inside a container. That equivalence is important: containerization should change packaging, not the API contract.</p>
+</section>
+<section id="automate-the-smoke-test" class="level2">
+<h2 class="anchored" data-anchor-id="automate-the-smoke-test">Automate the smoke test</h2>
+<p>The companion script builds the image, starts a temporary container, waits for the health endpoint, runs the Chapter 06 API test script when it is available, and removes the container on exit:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/bash/07-build-and-test-container.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Optional environment variables allow the defaults to be changed without editing the script:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="va">IMAGE_NAME</span><span class="op">=</span>cdi-model-api <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="va">IMAGE_TAG</span><span class="op">=</span>07 <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="va">HOST_PORT</span><span class="op">=</span>8001 <span class="dt">\</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/bash/07-build-and-test-container.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The script deliberately removes only the container it creates. It does not delete the resulting image, so the verified artifact remains available for inspection or later use.</p>
+</section>
+<section id="add-an-image-health-check" class="level2">
+<h2 class="anchored" data-anchor-id="add-an-image-health-check">Add an image health check</h2>
+<p>An HTTP health endpoint is useful only when the runtime checks it. Python is already present in the image, so a health check can avoid adding another system package. Add the following instruction before <code>CMD</code>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">HEALTHCHECK</span> <span class="op">--interval=30s</span> <span class="op">--timeout=3s</span> <span class="op">--start-period=10s</span> <span class="op">--retries=3</span> \</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CMD</span> <span class="ex">python</span> <span class="at">-c</span> <span class="st">"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"</span> <span class="kw">||</span> <span class="bu">exit</span> 1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Rebuild and run the image, then inspect its status:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> inspect <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--format</span><span class="op">=</span><span class="st">'{{json .State.Health}}'</span> <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  cdi-model-api-07</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The endpoint should confirm that the process can serve requests. If prediction readiness depends on a loaded model, the health logic should also verify that the artifact was loaded successfully.</p>
+</section>
+<section id="inspect-the-packaged-application" class="level2">
+<h2 class="anchored" data-anchor-id="inspect-the-packaged-application">Inspect the packaged application</h2>
+<p>Use read-only inspection when debugging the packaged files:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--rm</span> cdi-model-api:07 <span class="dt">\</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  python <span class="at">-c</span> <span class="st">"from app.main import app; print(app.title)"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>To list the model artifact without opening an interactive shell:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--rm</span> cdi-model-api:07 <span class="dt">\</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  python <span class="at">-c</span> <span class="st">"from pathlib import Path; print(list(Path('models').glob('*')))"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>These checks answer two frequent questions: whether the Python module can be imported and whether the model artifact is present at the path expected by the application.</p>
+</section>
+<section id="stop-and-remove-the-container" class="level2">
+<h2 class="anchored" data-anchor-id="stop-and-remove-the-container">Stop and remove the container</h2>
+<p>When a manually started container is no longer needed:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> stop cdi-model-api-07</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> rm cdi-model-api-07</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Stopping ends the process; removing deletes that container instance. The image remains available. To remove the image later, first confirm that it is no longer needed:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> image rm cdi-model-api:07</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="troubleshooting" class="level2">
+<h2 class="anchored" data-anchor-id="troubleshooting">Troubleshooting</h2>
+<section id="the-port-is-already-in-use" class="level3">
+<h3 class="anchored" data-anchor-id="the-port-is-already-in-use">The port is already in use</h3>
+<p>Map a different host port while leaving the container port unchanged:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--rm</span> <span class="at">--publish</span> 8001:8000 cdi-model-api:07</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The service is then available at <code>http://127.0.0.1:8001</code>.</p>
+</section>
+<section id="the-container-exits-immediately" class="level3">
+<h3 class="anchored" data-anchor-id="the-container-exits-immediately">The container exits immediately</h3>
+<p>Inspect all containers and read the logs:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> ps <span class="at">--all</span> <span class="at">--filter</span> name=cdi-model-api-07</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> logs cdi-model-api-07</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Common causes include an invalid import string, a missing package, or a model-loading exception during application startup.</p>
+</section>
+<section id="the-model-file-cannot-be-found" class="level3">
+<h3 class="anchored" data-anchor-id="the-model-file-cannot-be-found">The model file cannot be found</h3>
+<p>Relative paths depend on the container working directory. Resolve model paths from the application module or from the known <code>/app</code> working directory, and confirm that <code>.dockerignore</code> does not exclude the artifact.</p>
+</section>
+<section id="the-api-works-locally-but-not-through-docker" class="level3">
+<h3 class="anchored" data-anchor-id="the-api-works-locally-but-not-through-docker">The API works locally but not through Docker</h3>
+<p>Confirm that Uvicorn binds to <code>0.0.0.0</code>, the correct port is published, and the request is sent to the host-side port. Binding to <code>127.0.0.1</code> inside the container makes the service unreachable from the host.</p>
+</section>
+<section id="the-image-is-unexpectedly-large" class="level3">
+<h3 class="anchored" data-anchor-id="the-image-is-unexpectedly-large">The image is unexpectedly large</h3>
+<p>Inspect its layers:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> history cdi-model-api:07</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Use a slim base image, exclude development files, avoid copying the entire repository, and keep build-only tools out of the final runtime image.</p>
+</section>
+</section>
+<section id="reproducibility-and-security-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="reproducibility-and-security-checklist">Reproducibility and security checklist</h2>
+<p>Before treating the image as a deployment candidate, confirm that:</p>
+<ul>
+<li>the API and model tests pass before the image is built;</li>
+<li>dependency versions come from the tested project environment;</li>
+<li>the model artifact is versioned or traceable to its training run;</li>
+<li>the build context excludes credentials, caches, reports, and local environments;</li>
+<li>the application runs as a non-root user;</li>
+<li>the image has a unique, meaningful tag rather than relying only on <code>latest</code>;</li>
+<li>the container passes health and prediction checks; and</li>
+<li>image metadata, source revision, and evaluation evidence can be connected.</li>
+</ul>
+<p>Containerization improves environmental consistency, but it does not validate the model, secure the surrounding platform, or monitor prediction quality. Those responsibilities remain part of the wider deployment system.</p>
+</section>
+<section id="chapter-summary" class="level2">
+<h2 class="anchored" data-anchor-id="chapter-summary">Chapter summary</h2>
+<p>A deployment-ready container is more than a successful <code>docker build</code>. It is a reproducible package containing the required runtime, dependencies, application, and model artifact. Its service must start under container constraints and satisfy the same validated API contract established before packaging.</p>
+<p>The workflow is therefore:</p>
+<ol type="1">
+<li>test the application outside the container;</li>
+<li>define a minimal and safe build context;</li>
+<li>build a versioned image;</li>
+<li>run the image with an explicit port mapping;</li>
+<li>verify health and prediction behaviour; and</li>
+<li>inspect and retain evidence for the exact image tested.</li>
+</ol>
+<p>The next chapter can build on this verified image by adding configuration, release, and operational deployment practices.</p>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://docs.docker.com/build/concepts/dockerfile/">Dockerfile overview</a></li>
+<li><a href="https://docs.docker.com/build/concepts/context/">Docker build context</a></li>
+<li><a href="https://docs.docker.com/engine/network/">Docker container networking</a></li>
+<li><a href="https://fastapi.tiangolo.com/deployment/docker/">FastAPI deployment with containers</a></li>
+</ul>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
