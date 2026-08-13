@@ -11,6 +11,7 @@ book:
   title: "Model Deployment"
   subtitle: "From Reproducible Training Pipelines to Tested Prediction Services"
   author: "Teresia Mrema Buza | Complex Data Insights"
+  
   chapters:
     - index.qmd
 
