@@ -1,0 +1,1651 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Model Deployment",
+    "section": "",
+    "text": "Free Guide · Updated Aug 2026",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>index.html</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html",
+    "href": "00-preface.html",
+    "title": "Preface",
+    "section": "",
+    "text": "Why model deployment needs its own guide\nTraining a model answers an important question: can useful patterns be learned from the available data? Deployment introduces a different question: can the same prediction logic be used reliably by people and software outside the development environment?\nA model can perform well during development and still fail when it is used in practice. Incoming fields may be missing, reordered, or represented with unexpected types. Training-time preprocessing may be recreated incorrectly. An API may accept invalid requests, return ambiguous predictions, or load a different artifact from the one that was tested. Even a technically correct service can become unreliable as its input data, dependencies, or operating conditions change.\nModel deployment therefore concerns the complete path from validated inputs to maintained predictions:\nCode\nflowchart TD\n    A[\"Validated training data\"] --&gt; B[\"Preprocessing and model pipeline\"]\n    B --&gt; C[\"Versioned model artifact\"]\n    C --&gt; D[\"Validated inference interface\"]\n    D --&gt; E[\"Tested prediction service\"]\n    E --&gt; F[\"Monitoring and maintenance\"]\n\n\n\n\n\nflowchart TD\n    A[\"Validated training data\"] --&gt; B[\"Preprocessing and model pipeline\"]\n    B --&gt; C[\"Versioned model artifact\"]\n    C --&gt; D[\"Validated inference interface\"]\n    D --&gt; E[\"Tested prediction service\"]\n    E --&gt; F[\"Monitoring and maintenance\"]\nServing a model is one step in this path. Reliable deployment also requires a stable prediction contract, reproducible artifacts, input validation, automated testing, repeatable packaging, and evidence that the service continues to behave as intended.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#the-central-design-decision",
+    "href": "00-preface.html#the-central-design-decision",
+    "title": "Preface",
+    "section": "The central design decision",
+    "text": "The central design decision\nThis guide saves preprocessing and the estimator together as one scikit-learn Pipeline. A pipeline preserves the ordered transformations used during training and applies the same operations during inference, reducing opportunities for training and deployment logic to diverge (scikit-learn developers n.d.).\nThe deployed unit is therefore not an isolated estimator. It is a tested prediction pipeline with clearly defined inputs and outputs.\nThat principle shapes the entire guide:\n\nBuild one prediction path, test that path, and deploy the same path.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#position-in-the-cdi-learning-pathway",
+    "href": "00-preface.html#position-in-the-cdi-learning-pathway",
+    "title": "Preface",
+    "section": "Position in the CDI learning pathway",
+    "text": "Position in the CDI learning pathway\nThis guide assumes that model development already includes appropriate evaluation, validation, and interpretation. It begins when a model has become a plausible deployment candidate—not merely when a training script runs successfully.\nThe progression is deliberate:\n\nData Science Foundations → Advanced Data Science → Model Deployment\n\nData Science Foundations establishes reproducible analysis. Advanced Data Science develops stronger modelling and evaluation decisions. Model Deployment converts a validated pipeline into a usable and maintainable prediction service.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#what-you-should-know-before-starting",
+    "href": "00-preface.html#what-you-should-know-before-starting",
+    "title": "Preface",
+    "section": "What you should know before starting",
+    "text": "What you should know before starting\nReaders should be comfortable with:\n\nrunning Python programs from a terminal;\nworking in a repository-specific virtual environment;\nreading basic pandas and scikit-learn code;\nunderstanding training, validation, and test data;\ninterpreting classification probabilities and decision thresholds; and\nusing Git for ordinary version-control tasks.\n\nPrior experience with FastAPI, Pydantic, pytest, Docker, or production infrastructure is not required. Each is introduced when it becomes necessary.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#what-you-will-build",
+    "href": "00-preface.html#what-you-will-build",
+    "title": "Preface",
+    "section": "What you will build",
+    "text": "What you will build\nEvery implementation chapter extends one compact binary-classification example. The example is small enough to inspect closely but complete enough to include:\n\nnumeric and categorical inputs;\npreprocessing with a ColumnTransformer;\nclassification with a probability-producing estimator;\na versioned serialized pipeline;\nexplicit request and response schemas;\nbatch and HTTP inference;\nautomated unit, integration, and API tests;\na containerized prediction service; and\nbasic monitoring for input and prediction changes.\n\nChanging datasets or estimators in every chapter would hide the deployment logic. Keeping one model, one preprocessing pipeline, and one prediction contract makes each new operational layer visible.\nBy the end of the guide, you should be able to explain and implement the path from reproducible model training to a locally tested, containerized service—and identify what must still be added for a specific production environment.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#how-the-guide-progresses",
+    "href": "00-preface.html#how-the-guide-progresses",
+    "title": "Preface",
+    "section": "How the guide progresses",
+    "text": "How the guide progresses\nThe chapters follow the order in which deployment concerns should be resolved:\n\ncreate and verify a reproducible environment;\ntrain one complete preprocessing and modelling pipeline;\nsave, load, and identify the resulting artifact;\ndefine a stable inference contract;\nexpose predictions through FastAPI;\ntest model, schema, and service behaviour;\npackage the service with Docker; and\nobserve, maintain, and improve the deployed system.\n\nLater chapters depend on the artifacts and decisions established earlier. Readers gain the most from following the guide in sequence before using individual chapters as references.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#teaching-and-code-conventions",
+    "href": "00-preface.html#teaching-and-code-conventions",
+    "title": "Preface",
+    "section": "Teaching and code conventions",
+    "text": "Teaching and code conventions\nThis is a Quarto book following Quarto’s multi-chapter book structure (Quarto n.d.). It uses the CDI guide conventions throughout:\n\nPython is the primary implementation language.\nEvery repository uses its own .venv.\nComplete executable programs belong in scripts/python/.\nBash wrappers belong in scripts/bash/.\nScript names begin with their chapter number.\nShort illustrative snippets use ordinary python fences and are not executed during rendering.\nGenerated data, models, results, and reports are separated from source code.\nTests must pass before an artifact is served or containerized.\nReferences are maintained in library/references.bib.\n\nCommands are presented from the repository root unless a chapter states otherwise. Generated outputs support learning and verification; they are not substitutes for the source programs that created them.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#scope-and-boundaries",
+    "href": "00-preface.html#scope-and-boundaries",
+    "title": "Preface",
+    "section": "Scope and boundaries",
+    "text": "Scope and boundaries\nThe guide teaches portable deployment principles through local Python programs, FastAPI, Pydantic, pytest, and Docker. FastAPI supports typed API development and generates an OpenAPI description and interactive documentation from the application definition (Ramírez n.d.a, n.d.b).\nThe guide does not claim that a local container is automatically production-ready. A real deployment may also require authentication, authorization, encrypted transport, secrets management, managed infrastructure, continuous delivery, scaling, audit controls, incident response, and organization-specific governance.\nCloud-provider configuration, Kubernetes administration, and vendor-specific observability platforms remain outside the core scope. The architecture developed here nevertheless separates the model, contract, service, tests, and packaging so those capabilities can be added without redesigning the prediction interface.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "00-preface.html#what-comes-next",
+    "href": "00-preface.html#what-comes-next",
+    "title": "Preface",
+    "section": "What comes next",
+    "text": "What comes next\nChapter 01 creates the repository-specific environment, establishes the project structure, and verifies the tools required for the complete workflow. Chapter 02 then trains the single classification pipeline that every later chapter will test, package, serve, and monitor.\n\n\n\n\nQuarto. n.d. “Creating a Book.” Accessed August 3, 2026. https://quarto.org/docs/books/.\n\n\nRamírez, Sebastián. n.d.a. “FastAPI Tutorial: User Guide.” Accessed August 3, 2026. https://fastapi.tiangolo.com/tutorial/.\n\n\n———. n.d.b. “FastAPI: First Steps.” Accessed August 3, 2026. https://fastapi.tiangolo.com/tutorial/first-steps/.\n\n\nscikit-learn developers. n.d. “Pipelines and Composite Estimators.” Accessed August 3, 2026. https://scikit-learn.org/stable/modules/compose.html.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html",
+    "href": "01-setting-up-environment.html",
+    "title": "Setting Up the Environment",
+    "section": "",
+    "text": "Learning objectives\nAfter completing this chapter, you will be able to:",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#learning-objectives",
+    "href": "01-setting-up-environment.html#learning-objectives",
+    "title": "Setting Up the Environment",
+    "section": "",
+    "text": "distinguish system tools from repository-specific Python packages;\nverify Python, Quarto, Git, and optional Docker installations;\ncreate and activate a repository-specific virtual environment;\ninstall the Python packages used throughout the guide;\nconfirm that Python and pip resolve inside the active .venv;\nexplain the responsibilities of the main project directories; and\nrender the initial Quarto book locally.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#why-environment-setup-matters",
+    "href": "01-setting-up-environment.html#why-environment-setup-matters",
+    "title": "Setting Up the Environment",
+    "section": "Why environment setup matters",
+    "text": "Why environment setup matters\nA model may work during development and still fail during testing, API serving, or containerization if those stages use different software versions or incompatible dependencies. Reproducible deployment therefore begins before model training: the repository must define its tools, dependencies, file locations, and verification steps.\nThis guide uses two environment layers:\n\nSystem tools are installed on the computer and shared across projects. They include Python, Quarto, Git, VS Code, and Docker.\nPython packages are installed inside this repository’s .venv. They include pandas, scikit-learn, FastAPI, Pydantic, HTTPX, and pytest.\n\nKeeping these layers distinct makes the project easier to reproduce and troubleshoot.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#install-the-system-tools",
+    "href": "01-setting-up-environment.html#install-the-system-tools",
+    "title": "Setting Up the Environment",
+    "section": "Install the system tools",
+    "text": "Install the system tools\nInstall these tools before beginning:\n\nPython 3.12 or newer for the guide programs;\nQuarto for rendering the book;\nGit for version control;\nVS Code as the recommended editor; and\nDocker Desktop or Docker Engine before Chapter 07.\n\nDocker is not required for Chapters 01–06. The environment check treats it as optional so you can prepare the local model and API workflow before working with containers.\nVerify the tools that are needed immediately:\npython3 --version\nquarto --version\ngit --version\nIf a command is not found, install that system tool before continuing. Do not install Quarto or Git into .venv; the virtual environment is only for Python packages.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#understand-the-repository",
+    "href": "01-setting-up-environment.html#understand-the-repository",
+    "title": "Setting Up the Environment",
+    "section": "Understand the repository",
+    "text": "Understand the repository\nRun all guide commands from the repository root—the directory containing _quarto.yml and requirements.txt.\nThe project structure separates source code, generated artifacts, tests, and rendered documentation:\nmodel-deployment/\n├── data/\n│   ├── raw/\n│   ├── processed/\n│   ├── reference/\n│   └── inference/\n├── models/\n├── reports/\n├── results/\n│   ├── figures/\n│   ├── metrics/\n│   └── monitoring/\n├── scripts/\n│   ├── bash/\n│   └── python/\n├── tests/\n├── library/\n├── assets/\n├── _quarto.yml\n└── requirements.txt\nThe main responsibilities are:\n\n\n\n\n\n\n\nLocation\nResponsibility\n\n\n\n\ndata/\nInputs used for training, testing, reference checks, and example inference\n\n\nmodels/\nSerialized model pipelines and associated model metadata\n\n\nresults/\nGenerated figures, evaluation metrics, and monitoring outputs\n\n\nreports/\nHuman-readable generated summaries and reports\n\n\nscripts/python/\nExecutable Python programs, prefixed by chapter number\n\n\nscripts/bash/\nReproducible command wrappers, also prefixed by chapter number\n\n\ntests/\nAutomated checks for model behavior, API contracts, and deployment readiness\n\n\nlibrary/\nReferences and supporting source material used by the guide\n\n\nassets/\nStatic book assets such as the cover image and shared styling\n\n\ndocs/\nRendered Quarto website generated during the build\n\n\n\nGenerated artifacts should be recreated by scripts whenever practical. Source programs and configuration belong in version control; .venv/, caches, and other machine-specific files do not.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#create-the-virtual-environment",
+    "href": "01-setting-up-environment.html#create-the-virtual-environment",
+    "title": "Setting Up the Environment",
+    "section": "Create the virtual environment",
+    "text": "Create the virtual environment\nFrom the repository root, create and activate .venv:\npython3 -m venv .venv\nsource .venv/bin/activate\npython -m pip install --upgrade pip\nOn Windows PowerShell, activation is different:\npython -m venv .venv\n.venv\\Scripts\\Activate.ps1\npython -m pip install --upgrade pip\nPython virtual environments isolate a project interpreter and its installed packages (Python Software Foundation n.d.). The .venv/ directory is created locally, excluded through .gitignore, and recreated from the dependency files rather than copied between computers or committed to Git.\nThe terminal prompt normally begins with (.venv) after activation. More importantly, confirm that the interpreter and package installer resolve through this repository:\nwhich python\npython --version\npython -m pip --version\nOn Windows, use where python instead of which python.\n\n\n\n\n\n\nWarning\n\n\n\nDeactivate the current environment before moving between CDI repositories, then activate the .venv belonging to the new repository. The identical (.venv) prompt does not prove that the correct environment is active.\n\n\nTo leave the environment, run:\ndeactivate",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#install-the-guide-dependencies",
+    "href": "01-setting-up-environment.html#install-the-guide-dependencies",
+    "title": "Setting Up the Environment",
+    "section": "Install the guide dependencies",
+    "text": "Install the guide dependencies\nReactivate .venv if necessary, then install the declared packages:\nsource .venv/bin/activate\npython -m pip install -r requirements.txt\nWindows PowerShell users should reactivate with .venv\\Scripts\\Activate.ps1.\nThe dependency set supports data preparation, scikit-learn pipelines, model serialization, API validation and serving, HTTP requests, automated tests, and optional notebook exploration. FastAPI uses Pydantic models for structured validation, while its test client integrates with HTTPX and pytest (Ramírez n.d.).\nUse python -m pip instead of a bare pip command. This makes the relationship between the active Python interpreter and its package installer explicit.\nAfter the environment works and the guide tests pass, record an exact snapshot:\npython -m pip freeze &gt; requirements-lock.txt\nrequirements.txt lists the project’s direct dependencies. requirements-lock.txt captures the complete tested environment, including transitive dependencies and exact versions. Regenerate the lock file intentionally after dependency upgrades and successful verification; do not edit it casually.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#verify-the-environment",
+    "href": "01-setting-up-environment.html#verify-the-environment",
+    "title": "Setting Up the Environment",
+    "section": "Verify the environment",
+    "text": "Verify the environment\nRun the Chapter 01 wrapper from the repository root:\nbash scripts/bash/01-check-environment.sh\nThe wrapper checks the required command-line tools and then runs the Python environment check with the active interpreter. Docker is reported separately because it is not required until Chapter 07.\nYou may run the Python check directly:\npython scripts/python/01-check-environment.py\nA successful result confirms that the expected project packages can be imported and that the environment is ready for the training workflow in Chapter 02. If the check fails, read the first reported error, confirm that .venv is active, and rerun the dependency installation before changing project code.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#configure-vs-code",
+    "href": "01-setting-up-environment.html#configure-vs-code",
+    "title": "Setting Up the Environment",
+    "section": "Configure VS Code",
+    "text": "Configure VS Code\nOpen the repository folder—not an individual file—in VS Code. Then:\n\nOpen the Command Palette.\nSelect Python: Select Interpreter.\nChoose the interpreter inside this repository’s .venv.\nOpen a new terminal and confirm that python points to the same environment.\n\nThe guide uses .py programs in scripts/python/ as the executable source of truth. Short code shown in chapters is illustrative and intentionally non-executable. Jupyter is available for optional exploration, but notebooks are not required for the deployment workflow.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#render-the-book",
+    "href": "01-setting-up-environment.html#render-the-book",
+    "title": "Setting Up the Environment",
+    "section": "Render the book",
+    "text": "Render the book\nRender from the repository root:\nquarto render\nQuarto combines the source files listed in _quarto.yml into the HTML book and writes the rendered site to docs/ (Quarto n.d.b, n.d.a). During development, preview changes with:\nquarto preview\nStop the preview server with Ctrl+C.\nRendering the book verifies the documentation layer. It does not replace the Python environment check or the automated tests introduced later in the guide.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#environment-readiness-checklist",
+    "href": "01-setting-up-environment.html#environment-readiness-checklist",
+    "title": "Setting Up the Environment",
+    "section": "Environment readiness checklist",
+    "text": "Environment readiness checklist\nBefore continuing, confirm that:\n\nthe repository root contains _quarto.yml and requirements.txt;\nthe repository-specific .venv is active;\npython and python -m pip resolve inside that environment;\npython -m pip install -r requirements.txt completes successfully;\nthe Chapter 01 environment check passes;\nquarto render produces the guide under docs/; and\nDocker is installed or scheduled before Chapter 07.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "01-setting-up-environment.html#next-step",
+    "href": "01-setting-up-environment.html#next-step",
+    "title": "Setting Up the Environment",
+    "section": "Next step",
+    "text": "Next step\nChapter 02 will create the guide’s classification dataset, combine preprocessing and classification in one scikit-learn pipeline, evaluate the deployment candidate, and write the first reproducible model artifacts.\n\n\n\n\nPython Software Foundation. n.d. “Venv: Creation of Virtual Environments.” Accessed August 3, 2026. https://docs.python.org/3/library/venv.html.\n\n\nQuarto. n.d.a. “Book Structure.” Accessed August 3, 2026. https://quarto.org/docs/books/book-structure.html.\n\n\n———. n.d.b. “Creating a Book.” Accessed August 3, 2026. https://quarto.org/docs/books/.\n\n\nRamírez, Sebastián. n.d. “Testing FastAPI Applications.” Accessed August 3, 2026. https://fastapi.tiangolo.com/tutorial/testing/.",
+    "crumbs": [
+      "Orientation",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Setting Up the Environment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html",
+    "href": "02-from-model-training-to-deployment.html",
+    "title": "From Model Training to Deployment",
+    "section": "",
+    "text": "Learning objectives\nTraining a model and deploying a model are related, but they are not the same task. During model development, the main question is whether a model performs well on data it has not seen. During deployment, the question becomes broader:\nThis chapter develops the classification pipeline used throughout the guide. The objective is not to search for the most sophisticated algorithm. It is to establish one dependable prediction workflow that can later be saved, loaded, tested, exposed through an API, and packaged in a container.\nBy the end of this chapter, you should be able to:",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#learning-objectives",
+    "href": "02-from-model-training-to-deployment.html#learning-objectives",
+    "title": "From Model Training to Deployment",
+    "section": "",
+    "text": "distinguish a fitted estimator from a deployable prediction pipeline;\ndefine the input and output contract of a model;\nprevent preprocessing leakage by fitting transformations inside a pipeline;\nevaluate a deployment candidate on untouched test data;\nselect metrics that reflect the model’s intended use; and\nidentify the artifacts and evidence required before deployment.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#the-development-to-deployment-transition",
+    "href": "02-from-model-training-to-deployment.html#the-development-to-deployment-transition",
+    "title": "From Model Training to Deployment",
+    "section": "The development-to-deployment transition",
+    "text": "The development-to-deployment transition\nA notebook result is not yet a deployed model. Deployment requires the modelling logic to move through a sequence of increasingly strict boundaries.\n\n\nCode\nflowchart TD\n    A[Raw input data] --&gt; B[Validated feature table]\n    B --&gt; C[Preprocessing and model pipeline]\n    C --&gt; D[Evaluation on held-out data]\n    D --&gt; E[Saved model artifact]\n    E --&gt; F[Prediction service]\n    F --&gt; G[Tests and monitoring]\n\n\n\n\n\nflowchart TD\n    A[Raw input data] --&gt; B[Validated feature table]\n    B --&gt; C[Preprocessing and model pipeline]\n    C --&gt; D[Evaluation on held-out data]\n    D --&gt; E[Saved model artifact]\n    E --&gt; F[Prediction service]\n    F --&gt; G[Tests and monitoring]\n\n\n\n\n\n\nEach boundary introduces a responsibility. The training code must preserve feature definitions. The saved artifact must reproduce the fitted transformations. The service must reject invalid requests. Tests must confirm that predictions remain stable as the surrounding software changes.\nThis guide therefore treats deployment as a continuation of reproducible model development, not as an export step added at the end.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#the-running-example",
+    "href": "02-from-model-training-to-deployment.html#the-running-example",
+    "title": "From Model Training to Deployment",
+    "section": "The running example",
+    "text": "The running example\nThe guide uses the breast cancer diagnostic dataset included with scikit-learn. The task is binary classification: predict whether a tumour is malignant or benign from measurements derived from a digitized image of a breast mass.\nThe dataset is useful for teaching deployment because it is:\n\nbundled with scikit-learn and available without a separate download;\nsmall enough to train quickly;\nentirely numeric, which keeps the first API contract understandable; and\nrealistic enough to demonstrate probability estimates, class imbalance, and careful interpretation.\n\nTo keep future prediction requests concise, the guide uses eight explicitly named measurements rather than all available columns.\nFEATURES = [\n    \"mean radius\",\n    \"mean texture\",\n    \"mean perimeter\",\n    \"mean area\",\n    \"mean smoothness\",\n    \"mean compactness\",\n    \"mean concavity\",\n    \"mean concave points\",\n]\n\n\n\n\n\n\nWarning\n\n\n\nThis dataset supports workflow instruction, not clinical decision-making. A teaching model trained on a public benchmark must not be interpreted as a validated medical device or used to guide patient care.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#define-the-prediction-contract-first",
+    "href": "02-from-model-training-to-deployment.html#define-the-prediction-contract-first",
+    "title": "From Model Training to Deployment",
+    "section": "Define the prediction contract first",
+    "text": "Define the prediction contract first\nA deployment contract specifies what the model accepts and what it returns. Writing this contract before training helps expose assumptions that may otherwise remain hidden in a notebook.\nFor this guide, one prediction request will contain eight numeric measurements with the exact feature names listed above. The eventual service will return:\n\nthe predicted class label;\nthe probability assigned to each class; and\nthe model version used for the prediction.\n\nThe first two outputs can already be produced during model evaluation. The model version will be added when the trained pipeline is saved in the next chapter.\nFeature names are part of the contract. Their spelling, meaning, units, and expected ranges must remain consistent between training and prediction. A model can execute successfully and still produce an invalid result when these semantics change.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#separate-training-data-from-evaluation-data",
+    "href": "02-from-model-training-to-deployment.html#separate-training-data-from-evaluation-data",
+    "title": "From Model Training to Deployment",
+    "section": "Separate training data from evaluation data",
+    "text": "Separate training data from evaluation data\nThe test set represents data that the final candidate has not seen during fitting. It must be separated before estimating preprocessing parameters or fitting the classifier.\nfrom sklearn.model_selection import train_test_split\n\nX_train, X_test, y_train, y_test = train_test_split(\n    X,\n    y,\n    test_size=0.20,\n    stratify=y,\n    random_state=42,\n)\nThe arguments have deliberate roles:\n\ntest_size=0.20 reserves 20% of observations for final evaluation;\nstratify=y preserves the class proportions in both subsets; and\nrandom_state=42 makes the split reproducible.\n\nThe test set should not guide repeated model or threshold changes. If extensive comparison is required, use cross-validation within the training data and evaluate the selected candidate on the test set once.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#keep-preprocessing-with-the-model",
+    "href": "02-from-model-training-to-deployment.html#keep-preprocessing-with-the-model",
+    "title": "From Model Training to Deployment",
+    "section": "Keep preprocessing with the model",
+    "text": "Keep preprocessing with the model\nLogistic regression is sensitive to feature scale. Standardization is therefore part of the prediction workflow, not merely a temporary training convenience.\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import StandardScaler\n\npipeline = Pipeline(\n    steps=[\n        (\"scale\", StandardScaler()),\n        (\n            \"classifier\",\n            LogisticRegression(\n                max_iter=1000,\n                random_state=42,\n            ),\n        ),\n    ]\n)\n\npipeline.fit(X_train, y_train)\nThe scaler is fitted only from X_train. At prediction time, the same fitted scaler transforms incoming values before the classifier receives them. Keeping both steps in one pipeline prevents three common errors:\n\nfitting preprocessing on the full dataset and leaking test information;\napplying different transformations during training and prediction; and\nsaving the classifier while forgetting the fitted preprocessing object.\n\nFrom this point forward, the pipeline—not the logistic regression estimator by itself—is the deployment candidate.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#evaluate-the-candidate",
+    "href": "02-from-model-training-to-deployment.html#evaluate-the-candidate",
+    "title": "From Model Training to Deployment",
+    "section": "Evaluate the candidate",
+    "text": "Evaluate the candidate\nAccuracy alone can hide important errors. This chapter records several complementary metrics:\n\n\n\n\n\n\n\nMetric\nQuestion it answers\n\n\n\n\nAccuracy\nWhat proportion of all predictions is correct?\n\n\nPrecision\nWhen the model predicts the positive class, how often is it correct?\n\n\nRecall\nWhat proportion of positive cases does the model identify?\n\n\nF1 score\nHow well does the model balance precision and recall?\n\n\nROC AUC\nHow well does the model rank the two classes across thresholds?\n\n\n\nIn the scikit-learn dataset, target value 0 means malignant and 1 means benign. The training script defines malignant as the operational positive class when calculating precision, recall, and F1. Making that choice explicit prevents a technically correct metric from answering the wrong question.\nfrom sklearn.metrics import (\n    accuracy_score,\n    precision_score,\n    recall_score,\n    f1_score,\n    roc_auc_score,\n)\n\ny_pred = pipeline.predict(X_test)\ny_probability_malignant = pipeline.predict_proba(X_test)[:, 0]\n\nmetrics = {\n    \"accuracy\": accuracy_score(y_test, y_pred),\n    \"precision_malignant\": precision_score(y_test, y_pred, pos_label=0),\n    \"recall_malignant\": recall_score(y_test, y_pred, pos_label=0),\n    \"f1_malignant\": f1_score(y_test, y_pred, pos_label=0),\n    \"roc_auc_malignant\": roc_auc_score(\n        (y_test == 0).astype(int),\n        y_probability_malignant,\n    ),\n}\nThe code uses probability column 0 because pipeline.classes_ follows the encoded class order [0, 1]. Never assume a probability column represents a particular class without checking classes_.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#run-the-complete-training-program",
+    "href": "02-from-model-training-to-deployment.html#run-the-complete-training-program",
+    "title": "From Model Training to Deployment",
+    "section": "Run the complete training program",
+    "text": "Run the complete training program\nThe short examples above explain individual decisions. The executable workflow belongs in a chapter-prefixed Python script:\npython scripts/python/02-train-deployment-candidate.py\nThe script should:\n\nload the bundled dataset;\nselect and validate the eight features;\ncreate the stratified train-test split;\nfit the complete pipeline;\ncalculate and print evaluation metrics; and\nwrite the metrics to results/metrics/02-deployment-candidate-metrics.csv.\n\nThe model is intentionally not saved in this chapter. Chapter Saving and Loading Model Pipelines will introduce model persistence, metadata, and safe loading as distinct deployment responsibilities.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#decide-whether-the-model-is-ready-to-package",
+    "href": "02-from-model-training-to-deployment.html#decide-whether-the-model-is-ready-to-package",
+    "title": "From Model Training to Deployment",
+    "section": "Decide whether the model is ready to package",
+    "text": "Decide whether the model is ready to package\nA strong score does not automatically make a model deployable. Before saving the candidate, confirm that the following statements are true.\n\nData and features\n\nThe feature set is explicit and ordered.\nFeature meanings and units are documented.\nTraining and test data are separated before fitting.\nThe target encoding and positive class are explicit.\n\n\n\nPipeline and reproducibility\n\nAll required preprocessing is inside the fitted pipeline.\nRandom operations have fixed seeds where appropriate.\nThe environment dependencies can be recreated.\nTraining can run from a script without hidden notebook state.\n\n\n\nEvaluation and intended use\n\nPerformance is measured on untouched test data.\nMetrics reflect the errors that matter for the intended use.\nKnown limitations are documented.\nThe model is not presented as suitable for uses it has not been validated to support.\n\n\n\nDeployment interface\n\nOne raw request can be converted into the expected feature table.\npredict() and predict_proba() work from the same pipeline.\nOutput class labels can be translated into meaningful names.\nInvalid or incomplete inputs can be detected before prediction.\n\nIf any item is unresolved, packaging the model only makes the unresolved assumption harder to see.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#what-this-chapter-established",
+    "href": "02-from-model-training-to-deployment.html#what-this-chapter-established",
+    "title": "From Model Training to Deployment",
+    "section": "What this chapter established",
+    "text": "What this chapter established\nThe deployment candidate is now a complete scikit-learn pipeline with explicit inputs, reproducible preprocessing, a binary classifier, and held-out evaluation evidence. This provides the stable modelling foundation required by the rest of the guide.\nThe next chapter will save this fitted pipeline as a versioned artifact, load it in a separate process, and verify that its predictions remain consistent.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "02-from-model-training-to-deployment.html#key-takeaways",
+    "href": "02-from-model-training-to-deployment.html#key-takeaways",
+    "title": "From Model Training to Deployment",
+    "section": "Key takeaways",
+    "text": "Key takeaways\n\nDeployment begins by defining a stable input and output contract.\nThe fitted preprocessing and estimator must travel together.\nTest data must remain outside every fitting step.\nMetric definitions must state which class is treated as positive.\nA reproducible training script is the bridge between experimentation and a deployable artifact.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>From Model Training to Deployment</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html",
+    "href": "03-saving-and-loading-model-pipelines.html",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "",
+    "text": "Learning objectives\nChapter 02 developed a deployment candidate as one fitted scikit-learn Pipeline: an eight-feature input contract, StandardScaler, and logistic regression. The next requirement is persistence—saving that fitted pipeline so another Python process can load it and reproduce the same predictions.\nThis chapter saves the complete fitted pipeline, records the information needed to identify and use it, reloads it in a clean step, and verifies that serialization has not changed its behaviour.\nBy the end of this chapter, you will be able to:",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#learning-objectives",
+    "href": "03-saving-and-loading-model-pipelines.html#learning-objectives",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "",
+    "text": "explain why preprocessing and prediction must be saved together;\ndistinguish a fitted in-memory object from a persistent model artifact;\nsave and load a scikit-learn pipeline with joblib;\nattach version and input-contract metadata to a model artifact;\nverify that predictions and probabilities survive a save–load round trip; and\nrecognize the compatibility and security limits of pickle-based formats.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#from-a-fitted-object-to-a-deployable-artifact",
+    "href": "03-saving-and-loading-model-pipelines.html#from-a-fitted-object-to-a-deployable-artifact",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "From a fitted object to a deployable artifact",
+    "text": "From a fitted object to a deployable artifact\nTraining produces a fitted Python object in memory. That object disappears when the process ends. A deployment service, batch job, or test suite therefore needs a persistent file from which it can reconstruct the fitted object.\nflowchart LR\n    A[Training data] --&gt; B[Fit complete pipeline]\n    B --&gt; C[Save versioned artifact]\n    C --&gt; D[Load in new process]\n    D --&gt; E[Verify predictions]\n    E --&gt; F[Use for inference]\nThe saved file is not merely a convenient copy. It is the exact model candidate that later chapters will use for batch inference and API predictions.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#save-the-complete-pipeline",
+    "href": "03-saving-and-loading-model-pipelines.html#save-the-complete-pipeline",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Save the complete pipeline",
+    "text": "Save the complete pipeline\nThe Chapter 02 candidate contains two fitted steps:\n\nStandardScaler stores the means and scales learned from the training data.\nLogisticRegression stores the fitted coefficients, intercept, and class order.\n\nSaving only the classifier would discard the fitted preprocessing state. A future service might then scale inputs differently—or not scale them at all—and silently produce different predictions.\nThe deployment unit is therefore the complete fitted pipeline:\npipeline = Pipeline(\n    steps=[\n        (\"scale\", StandardScaler()),\n        (\n            \"classifier\",\n            LogisticRegression(max_iter=1000, random_state=42),\n        ),\n    ]\n)\n\npipeline.fit(X_train, y_train)\nAfter fitting, both steps carry learned state. The pipeline also exposes the classifier’s class order through pipeline.classes_. This matters because probability columns must always be resolved from the fitted classes rather than assumed from position.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#define-the-model-artifact",
+    "href": "03-saving-and-loading-model-pipelines.html#define-the-model-artifact",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Define the model artifact",
+    "text": "Define the model artifact\nA model file alone cannot explain its intended inputs, version, or training environment. This guide stores a small artifact bundle containing the fitted pipeline and the metadata needed by downstream code.\nThe bundle contains:\n\n\n\n\n\n\n\nField\nPurpose\n\n\n\n\npipeline\nComplete fitted preprocessing and classification workflow\n\n\nmodel_version\nStable identifier returned with predictions\n\n\nfeature_names\nOrdered eight-feature input contract\n\n\ntarget_names\nMapping from encoded classes to readable labels\n\n\ntrained_at_utc\nUTC timestamp for traceability\n\n\npython_version\nPython version used to create the artifact\n\n\nscikit_learn_version\nscikit-learn version used to fit and save it\n\n\n\nThe feature order remains the contract established in Chapter 02:\nFEATURE_NAMES = [\n    \"mean radius\",\n    \"mean texture\",\n    \"mean perimeter\",\n    \"mean area\",\n    \"mean smoothness\",\n    \"mean compactness\",\n    \"mean concavity\",\n    \"mean concave points\",\n]\nThe target mapping is:\nTARGET_NAMES = {\n    0: \"malignant\",\n    1: \"benign\",\n}\nExplicit metadata prevents later code from having to guess what the artifact expects.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#save-with-joblib",
+    "href": "03-saving-and-loading-model-pipelines.html#save-with-joblib",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Save with joblib",
+    "text": "Save with joblib\njoblib provides a convenient persistence format for Python objects containing large NumPy arrays. It uses Python’s pickle protocol underneath, so it preserves the fitted scikit-learn pipeline as a Python object.\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nimport platform\n\nimport joblib\nimport sklearn\n\n\nMODEL_PATH = Path(\"models/03-breast-cancer-pipeline.joblib\")\nMODEL_VERSION = \"breast-cancer-logistic-v1\"\n\nartifact = {\n    \"pipeline\": pipeline,\n    \"model_version\": MODEL_VERSION,\n    \"feature_names\": FEATURE_NAMES,\n    \"target_names\": TARGET_NAMES,\n    \"trained_at_utc\": datetime.now(timezone.utc).isoformat(),\n    \"python_version\": platform.python_version(),\n    \"scikit_learn_version\": sklearn.__version__,\n}\n\nMODEL_PATH.parent.mkdir(parents=True, exist_ok=True)\njoblib.dump(artifact, MODEL_PATH)\nThe models/ directory is created if necessary. joblib.dump() then serializes the bundle to one file. The timestamp documents when the artifact was created; it does not by itself guarantee reproducibility, so the repository’s dependency lock file and source code must also be retained.\n\n\n\n\n\n\nNote\n\n\n\nThe chapter number in the filename makes the artifact’s origin visible during development. The semantic model_version identifies the model itself and is the value that downstream predictions should report.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#load-and-validate-the-artifact",
+    "href": "03-saving-and-loading-model-pipelines.html#load-and-validate-the-artifact",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Load and validate the artifact",
+    "text": "Load and validate the artifact\nLoading reverses the serialization step:\nloaded_artifact = joblib.load(MODEL_PATH)\nloaded_pipeline = loaded_artifact[\"pipeline\"]\nBefore using the model, validate the artifact structure rather than assuming every required field is present.\nREQUIRED_ARTIFACT_KEYS = {\n    \"pipeline\",\n    \"model_version\",\n    \"feature_names\",\n    \"target_names\",\n    \"trained_at_utc\",\n    \"python_version\",\n    \"scikit_learn_version\",\n}\n\nmissing_keys = REQUIRED_ARTIFACT_KEYS - loaded_artifact.keys()\nif missing_keys:\n    raise ValueError(\n        f\"Model artifact is missing required keys: {sorted(missing_keys)}\"\n    )\n\nif loaded_artifact[\"feature_names\"] != FEATURE_NAMES:\n    raise ValueError(\"Saved feature contract does not match the application contract.\")\nThese checks fail early if a wrong, incomplete, or incompatible artifact is placed at the expected path.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#verify-the-saveload-round-trip",
+    "href": "03-saving-and-loading-model-pipelines.html#verify-the-saveload-round-trip",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Verify the save–load round trip",
+    "text": "Verify the save–load round trip\nA successful file write does not prove that the reloaded artifact behaves correctly. Compare predictions made immediately before saving with predictions made after loading.\nimport numpy as np\n\n\npredictions_before = pipeline.predict(X_test)\nprobabilities_before = pipeline.predict_proba(X_test)\n\npredictions_after = loaded_pipeline.predict(X_test)\nprobabilities_after = loaded_pipeline.predict_proba(X_test)\n\nif not np.array_equal(predictions_before, predictions_after):\n    raise RuntimeError(\"Class predictions changed after serialization.\")\n\nif not np.allclose(probabilities_before, probabilities_after):\n    raise RuntimeError(\"Class probabilities changed after serialization.\")\nnp.array_equal() requires identical class predictions. np.allclose() is appropriate for floating-point probabilities, where numerically negligible representation differences may occur.\nAlso verify that the class labels retained their expected meaning:\nexpected_classes = np.array([0, 1])\n\nif not np.array_equal(loaded_pipeline.classes_, expected_classes):\n    raise RuntimeError(\n        f\"Unexpected fitted class order: {loaded_pipeline.classes_.tolist()}\"\n    )\nThe malignant-class probability can then be selected safely:\nmalignant_class = 0\nmalignant_index = np.where(\n    loaded_pipeline.classes_ == malignant_class\n)[0].item()\n\nmalignant_probability = probabilities_after[:, malignant_index]\nThis repeats an important deployment rule from Chapter 02: resolve a probability column from classes_; never assume its position.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#run-the-complete-persistence-workflow",
+    "href": "03-saving-and-loading-model-pipelines.html#run-the-complete-persistence-workflow",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Run the complete persistence workflow",
+    "text": "Run the complete persistence workflow\nThe executable program for this chapter is:\nscripts/python/03-save-and-load-model-pipeline.py\nIt performs the complete workflow:\n\nloads the same scikit-learn breast cancer dataset used in Chapter 02;\nselects and validates the same eight features;\nrecreates the same stratified training and test split;\nfits the same scaling and logistic regression pipeline;\nsaves the fitted pipeline and its metadata;\nreloads and validates the artifact; and\nconfirms that predictions and probabilities are unchanged.\n\nFrom the repository root, with the project environment activated, run:\npython scripts/python/03-save-and-load-model-pipeline.py\nThe expected artifact is:\nmodels/03-breast-cancer-pipeline.joblib\nInspect the result without trying to print the binary file:\nls -lh models/03-breast-cancer-pipeline.joblib\nThe program should report the saved path, model version, fitted class order, and successful round-trip verification.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#why-the-chapter-script-fits-the-model-again",
+    "href": "03-saving-and-loading-model-pipelines.html#why-the-chapter-script-fits-the-model-again",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Why the chapter script fits the model again",
+    "text": "Why the chapter script fits the model again\nChapter 02 evaluated whether the pipeline was suitable as a deployment candidate. Chapter 03 creates the persistent artifact. The chapter script deliberately rebuilds the candidate from the same deterministic training definition before saving it.\nThis keeps the persistence workflow reproducible from source and avoids depending on an undocumented in-memory object left behind by another process. In a larger production system, training and artifact publication would normally be separate pipeline stages sharing reusable project modules. The compact guide keeps that orchestration visible within one executable program.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#compatibility-is-part-of-the-artifact",
+    "href": "03-saving-and-loading-model-pipelines.html#compatibility-is-part-of-the-artifact",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Compatibility is part of the artifact",
+    "text": "Compatibility is part of the artifact\nPickle-based model files are tied to Python and the libraries that define the stored objects. Loading an artifact under substantially different Python, NumPy, SciPy, or scikit-learn versions may fail or produce unsupported behaviour.\nFor this guide:\n\ncreate and use the repository-specific .venv;\ninstall the project’s declared dependencies;\nretain the dependency lock file used for the build;\nrecord the Python and scikit-learn versions in the artifact; and\nrebuild and revalidate the model when dependencies change.\n\nThe version metadata helps diagnose a mismatch, but it does not make incompatible environments compatible.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#treat-model-files-as-trusted-code",
+    "href": "03-saving-and-loading-model-pipelines.html#treat-model-files-as-trusted-code",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Treat model files as trusted code",
+    "text": "Treat model files as trusted code\n\n\n\n\n\n\nWarning\n\n\n\nNever load an untrusted .joblib, .pkl, or other pickle-based file. Loading can execute arbitrary code embedded in the serialized object. Only load artifacts created by a trusted training workflow and stored in a controlled location.\n\n\nIn a production workflow, access controls, artifact checksums, signed releases, or a model registry can provide stronger provenance. Those controls are outside this guide’s local example, but the trust boundary applies from the beginning.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#common-persistence-mistakes",
+    "href": "03-saving-and-loading-model-pipelines.html#common-persistence-mistakes",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Common persistence mistakes",
+    "text": "Common persistence mistakes\n\nSaving only the classifier\nThis loses the fitted scaler and breaks the relationship between training and inference. Save the complete pipeline.\n\n\nRecreating preprocessing during inference\nHand-written preprocessing can drift from training logic. Call predict() or predict_proba() on the loaded pipeline and let the pipeline apply its stored transformations.\n\n\nDepending on feature position without a contract\nA numeric array can contain the right values in the wrong order. Store the ordered feature names and validate incoming data before prediction.\n\n\nAssuming a probability column\nThe first or second column is not inherently malignant or benign. Resolve the column from loaded_pipeline.classes_.\n\n\nOverwriting an artifact without changing its version\nIf model parameters, training data, preprocessing, or the feature contract changes, publish a new model version. A version should identify one reproducible model definition.\n\n\nLoading across unverified environments\nMatching filenames do not guarantee library compatibility. Record versions and rerun the verification suite after environment changes.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#persistence-checklist",
+    "href": "03-saving-and-loading-model-pipelines.html#persistence-checklist",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Persistence checklist",
+    "text": "Persistence checklist\nBefore an artifact is used for inference, confirm that:\n\nthe complete fitted pipeline was saved;\nthe ordered feature contract is stored and validated;\nthe class-label mapping is explicit;\nthe model has a stable semantic version;\nPython and scikit-learn versions are recorded;\npredictions match before and after loading;\nprobabilities match before and after loading;\nthe fitted class order is checked; and\nthe artifact comes from a trusted source.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "03-saving-and-loading-model-pipelines.html#chapter-summary",
+    "href": "03-saving-and-loading-model-pipelines.html#chapter-summary",
+    "title": "Saving and Loading Model Pipelines",
+    "section": "Chapter summary",
+    "text": "Chapter summary\nModel persistence is the boundary between training and operational inference. A reliable artifact preserves the complete fitted pipeline, the ordered feature contract, the class meanings, the model version, and enough environment information to diagnose compatibility problems.\nThe round-trip verification provides concrete evidence that the saved and reloaded pipeline behaves like the fitted deployment candidate. Chapter 04 will build on this artifact by creating a reliable inference workflow that validates new records, preserves feature order, and returns structured predictions.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Saving and Loading Model Pipelines</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html",
+    "href": "04-building-a-reliable-inference-workflow.html",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "",
+    "text": "From training to inference\nSaving a trained pipeline is only the beginning of deployment. A useful deployment workflow must also accept new observations, verify that they match the model’s expectations, produce interpretable outputs, and preserve enough context to investigate failures later.\nThis chapter develops a repeatable batch-inference workflow around the pipeline saved in Saving and Loading Model Pipelines. Batch inference is a practical first deployment target because it makes every stage visible: a file arrives, the program validates it, the model produces predictions, and a new file records the results.\nBy the end of the chapter, you will be able to:\nTraining and inference use the same fitted pipeline for different purposes.\nThe separation is important. During inference, the program must call predict() or predict_proba() on the loaded pipeline. Calling fit(), fit_transform(), or fit_predict() would allow new data to change the model and would break reproducibility.\nBecause preprocessing and prediction were saved together, the inference program does not need to reproduce encoding, scaling, or imputation manually. The pipeline applies the fitted transformations in the correct order.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#from-training-to-inference",
+    "href": "04-building-a-reliable-inference-workflow.html#from-training-to-inference",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "",
+    "text": "Stage\nInput\nPipeline behaviour\nOutput\n\n\n\n\nTraining\nHistorical labelled data\nLearns preprocessing parameters and model parameters\nSaved fitted pipeline\n\n\nInference\nNew unlabelled data\nReuses learned parameters without fitting again\nPredictions and supporting metadata\n\n\n\n\n# Correct: reuse the fitted pipeline.\npredictions = pipeline.predict(features)\n\n# Incorrect: never retrain as part of ordinary inference.\npipeline.fit(features, labels)",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#define-the-inference-contract",
+    "href": "04-building-a-reliable-inference-workflow.html#define-the-inference-contract",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Define the inference contract",
+    "text": "Define the inference contract\nAn inference contract states what the program accepts and what it returns. It should be decided before writing the prediction code.\nFor this guide, each incoming record contains:\n\na stable record_id used to connect the output to the source record;\nthe feature columns expected by the saved pipeline; and\nno target column, because the outcome is not yet known at prediction time.\n\nThe prediction file contains:\n\nrecord_id;\nprediction;\nprediction_probability; and\nmodel_version.\n\nThe identifier and version are operational metadata. They are not model features. Keeping them outside the feature matrix prevents accidental leakage while making every prediction traceable.\n\n\n\n\n\n\nImportant\n\n\n\nThe exact column names, meanings, units, and permitted values form part of the model interface. A CSV file is not valid merely because pandas can read it.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#a-reliable-batch-inference-sequence",
+    "href": "04-building-a-reliable-inference-workflow.html#a-reliable-batch-inference-sequence",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "A reliable batch-inference sequence",
+    "text": "A reliable batch-inference sequence\nA robust program follows a short, explicit sequence:\n\nresolve and verify all file paths;\nload the saved pipeline and its metadata;\nread the incoming batch;\nvalidate identifiers, required columns, values, and row counts;\nisolate model features in the expected order;\ngenerate predictions and, where supported, probabilities;\nvalidate the prediction output; and\nwrite the result to a deliberate location.\n\nThis design keeps validation close to the boundary of the system. Invalid input should fail before the model produces a plausible-looking but unreliable result.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#validate-incoming-data",
+    "href": "04-building-a-reliable-inference-workflow.html#validate-incoming-data",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Validate incoming data",
+    "text": "Validate incoming data\nStart with structural checks that produce clear error messages.\ndef validate_input(data, required_features):\n    required_columns = {\"record_id\", *required_features}\n    missing = sorted(required_columns.difference(data.columns))\n\n    if missing:\n        raise ValueError(f\"Missing required columns: {missing}\")\n    if data.empty:\n        raise ValueError(\"The inference batch contains no rows.\")\n    if data[\"record_id\"].isna().any():\n        raise ValueError(\"record_id contains missing values.\")\n    if data[\"record_id\"].duplicated().any():\n        raise ValueError(\"record_id must be unique within a batch.\")\nStructural validation is necessary but not sufficient. Depending on the application, validation may also enforce:\n\nnumeric ranges, such as non-negative counts;\nknown categories or a documented unknown-category policy;\nconsistent units;\nacceptable missingness;\nparseable dates;\nmaximum batch size; and\nprivacy rules that exclude prohibited fields.\n\nThe pipeline can impute missing feature values only if it was trained to do so. Validation should therefore distinguish between expected missingness, which the pipeline knows how to handle, and invalid missingness, which indicates a broken upstream process.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#preserve-identifiers-and-select-features",
+    "href": "04-building-a-reliable-inference-workflow.html#preserve-identifiers-and-select-features",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Preserve identifiers and select features",
+    "text": "Preserve identifiers and select features\nThe incoming table contains both operational fields and model inputs. Separate them deliberately.\nrecord_ids = data[\"record_id\"].copy()\nfeatures = data.loc[:, required_features].copy()\nSelecting features by name is safer than passing the entire table to the model. It prevents identifiers, timestamps, comments, or newly added upstream columns from silently becoming prediction inputs.\nWhen the fitted estimator exposes feature_names_in_, the program can use it as the authoritative feature list:\nrequired_features = pipeline.feature_names_in_.tolist()\nIf the saved object does not expose feature names, store the ordered list in the model metadata created during training. Do not infer the contract from whichever columns happen to arrive.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#generate-predictions-and-probabilities",
+    "href": "04-building-a-reliable-inference-workflow.html#generate-predictions-and-probabilities",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Generate predictions and probabilities",
+    "text": "Generate predictions and probabilities\nLoad the model once per program run, then predict the entire validated batch.\nimport joblib\n\npipeline = joblib.load(\"models/customer-risk-pipeline.joblib\")\npredictions = pipeline.predict(features)\nFor a binary classifier, probabilities provide more information than class labels alone:\nprobabilities = pipeline.predict_proba(features)\npositive_probability = probabilities[:, 1]\nThe expression [:, 1] is safe only when the second probability column is known to represent the intended positive class. A more reliable implementation locates that class explicitly:\npositive_class = 1\nclasses = pipeline.classes_.tolist()\n\nif positive_class not in classes:\n    raise ValueError(f\"Positive class {positive_class!r} not found in {classes}.\")\n\npositive_index = classes.index(positive_class)\npositive_probability = pipeline.predict_proba(features)[:, positive_index]\nThis check prevents a subtle but serious error when class labels or their ordering differ from an assumption in the inference code.\n\n\n\n\n\n\nNote\n\n\n\nNot every estimator implements predict_proba(). Some expose decision_function(), while regression models return continuous predictions directly. The output contract must match the fitted estimator and the decision process that consumes its predictions.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#build-a-stable-prediction-table",
+    "href": "04-building-a-reliable-inference-workflow.html#build-a-stable-prediction-table",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Build a stable prediction table",
+    "text": "Build a stable prediction table\nConstruct the result independently from the feature table so that the output schema remains intentional.\nimport pandas as pd\n\nresults = pd.DataFrame(\n    {\n        \"record_id\": record_ids,\n        \"prediction\": predictions,\n        \"prediction_probability\": positive_probability,\n        \"model_version\": \"1.0.0\",\n    }\n)\nBefore writing the file, validate the output:\nif len(results) != len(data):\n    raise RuntimeError(\"Prediction row count does not match input row count.\")\n\nif results[\"prediction_probability\"].isna().any():\n    raise RuntimeError(\"Prediction probabilities contain missing values.\")\n\nif not results[\"prediction_probability\"].between(0, 1).all():\n    raise RuntimeError(\"Prediction probabilities fall outside [0, 1].\")\nThese checks are inexpensive and protect the boundary between the model and downstream systems.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#the-executable-inference-program",
+    "href": "04-building-a-reliable-inference-workflow.html#the-executable-inference-program",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "The executable inference program",
+    "text": "The executable inference program\nThe complete implementation belongs in:\nscripts/python/04-run-batch-inference.py\nIt should use command-line arguments rather than fixed working-directory assumptions:\npython scripts/python/04-run-batch-inference.py \\\n  --input data/inference/new-records.csv \\\n  --model models/customer-risk-pipeline.joblib \\\n  --metadata models/customer-risk-metadata.json \\\n  --output results/predictions/customer-risk-predictions.csv\nThe program should create the output directory when needed but should not create or guess missing input files. A missing model, metadata file, or inference dataset is an error that requires correction.\nThe corresponding wrapper belongs in:\nscripts/bash/04-run-batch-inference.sh\nand provides a short, repeatable project command:\nbash scripts/bash/04-run-batch-inference.sh\nThe Python command is the direct interface; the Bash wrapper is a convenience that supplies the standard project paths. Both routes execute the same Python workflow and therefore produce the same result.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#fail-clearly-and-safely",
+    "href": "04-building-a-reliable-inference-workflow.html#fail-clearly-and-safely",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Fail clearly and safely",
+    "text": "Fail clearly and safely\nInference failures should be visible. Do not catch every exception and continue with partial or fabricated output.\nUseful failure messages identify:\n\nthe missing or unreadable file;\nmissing, duplicate, or unexpected fields;\ninvalid values and affected columns;\nincompatibility between the model artifact and the runtime;\nunsupported probability behaviour; or\ndisagreement between input and output row counts.\n\nWhen an output file may already exist, choose an explicit policy. For a teaching workflow, overwriting the named result keeps repeated runs simple. In production, versioned or timestamped destinations may be preferable, provided downstream consumers can identify the authoritative result.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#record-operational-evidence",
+    "href": "04-building-a-reliable-inference-workflow.html#record-operational-evidence",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Record operational evidence",
+    "text": "Record operational evidence\nA prediction file should answer more than “what did the model predict?” At minimum, retain or log:\n\nmodel name and version;\nmodel artifact checksum or immutable identifier;\ninference timestamp in UTC;\ninput source or batch identifier;\ninput and output row counts;\nvalidation outcome;\nprediction summary, such as class counts; and\nsoftware or environment version when strict reproducibility is required.\n\nDo not place sensitive source features into logs merely for convenience. Operational evidence should support traceability without duplicating protected data.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#common-failure-patterns",
+    "href": "04-building-a-reliable-inference-workflow.html#common-failure-patterns",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Common failure patterns",
+    "text": "Common failure patterns\n\n\n\n\n\n\n\n\nFailure pattern\nWhy it is unreliable\nBetter approach\n\n\n\n\nRecreating preprocessing in the inference script\nTraining and inference transformations can diverge\nLoad one fitted pipeline\n\n\nPassing every incoming column to the model\nOperational or newly added columns may leak into prediction\nSelect the named feature contract\n\n\nAssuming probability column 1 is always positive\nClass ordering may differ\nLocate the positive class through classes_\n\n\nDropping the record identifier\nPredictions cannot be joined safely to source records\nPreserve a unique identifier outside the features\n\n\nAccepting an empty batch\nA technically successful empty output can hide upstream failure\nReject empty input explicitly\n\n\nWriting results before validation\nInvalid output can reach downstream consumers\nValidate first, then write\n\n\nRefitting during prediction\nNew data changes the model\nUse only prediction methods",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#test-the-workflow-before-automation",
+    "href": "04-building-a-reliable-inference-workflow.html#test-the-workflow-before-automation",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Test the workflow before automation",
+    "text": "Test the workflow before automation\nRun at least four small batches before relying on the program:\n\na valid batch with several records;\na batch missing one required feature;\na batch containing duplicate identifiers; and\nan empty batch.\n\nThe valid batch should produce one output row per input row. Each invalid batch should stop with a specific, understandable error. These cases will become automated tests in a later chapter; running them manually now confirms that the contract is clear enough to test.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "04-building-a-reliable-inference-workflow.html#chapter-checkpoint",
+    "href": "04-building-a-reliable-inference-workflow.html#chapter-checkpoint",
+    "title": "Building a Reliable Inference Workflow",
+    "section": "Chapter checkpoint",
+    "text": "Chapter checkpoint\nYou now have the design for a reliable batch-inference boundary:\n\nthe fitted pipeline is loaded rather than rebuilt;\nincoming data is checked against an explicit contract;\nidentifiers remain separate from model features;\nclass probabilities are interpreted deliberately;\npredictions follow a stable, traceable schema; and\nfailures stop the workflow before unreliable output is written.\n\nThe next step is to expose the same prediction logic through a service interface. The input and output contracts developed here will transfer directly to request and response models, reducing the amount of new logic required for an API.",
+    "crumbs": [
+      "From Model to Inference",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Building a Reliable Inference Workflow</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html",
+    "href": "05-serving-predictions-with-fastapi.html",
+    "title": "Serving Predictions with FastAPI",
+    "section": "",
+    "text": "Learning objectives\nA saved model is useful only when another program can send it data and receive a dependable prediction. In this chapter, you will place the inference workflow from Building a Reliable Inference Workflow behind a small HTTP API built with FastAPI.\nThe objective is not merely to make the model reachable. The API must preserve the same input rules, preprocessing steps, output meanings, and failure behaviour that were tested before deployment.\nBy the end of this chapter, you will be able to:",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#learning-objectives",
+    "href": "05-serving-predictions-with-fastapi.html#learning-objectives",
+    "title": "Serving Predictions with FastAPI",
+    "section": "",
+    "text": "explain the role of an API in a model-serving system;\ndefine validated request and response models with Pydantic;\nload a saved pipeline once when a FastAPI application starts;\nexpose health and prediction endpoints;\nsend prediction requests from the command line and Python;\ndistinguish client validation errors from server-side inference failures; and\ntest the API without opening a network connection.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#from-an-inference-function-to-a-service",
+    "href": "05-serving-predictions-with-fastapi.html#from-an-inference-function-to-a-service",
+    "title": "Serving Predictions with FastAPI",
+    "section": "From an inference function to a service",
+    "text": "From an inference function to a service\nChapter 04 established a reliable inference boundary:\nraw request -&gt; validation -&gt; tabular input -&gt; saved pipeline -&gt; prediction -&gt; structured output\nFastAPI adds an HTTP layer around that boundary. A client sends JSON to a URL, the application validates it, and the inference function returns a JSON response.\nThe application should remain thin. It should not reproduce preprocessing logic already stored in the fitted scikit-learn pipeline. Duplicating transformations in the API would create a second implementation that could drift away from training.\nFastAPI uses Python type annotations and Pydantic models to validate request data and generate an OpenAPI description of the service (Ramírez n.d.a). Response models also document and validate the data returned to clients (Ramírez n.d.d).",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#the-api-contract",
+    "href": "05-serving-predictions-with-fastapi.html#the-api-contract",
+    "title": "Serving Predictions with FastAPI",
+    "section": "The API contract",
+    "text": "The API contract\nAn API contract specifies what a client may send and what the service promises to return. For this guide, the service exposes two endpoints.\n\n\n\n\n\n\n\n\n\nMethod\nPath\nPurpose\nSuccessful response\n\n\n\n\nGET\n/health\nConfirm that the application and model are ready\nService status and model identifier\n\n\nPOST\n/predict\nValidate one observation and generate a prediction\nPredicted class and probability\n\n\n\nThe health endpoint is operational: monitoring systems can call it without making a prediction. The prediction endpoint is analytical: it implements the inference contract.\n\n\n\n\n\n\nImportant\n\n\n\nThe field names and types in the request model must match the model developed earlier in this guide. Do not rename fields at the API boundary unless an explicit mapping is part of the tested inference workflow.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#define-request-and-response-schemas",
+    "href": "05-serving-predictions-with-fastapi.html#define-request-and-response-schemas",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Define request and response schemas",
+    "text": "Define request and response schemas\nPydantic models turn the informal input description into executable validation rules. The following pattern uses constrained fields, rejects unexpected inputs, and includes an example for the generated API documentation.\nfrom typing import Literal\n\nimport pandas as pd\nfrom pydantic import BaseModel, ConfigDict, Field\n\n\nclass PredictionRequest(BaseModel):\n    model_config = ConfigDict(\n        extra=\"forbid\",\n        json_schema_extra={\n            \"examples\": [\n                {\n                    \"mean_radius\": 17.99,\n                    \"mean_texture\": 10.38,\n                    \"mean_perimeter\": 122.8,\n                    \"mean_area\": 1001.0,\n                    \"mean_smoothness\": 0.1184,\n                    \"mean_compactness\": 0.2776,\n                    \"mean_concavity\": 0.3001,\n                    \"mean_concave_points\": 0.1471,\n                }\n            ]\n        },\n    )\n\n    mean_radius: float = Field(gt=0)\n    mean_texture: float = Field(ge=0)\n    mean_perimeter: float = Field(gt=0)\n    mean_area: float = Field(gt=0)\n    mean_smoothness: float = Field(ge=0)\n    mean_compactness: float = Field(ge=0)\n    mean_concavity: float = Field(ge=0)\n    mean_concave_points: float = Field(ge=0)\n\n    def to_model_frame(self) -&gt; pd.DataFrame:\n        values = self.model_dump()\n        mapping = {\n            \"mean_radius\": \"mean radius\",\n            \"mean_texture\": \"mean texture\",\n            \"mean_perimeter\": \"mean perimeter\",\n            \"mean_area\": \"mean area\",\n            \"mean_smoothness\": \"mean smoothness\",\n            \"mean_compactness\": \"mean compactness\",\n            \"mean_concavity\": \"mean concavity\",\n            \"mean_concave_points\": \"mean concave points\",\n        }\n        row = {model_name: values[api_name]\n               for api_name, model_name in mapping.items()}\n        return pd.DataFrame([row], columns=list(mapping.values()))\n\n\nclass PredictionResponse(BaseModel):\n    prediction: int\n    label: Literal[\"malignant\", \"benign\"]\n    probability_malignant: float = Field(ge=0.0, le=1.0)\n    model_version: str\n\n\nclass HealthResponse(BaseModel):\n    status: Literal[\"ready\"]\n    model_version: str\nThese are the eight features selected in Chapters 02–04. The public API uses JSON-friendly snake-case names and maps them explicitly to the artifact names, such as mean_radius to mean radius. Pydantic’s Field supports numeric constraints and schema metadata, while extra=\"forbid\" prevents misspelled or unknown fields from being silently ignored (Pydantic n.d.).\nRequest validation protects the interface, but it does not prove that an input is meaningful in the real world. For example, an income of zero may be syntactically valid while still requiring business review. Semantic and distributional checks belong in the inference contract and monitoring design.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#build-the-fastapi-application",
+    "href": "05-serving-predictions-with-fastapi.html#build-the-fastapi-application",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Build the FastAPI application",
+    "text": "Build the FastAPI application\nCreate the executable application as:\nscripts/python/05-serving-predictions-api.py\nThe complete application should contain four responsibilities:\n\nlocate and load the model artifact;\nretain the loaded model in application state;\ndefine typed HTTP endpoints; and\ntranslate expected inference failures into appropriate HTTP responses.\n\nThe central pattern is shown below.\nfrom contextlib import asynccontextmanager\nfrom pathlib import Path\n\nimport joblib\nimport pandas as pd\nfrom fastapi import FastAPI, HTTPException, Request\n\n\nMODEL_PATH = Path(\"models/03-breast-cancer-pipeline.joblib\")\nPOSITIVE_CLASS = 0\n\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    artifact = joblib.load(MODEL_PATH)\n    app.state.model = artifact[\"pipeline\"]\n    app.state.model_version = artifact[\"model_version\"]\n    app.state.target_names = artifact[\"target_names\"]\n    yield\n    app.state.model = None\n\n\napp = FastAPI(\n    title=\"CDI Prediction API\",\n    version=\"1.0.0\",\n    lifespan=lifespan,\n)\n\n\n@app.get(\"/health\", response_model=HealthResponse)\ndef health(request: Request) -&gt; HealthResponse:\n    if request.app.state.model is None:\n        raise HTTPException(status_code=503, detail=\"Model is not ready\")\n\n    return HealthResponse(status=\"ready\", model_version=request.app.state.model_version)\n\n\n@app.post(\"/predict\", response_model=PredictionResponse)\ndef predict(payload: PredictionRequest, request: Request) -&gt; PredictionResponse:\n    model = request.app.state.model\n    frame = payload.to_model_frame()\n\n    try:\n        predicted_class = int(model.predict(frame)[0])\n        positive_index = list(model.classes_).index(POSITIVE_CLASS)\n        probability = float(model.predict_proba(frame)[0, positive_index])\n        label = request.app.state.target_names[predicted_class]\n    except (KeyError, TypeError, ValueError) as exc:\n        raise HTTPException(\n            status_code=422,\n            detail=\"Input could not be processed by the model\",\n        ) from exc\n\n    return PredictionResponse(\n        prediction=predicted_class,\n        label=label,\n        probability_malignant=probability,\n        model_version=request.app.state.model_version,\n    )\nFastAPI recommends the application lifespan context for startup and shutdown logic (Ramírez n.d.b). Loading the artifact before yield has two important consequences:\n\nthe service fails during startup if the model cannot be loaded; and\nthe model is reused across requests instead of being read from disk for every prediction.\n\nLoading once reduces avoidable latency. It also makes readiness honest: the application should not report ready until the artifact is available.\n\n\n\n\n\n\nNote\n\n\n\nThe model path and version should ultimately come from configuration or artifact metadata. They are constants here so the serving boundary remains easy to inspect. Chapter 07 will separate configuration from application code.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#preserve-the-fitted-pipeline",
+    "href": "05-serving-predictions-with-fastapi.html#preserve-the-fitted-pipeline",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Preserve the fitted pipeline",
+    "text": "Preserve the fitted pipeline\nThe request is converted to a one-row pandas.DataFrame before prediction. The executable to_model_frame() method produces the exact eight Chapter 03 columns, in their saved order: mean radius, mean texture, mean perimeter, mean area, mean smoothness, mean compactness, mean concavity, and mean concave points.\nDo not extract numeric values into an unnamed list:\n# Fragile: column names and ordering are implicit.\nvalues = [[payload.mean_radius, payload.mean_texture,\n           payload.mean_perimeter, payload.mean_area]]\nprediction = model.predict(values)\nThis approach makes feature order part of undocumented application code. A named DataFrame keeps the contract visible and allows the pipeline’s column-based preprocessing to work as designed.\nThe API should also call the saved pipeline directly. It should not manually standardize numeric variables, encode categories, or fill missing values. Those transformations belong inside the fitted pipeline saved in Saving and Loading Model Pipelines.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#choose-output-meanings-carefully",
+    "href": "05-serving-predictions-with-fastapi.html#choose-output-meanings-carefully",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Choose output meanings carefully",
+    "text": "Choose output meanings carefully\nFor this classifier, class 0 means malignant and class 1 means benign. Malignant is the operational positive class established in Chapter 02, so the API returns an explicitly named probability_malignant. A fixed probability column is fragile:\nprobability = float(model.predict_proba(frame)[0, 0])  # fragile\nThat assumption must be verified against model.classes_. A safer implementation finds the probability column explicitly:\npositive_class = 0\nclasses = list(model.classes_)\npositive_index = classes.index(positive_class)\nprobability = float(model.predict_proba(frame)[0, positive_index])\nIf the estimator does not implement predict_proba(), return only outputs the model genuinely supports or use a separately validated score. Do not label an arbitrary decision score as a probability.\nThe response includes model_version so predictions can be traced to a deployed artifact. In a larger system, the response or internal logs may also carry a request identifier, deployment version, and inference timestamp. Avoid returning internal filesystem paths, stack traces, or sensitive feature values.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#run-the-api-locally",
+    "href": "05-serving-predictions-with-fastapi.html#run-the-api-locally",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Run the API locally",
+    "text": "Run the API locally\nActivate the repository-specific environment and start the development server from the repository root:\nsource .venv/bin/activate\nfastapi dev scripts/python/05-serving-predictions-api.py\nThe development server reloads when source files change. It is intended for local development, not as the final production process.\nOnce the server starts, open:\n\nhttp://127.0.0.1:8000/docs for Swagger UI;\nhttp://127.0.0.1:8000/redoc for ReDoc; and\nhttp://127.0.0.1:8000/openapi.json for the machine-readable OpenAPI schema.\n\nThe interactive documentation is generated from the route definitions, request models, and response models. It is a useful inspection surface, but it does not replace automated tests.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#call-the-endpoints",
+    "href": "05-serving-predictions-with-fastapi.html#call-the-endpoints",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Call the endpoints",
+    "text": "Call the endpoints\n\nCheck readiness\ncurl --fail --silent http://127.0.0.1:8000/health\nA successful response should resemble:\n{\n  \"status\": \"ready\",\n  \"model_version\": \"breast-cancer-logistic-v1\"\n}\n\n\nRequest a prediction\ncurl --fail --silent \\\n  --request POST \\\n  --url http://127.0.0.1:8000/predict \\\n  --header 'Content-Type: application/json' \\\n  --data '{\n    \"mean_radius\": 17.99,\n    \"mean_texture\": 10.38,\n    \"mean_perimeter\": 122.8,\n    \"mean_area\": 1001.0,\n    \"mean_smoothness\": 0.1184,\n    \"mean_compactness\": 0.2776,\n    \"mean_concavity\": 0.3001,\n    \"mean_concave_points\": 0.1471\n  }'\nA successful response has a stable shape:\n{\n  \"prediction\": 0,\n  \"label\": \"malignant\",\n  \"probability_malignant\": 0.98,\n  \"model_version\": \"breast-cancer-logistic-v1\"\n}\nThe values are illustrative. The important property is that the response fields and their meanings remain stable.\n\n\nCall the service from Python\nimport httpx\n\n\npayload = {\n    \"mean_radius\": 17.99,\n    \"mean_texture\": 10.38,\n    \"mean_perimeter\": 122.8,\n    \"mean_area\": 1001.0,\n    \"mean_smoothness\": 0.1184,\n    \"mean_compactness\": 0.2776,\n    \"mean_concavity\": 0.3001,\n    \"mean_concave_points\": 0.1471,\n}\n\nresponse = httpx.post(\n    \"http://127.0.0.1:8000/predict\",\n    json=payload,\n    timeout=10.0,\n)\nresponse.raise_for_status()\n\nresult = response.json()\nprint(result)\nAn explicit timeout prevents a client from waiting indefinitely. Production clients may also need bounded retries, but automatic retries must be designed carefully to avoid amplifying failures.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#understand-validation-and-http-errors",
+    "href": "05-serving-predictions-with-fastapi.html#understand-validation-and-http-errors",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Understand validation and HTTP errors",
+    "text": "Understand validation and HTTP errors\nFastAPI distinguishes errors raised while validating client input from errors that occur inside the service.\n\n\n\n\n\n\n\n\nSituation\nTypical status\nMeaning\n\n\n\n\nValid request and successful inference\n200\nPrediction returned\n\n\nMissing, malformed, or disallowed field\n422\nRequest does not satisfy the schema\n\n\nValid JSON that violates an inference rule\n422\nInput cannot be processed under the contract\n\n\nModel not loaded or temporarily unavailable\n503\nService is not ready\n\n\nUnexpected application defect\n500\nServer failed unexpectedly\n\n\n\nDo not catch every exception and return 200 with an error message. Clients and monitoring tools depend on HTTP status codes to distinguish success from failure. Likewise, avoid exposing raw exception text because it may reveal implementation details.\nTry an invalid request:\ncurl --silent \\\n  --request POST \\\n  --url http://127.0.0.1:8000/predict \\\n  --header 'Content-Type: application/json' \\\n  --data '{\n    \"mean_radius\": -4,\n    \"mean_texture\": 10.38,\n    \"mean_perimeter\": 122.8,\n    \"mean_area\": 1001.0,\n    \"mean_smoothness\": 0.1184,\n    \"mean_compactness\": 0.2776,\n    \"mean_concavity\": 0.3001,\n    \"mean_concave_points\": 0.1471\n  }'\nThe framework should reject the request before the endpoint calls the model. That is a valuable boundary: invalid input does not enter the inference workflow.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#test-without-starting-a-server",
+    "href": "05-serving-predictions-with-fastapi.html#test-without-starting-a-server",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Test without starting a server",
+    "text": "Test without starting a server\nFastAPI’s TestClient exercises the application directly without opening an HTTP socket (Ramírez n.d.f). Because the model loads in the lifespan context, use TestClient as a context manager so startup and shutdown logic runs during the test (Ramírez n.d.e).\nCreate:\ntests/test_05_api.py\nThe essential test cases are:\nfrom fastapi.testclient import TestClient\n\nfrom api_import_helper import app\n\n\ndef test_health_reports_ready():\n    with TestClient(app) as client:\n        response = client.get(\"/health\")\n\n    assert response.status_code == 200\n    assert response.json()[\"status\"] == \"ready\"\n\n\ndef test_predict_returns_contract_fields(valid_payload):\n    with TestClient(app) as client:\n        response = client.post(\"/predict\", json=valid_payload)\n\n    assert response.status_code == 200\n    body = response.json()\n    assert set(body) == {\n        \"prediction\", \"label\", \"probability_malignant\", \"model_version\"\n    }\n    assert 0.0 &lt;= body[\"probability_malignant\"] &lt;= 1.0\n\n\ndef test_predict_rejects_missing_feature(valid_payload):\n    invalid_payload = valid_payload.copy()\n    invalid_payload.pop(\"mean_area\")\n\n    with TestClient(app) as client:\n        response = client.post(\"/predict\", json=invalid_payload)\n\n    assert response.status_code == 422\n\n\ndef test_predict_rejects_unknown_field(valid_payload):\n    invalid_payload = valid_payload | {\"unexpected\": 1}\n\n    with TestClient(app) as client:\n        response = client.post(\"/predict\", json=invalid_payload)\n\n    assert response.status_code == 422\napi_import_helper represents a small import adapter for the chapter-prefixed application filename. The repository’s executable test suite should contain that adapter and a reusable valid_payload fixture. Keeping the full runnable implementation outside the .qmd file preserves the guide’s standard: concise examples remain visible here, while executable code lives under scripts/ and tests/.\nRun the tests from the repository root:\npytest -q tests/test_05_api.py\nThe prediction test should verify more than status 200. It should also compare the API result with the previously tested inference function for the same observation. This parity test detects accidental differences introduced at the HTTP boundary.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#common-mistakes",
+    "href": "05-serving-predictions-with-fastapi.html#common-mistakes",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Common mistakes",
+    "text": "Common mistakes\n\nLoading the model inside the endpoint\nReading the artifact for every request adds disk access and deserialization time to every prediction. Load it once during application startup.\n\n\nRebuilding preprocessing in the API\nManual transformations duplicate the fitted pipeline and invite training-serving skew. Pass the named DataFrame to the saved pipeline.\n\n\nAllowing extra fields silently\nA misspelled field can otherwise disappear during validation while the client assumes it was used. Reject unexpected fields unless the contract explicitly permits them.\n\n\nReturning NumPy objects directly\nNumPy scalar types are not always JSON serializable. Convert predictions and probabilities to native Python int and float values at the response boundary.\n\n\nTreating /health as proof of predictive quality\nA health check shows that the service is running and the model is loaded. It does not show that the model remains accurate, calibrated, fair, or appropriate for current data. Those questions require monitoring and evaluation.\n\n\nCalling local development a deployment\nServing on 127.0.0.1 confirms that the API works on one machine. A deployable service still needs dependency control, tests, configuration, logging, containerization, security, and an operating environment.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#a-disciplined-serving-workflow",
+    "href": "05-serving-predictions-with-fastapi.html#a-disciplined-serving-workflow",
+    "title": "Serving Predictions with FastAPI",
+    "section": "A disciplined serving workflow",
+    "text": "A disciplined serving workflow\nThe chapter workflow is:\n\nstart from the tested inference contract;\ndefine strict request and response models;\nload the saved pipeline during application startup;\nconvert validated input into the expected named table;\nreturn JSON-safe, documented outputs;\ntest success, validation failure, and readiness behaviour; and\nconfirm parity between direct inference and API inference.\n\nThis sequence keeps the HTTP layer small and makes failures easier to locate.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#chapter-checkpoint",
+    "href": "05-serving-predictions-with-fastapi.html#chapter-checkpoint",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Chapter checkpoint",
+    "text": "Chapter checkpoint\nYou now have the conceptual and implementation structure for a prediction API with:\n\none model loaded at application startup;\na readiness endpoint;\na validated prediction endpoint;\nexplicit response semantics;\ninteractive OpenAPI documentation; and\ntests that exercise the service without starting an external server.\n\nThe service is locally usable, but it is not yet production-ready. The next chapter will test the API and inference behaviour more systematically before packaging and deployment.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#review-questions",
+    "href": "05-serving-predictions-with-fastapi.html#review-questions",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Review questions",
+    "text": "Review questions\n\nWhy should preprocessing remain inside the saved pipeline rather than the FastAPI endpoint?\nWhat is the difference between request validation and real-world plausibility checking?\nWhy is a named one-row DataFrame safer than an unnamed list of values?\nWhat does the /health endpoint establish, and what does it not establish?\nWhy should a prediction response include a model version?\nWhich test would reveal a mismatch between direct inference and API inference?",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "05-serving-predictions-with-fastapi.html#further-reading",
+    "href": "05-serving-predictions-with-fastapi.html#further-reading",
+    "title": "Serving Predictions with FastAPI",
+    "section": "Further reading",
+    "text": "Further reading\n\nFastAPI request bodies and data validation (Ramírez n.d.c)\nFastAPI response models (Ramírez n.d.d)\nFastAPI lifespan events (Ramírez n.d.b)\nFastAPI testing with TestClient (Ramírez n.d.f)\nPydantic fields and validation metadata (Pydantic n.d.)\n\n\n\n\n\nPydantic. n.d. “Fields.” Accessed August 4, 2026. https://docs.pydantic.dev/latest/concepts/fields/.\n\n\nRamírez, Sebastián. n.d.a. “FastAPI.” Accessed August 4, 2026. https://fastapi.tiangolo.com/.\n\n\n———. n.d.b. “Lifespan Events.” Accessed August 4, 2026. https://fastapi.tiangolo.com/advanced/events/.\n\n\n———. n.d.c. “Request Body.” Accessed August 4, 2026. https://fastapi.tiangolo.com/tutorial/body/.\n\n\n———. n.d.d. “Response Model: Return Type.” Accessed August 4, 2026. https://fastapi.tiangolo.com/tutorial/response-model/.\n\n\n———. n.d.e. “Testing Events: Lifespan and Startup–Shutdown.” Accessed August 4, 2026. https://fastapi.tiangolo.com/advanced/testing-events/.\n\n\n———. n.d.f. “Testing FastAPI Applications.” Accessed August 4, 2026. https://fastapi.tiangolo.com/tutorial/testing/.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Serving Predictions with FastAPI</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html",
+    "href": "06-validation-errors-and-api-testing.html",
+    "title": "Validation, Errors, and API Testing",
+    "section": "",
+    "text": "Learning objectives\nA prediction API is reliable only when its failures are as deliberate as its successful responses. A model may predict correctly for valid data and still be unsafe to deploy if malformed requests produce confusing messages, unexpected status codes, or silent coercions.\nThis chapter develops a practical testing strategy for the FastAPI service introduced in Serving Predictions with FastAPI. The goal is to verify the public API contract: which requests are accepted, which are rejected, and what every response communicates to a client.\nBy the end of this chapter, you should be able to:",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#learning-objectives",
+    "href": "06-validation-errors-and-api-testing.html#learning-objectives",
+    "title": "Validation, Errors, and API Testing",
+    "section": "",
+    "text": "distinguish request validation from model inference errors;\ninterpret common HTTP status codes returned by a prediction API;\ndesign positive, negative, and boundary test cases;\ntest a running API with a repeatable Python program;\nwrite focused in-process tests with FastAPI’s TestClient;\ndiagnose failures without exposing internal implementation details.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#validation-is-part-of-the-api-contract",
+    "href": "06-validation-errors-and-api-testing.html#validation-is-part-of-the-api-contract",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Validation is part of the API contract",
+    "text": "Validation is part of the API contract\nThe request schema defines the boundary between an external client and the prediction system. In FastAPI, a Pydantic model can validate field presence, data types, ranges, and selected business rules before inference begins.\nConsider a request model with explicit constraints:\nfrom pydantic import BaseModel, ConfigDict, Field\n\n\nclass PredictionRequest(BaseModel):\n    model_config = ConfigDict(extra=\"forbid\")\n\n    mean_radius: float = Field(gt=0)\n    mean_texture: float = Field(gt=0)\n    mean_perimeter: float = Field(gt=0)\n    mean_area: float = Field(gt=0)\n    mean_smoothness: float = Field(ge=0, le=1)\n    mean_compactness: float = Field(ge=0, le=1)\n    mean_concavity: float = Field(ge=0, le=1)\n    mean_concave_points: float = Field(ge=0, le=1)\nThese constraints prevent several invalid states:\n\nmissing required fields;\nvalues with incompatible types;\nnon-positive size measurements;\nproportions outside their supported range;\nunexpected fields when extra=\"forbid\" is enabled.\n\nValidation should reflect the conditions under which the model was designed and evaluated. A field being numeric does not mean that every numeric value is meaningful.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#separate-client-errors-from-server-errors",
+    "href": "06-validation-errors-and-api-testing.html#separate-client-errors-from-server-errors",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Separate client errors from server errors",
+    "text": "Separate client errors from server errors\nAn API should distinguish a request the client can correct from a failure inside the service.\n\n\n\n\n\n\n\n\nStatus\nMeaning in this workflow\nExample\n\n\n\n\n200 OK\nThe request was valid and inference succeeded\nA prediction response is returned\n\n\n400 Bad Request\nThe request is understandable but violates an application rule\nAn unsupported category combination\n\n\n404 Not Found\nThe requested route or resource does not exist\nAn unknown model version\n\n\n422 Unprocessable Content\nFastAPI/Pydantic could not validate the request body\nA required field is missing\n\n\n500 Internal Server Error\nAn unexpected failure occurred in the service\nAn unhandled preprocessing failure\n\n\n503 Service Unavailable\nThe service is running but cannot currently predict\nThe model artifact failed to load\n\n\n\nDo not return 200 OK with an error hidden inside the response body. Status codes allow clients, monitoring tools, and automated tests to respond correctly.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#design-a-small-but-meaningful-test-matrix",
+    "href": "06-validation-errors-and-api-testing.html#design-a-small-but-meaningful-test-matrix",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Design a small but meaningful test matrix",
+    "text": "Design a small but meaningful test matrix\nTesting only one valid example establishes very little. A useful first test suite covers four behaviours.\n\n\n\n\n\n\n\n\nTest category\nExample\nExpected result\n\n\n\n\nValid request\nAll required fields contain supported values\n200; prediction fields are present\n\n\nMissing field\nOmit mean_texture\n422; validation details are returned\n\n\nInvalid boundary\nSend a negative mean_radius\n422; inference is not attempted\n\n\nMalformed JSON\nSend an incomplete JSON document\n422 or another documented client error\n\n\n\nAdd domain-specific cases as the contract matures: minimum and maximum accepted values, unknown categories, null values, extra fields, and values close to decision thresholds.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#test-a-running-api",
+    "href": "06-validation-errors-and-api-testing.html#test-a-running-api",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Test a running API",
+    "text": "Test a running API\nStart the API in one terminal using the Chapter 05 command. In a second terminal, run the Chapter 06 test program:\npython scripts/python/06-test-api.py \\\n  --base-url http://127.0.0.1:8000 \\\n  --output results/06-api-test-results.json\nThe program sends health, valid-prediction, and invalid-prediction requests. It checks status codes and response structure, writes a machine-readable report, and exits with a non-zero status if any check fails. This makes the same script useful locally and in continuous integration.\nThe Bash wrapper provides a shorter equivalent command:\nbash scripts/bash/06-test-api.sh\nThe VALID_PAYLOAD fields match the Chapter 05 breast-cancer request schema. Keep invalid cases derived from this known-valid payload so each negative test isolates one validation rule.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#add-fast-in-process-tests",
+    "href": "06-validation-errors-and-api-testing.html#add-fast-in-process-tests",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Add fast in-process tests",
+    "text": "Add fast in-process tests\nLive tests verify the assembled service over HTTP. During development, in-process tests provide faster feedback and do not require a separately running server.\nfrom fastapi.testclient import TestClient\n\nfrom app.main import app\n\n\nclient = TestClient(app)\n\n\ndef test_health_endpoint():\n    response = client.get(\"/health\")\n\n    assert response.status_code == 200\n    assert response.json()[\"status\"] == \"ok\"\n\n\ndef test_predict_rejects_missing_field():\n    payload = {\n        \"mean_radius\": 17.99,\n        # mean_texture is deliberately omitted\n        \"mean_perimeter\": 122.80,\n        \"mean_area\": 1001.0,\n        \"mean_smoothness\": 0.11840,\n        \"mean_compactness\": 0.27760,\n        \"mean_concavity\": 0.30010,\n        \"mean_concave_points\": 0.14710,\n    }\n\n    response = client.post(\"/predict\", json=payload)\n\n    assert response.status_code == 422\n    assert \"detail\" in response.json()\nSave project-specific tests under tests/ and run them with:\npytest -q\nPrefer assertions about the public contract. Testing private helper functions too closely can make harmless refactoring unnecessarily difficult.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#test-response-structure-not-only-status",
+    "href": "06-validation-errors-and-api-testing.html#test-response-structure-not-only-status",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Test response structure, not only status",
+    "text": "Test response structure, not only status\nA 200 response can still be unusable. Tests should verify the stable fields and basic types promised to clients.\ndef test_prediction_response_contract():\n    payload = {\n        \"mean_radius\": 17.99,\n        \"mean_texture\": 10.38,\n        \"mean_perimeter\": 122.80,\n        \"mean_area\": 1001.0,\n        \"mean_smoothness\": 0.11840,\n        \"mean_compactness\": 0.27760,\n        \"mean_concavity\": 0.30010,\n        \"mean_concave_points\": 0.14710,\n    }\n\n    response = client.post(\"/predict\", json=payload)\n    body = response.json()\n\n    assert response.status_code == 200\n    assert isinstance(body[\"prediction\"], int)\n    assert 0.0 &lt;= body[\"probability\"] &lt;= 1.0\n    assert isinstance(body[\"model_version\"], str)\nAvoid asserting an exact probability unless the test intentionally locks a particular model artifact and dependency environment. Otherwise, a legitimate model retraining can break the test even though the API contract remains valid.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#return-controlled-application-errors",
+    "href": "06-validation-errors-and-api-testing.html#return-controlled-application-errors",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Return controlled application errors",
+    "text": "Return controlled application errors\nKnown operational failures should become deliberate HTTP responses. For example, a service that has not loaded its model is temporarily unable to predict:\nfrom fastapi import HTTPException\n\n\n@app.post(\"/predict\", response_model=PredictionResponse)\ndef predict(request: PredictionRequest) -&gt; PredictionResponse:\n    if model is None:\n        raise HTTPException(\n            status_code=503,\n            detail=\"Prediction service is not ready.\",\n        )\n\n    return run_inference(request)\nThe client receives a useful, stable message without seeing a Python traceback, filesystem path, or model internals. Detailed exceptions should go to protected service logs, not public responses.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#diagnose-a-failing-test-systematically",
+    "href": "06-validation-errors-and-api-testing.html#diagnose-a-failing-test-systematically",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Diagnose a failing test systematically",
+    "text": "Diagnose a failing test systematically\nWhen a test fails, inspect the layers in order:\n\nConfirm that the API process is running and the base URL is correct.\nRead the status code before interpreting the response body.\nCompare the sent JSON keys with the current request schema.\nCheck the API log for model-loading or preprocessing errors.\nReproduce the request through /docs to separate client-code errors from server behaviour.\nConfirm that the model and API are using the same feature names and preprocessing pipeline.\n\nA 422 response usually indicates a schema mismatch. A 500 response indicates that the request passed validation but an unhandled server-side failure occurred.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#testing-layers-before-deployment",
+    "href": "06-validation-errors-and-api-testing.html#testing-layers-before-deployment",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Testing layers before deployment",
+    "text": "Testing layers before deployment\nNo single test style is sufficient:\n\nfunction tests verify preprocessing and inference helpers;\nin-process API tests verify routes, schemas, and error responses quickly;\nlive smoke tests verify the running service and its configuration;\ndeployment checks verify the packaged service in its target environment.\n\nThe test cases can overlap, but each layer should have a clear purpose. Start with a small contract-focused suite and add regression tests whenever a defect is discovered.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#chapter-checklist",
+    "href": "06-validation-errors-and-api-testing.html#chapter-checklist",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Chapter checklist",
+    "text": "Chapter checklist\nBefore proceeding, confirm that:\n\nvalid requests return a documented success response;\nmissing, invalid, and unexpected inputs are rejected consistently;\nresponse bodies contain the promised fields and types;\nknown operational failures use deliberate status codes;\nunexpected errors do not expose sensitive internal details;\nautomated tests exit unsuccessfully when a contract check fails;\nthe test payloads match the deployed request schema.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "06-validation-errors-and-api-testing.html#key-takeaway",
+    "href": "06-validation-errors-and-api-testing.html#key-takeaway",
+    "title": "Validation, Errors, and API Testing",
+    "section": "Key takeaway",
+    "text": "Key takeaway\nReliable API testing is not a final check added after deployment. It is an executable definition of the service contract. By testing both success and failure behaviour, the prediction service becomes easier to integrate, monitor, debug, and change safely.",
+    "crumbs": [
+      "Serving and Testing Predictions",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Validation, Errors, and API Testing</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html",
+    "href": "07-containerizing-the-application.html",
+    "title": "Containerizing the Application",
+    "section": "",
+    "text": "Learning objectives\nA prediction API is not fully deployable merely because it runs inside the development environment. The operating system, Python runtime, dependencies, application code, and model artifact must reach the target environment together. A container image packages those components into one versioned unit.\nThis chapter containerizes the FastAPI service developed in Serving Predictions with FastAPI and tested in Validation, Errors, and API Testing. The objective is not simply to make Docker run. It is to create a small, inspectable image whose behaviour can be verified before it is released.\nBy the end of this chapter, you should be able to:",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#learning-objectives",
+    "href": "07-containerizing-the-application.html#learning-objectives",
+    "title": "Containerizing the Application",
+    "section": "",
+    "text": "explain the difference between an image and a running container;\ndefine a minimal Docker build context;\nwrite a production-oriented Dockerfile for a FastAPI service;\nbuild, run, inspect, and stop the container safely;\nverify the container through the same HTTP contract used outside Docker; and\nidentify common failures involving ports, paths, dependencies, and model artifacts.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#from-source-code-to-a-running-container",
+    "href": "07-containerizing-the-application.html#from-source-code-to-a-running-container",
+    "title": "Containerizing the Application",
+    "section": "From source code to a running container",
+    "text": "From source code to a running container\nThe container workflow has two distinct phases. docker build creates an immutable image from the project files and instructions. docker run starts an isolated process from that image.\n\n\nCode\nflowchart TD\n    A[\"Application, model, and dependencies\"] --&gt; B[\"Docker build context\"]\n    B --&gt; C[\"Versioned image\"]\n    C --&gt; D[\"Running container\"]\n    D --&gt; E[\"Health and prediction checks\"]\n\n\n\n\n\nflowchart TD\n    A[\"Application, model, and dependencies\"] --&gt; B[\"Docker build context\"]\n    B --&gt; C[\"Versioned image\"]\n    C --&gt; D[\"Running container\"]\n    D --&gt; E[\"Health and prediction checks\"]\n\n\n\n\n\n\nAn image is a packaged template. A container is a running instance of that template. Several containers can be started from the same image, but runtime changes inside one container do not update the image.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#prerequisites",
+    "href": "07-containerizing-the-application.html#prerequisites",
+    "title": "Containerizing the Application",
+    "section": "Prerequisites",
+    "text": "Prerequisites\nComplete the API implementation and tests before containerizing it. At minimum, the repository should contain:\nmodel-deployment/\n├── app/\n│   ├── __init__.py\n│   └── main.py\n├── models/\n│   └── deployment_pipeline.joblib\n├── scripts/\n│   ├── bash/\n│   └── python/\n├── requirements.txt\n├── Dockerfile\n└── .dockerignore\nThe examples assume that the FastAPI object is named app in app/main.py, giving the import string app.main:app. If your module differs, change that string consistently in the Dockerfile and local commands.\nConfirm that Docker is available:\ndocker --version\ndocker info\ndocker --version confirms that the client is installed. docker info also checks whether the Docker engine is running.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#define-the-runtime-dependencies",
+    "href": "07-containerizing-the-application.html#define-the-runtime-dependencies",
+    "title": "Containerizing the Application",
+    "section": "Define the runtime dependencies",
+    "text": "Define the runtime dependencies\nThe container must install the packages required at runtime. A focused deployment file avoids pulling notebook and development tools into the image. For a small guide project, the existing requirements.txt may be used if it already contains the following runtime dependencies:\nfastapi\njoblib\nnumpy\npandas\npydantic\nscikit-learn\nuvicorn[standard]\nPinning exact versions in requirements-lock.txt improves reproducibility. When a tested lock file exists, substitute it for requirements.txt in the Dockerfile. Do not generate a lock file from an unrelated virtual environment.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#create-the-dockerfile",
+    "href": "07-containerizing-the-application.html#create-the-dockerfile",
+    "title": "Containerizing the Application",
+    "section": "Create the Dockerfile",
+    "text": "Create the Dockerfile\nAt the repository root, create Dockerfile:\nFROM python:3.12-slim\n\nENV PYTHONDONTWRITEBYTECODE=1 \\\n    PYTHONUNBUFFERED=1 \\\n    PIP_NO_CACHE_DIR=1\n\nWORKDIR /app\n\nCOPY requirements.txt ./\nRUN python -m pip install --upgrade pip \\\n    && python -m pip install -r requirements.txt\n\nCOPY app/ ./app/\nCOPY models/ ./models/\n\nRUN useradd --create-home --uid 10001 apiuser \\\n    && chown -R apiuser:apiuser /app\nUSER apiuser\n\nEXPOSE 8000\n\nCMD [\"uvicorn\", \"app.main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]\nEach instruction has a specific deployment purpose:\n\n\n\n\n\n\n\nInstruction\nPurpose\n\n\n\n\nFROM python:3.12-slim\nStarts from a compact Python runtime.\n\n\nWORKDIR /app\nMakes application paths predictable inside the image.\n\n\nCOPY requirements.txt before source code\nAllows Docker to reuse the dependency layer when only application code changes.\n\n\nCOPY app/ and COPY models/\nIncludes only the runtime code and trained artifact.\n\n\nUSER apiuser\nAvoids running the service as the root user.\n\n\nEXPOSE 8000\nDocuments the port used by the application.\n\n\n--host 0.0.0.0\nMakes Uvicorn reachable outside the container.\n\n\n\nEXPOSE documents the intended container port; it does not publish that port to the host. Port publishing happens when the container is started.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#restrict-the-build-context",
+    "href": "07-containerizing-the-application.html#restrict-the-build-context",
+    "title": "Containerizing the Application",
+    "section": "Restrict the build context",
+    "text": "Restrict the build context\nDocker sends the build context to the builder. A .dockerignore file prevents irrelevant, large, or sensitive files from entering that context.\n.git\n.gitignore\n.venv\n__pycache__\n*.py[cod]\n.pytest_cache\n.ipynb_checkpoints\n.DS_Store\ndocs\nnotebooks\nreports\nresults\ntests\n*.log\n.env\n.env.*\nDo not exclude models/ when the application loads its model from that directory. Never bake credentials or production secrets into the image. Supply runtime configuration through the deployment platform or environment variables.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#build-the-image",
+    "href": "07-containerizing-the-application.html#build-the-image",
+    "title": "Containerizing the Application",
+    "section": "Build the image",
+    "text": "Build the image\nFrom the repository root, run:\ndocker build --tag cdi-model-api:07 .\nThe final period selects the current directory as the build context. The explicit tag identifies both the application and the chapter-stage version.\nInspect the result:\ndocker image ls cdi-model-api\ndocker image inspect cdi-model-api:07\nA successful build proves that the image instructions completed. It does not prove that the service starts correctly or returns valid predictions.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#run-the-container",
+    "href": "07-containerizing-the-application.html#run-the-container",
+    "title": "Containerizing the Application",
+    "section": "Run the container",
+    "text": "Run the container\nStart the service in the background:\ndocker run \\\n  --detach \\\n  --name cdi-model-api-07 \\\n  --publish 8000:8000 \\\n  cdi-model-api:07\nThe mapping 8000:8000 means host-port:container-port. The API should now be available at http://127.0.0.1:8000.\nCheck its state and logs:\ndocker ps --filter name=cdi-model-api-07\ndocker logs cdi-model-api-07\ncurl --fail --silent http://127.0.0.1:8000/health\nThen run the Chapter 06 contract checks against the containerized service:\nbash scripts/bash/06-test-api.sh\nThe same tests should pass whether Uvicorn runs from the virtual environment or inside a container. That equivalence is important: containerization should change packaging, not the API contract.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#automate-the-smoke-test",
+    "href": "07-containerizing-the-application.html#automate-the-smoke-test",
+    "title": "Containerizing the Application",
+    "section": "Automate the smoke test",
+    "text": "Automate the smoke test\nThe companion script builds the image, starts a temporary container, waits for the health endpoint, runs the Chapter 06 API test script when it is available, and removes the container on exit:\nbash scripts/bash/07-build-and-test-container.sh\nOptional environment variables allow the defaults to be changed without editing the script:\nIMAGE_NAME=cdi-model-api \\\nIMAGE_TAG=07 \\\nHOST_PORT=8001 \\\nbash scripts/bash/07-build-and-test-container.sh\nThe script deliberately removes only the container it creates. It does not delete the resulting image, so the verified artifact remains available for inspection or later use.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#add-an-image-health-check",
+    "href": "07-containerizing-the-application.html#add-an-image-health-check",
+    "title": "Containerizing the Application",
+    "section": "Add an image health check",
+    "text": "Add an image health check\nAn HTTP health endpoint is useful only when the runtime checks it. Python is already present in the image, so a health check can avoid adding another system package. Add the following instruction before CMD:\nHEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \\\n  CMD python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)\" || exit 1\nRebuild and run the image, then inspect its status:\ndocker inspect \\\n  --format='{{json .State.Health}}' \\\n  cdi-model-api-07\nThe endpoint should confirm that the process can serve requests. If prediction readiness depends on a loaded model, the health logic should also verify that the artifact was loaded successfully.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#inspect-the-packaged-application",
+    "href": "07-containerizing-the-application.html#inspect-the-packaged-application",
+    "title": "Containerizing the Application",
+    "section": "Inspect the packaged application",
+    "text": "Inspect the packaged application\nUse read-only inspection when debugging the packaged files:\ndocker run --rm cdi-model-api:07 \\\n  python -c \"from app.main import app; print(app.title)\"\nTo list the model artifact without opening an interactive shell:\ndocker run --rm cdi-model-api:07 \\\n  python -c \"from pathlib import Path; print(list(Path('models').glob('*')))\"\nThese checks answer two frequent questions: whether the Python module can be imported and whether the model artifact is present at the path expected by the application.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#stop-and-remove-the-container",
+    "href": "07-containerizing-the-application.html#stop-and-remove-the-container",
+    "title": "Containerizing the Application",
+    "section": "Stop and remove the container",
+    "text": "Stop and remove the container\nWhen a manually started container is no longer needed:\ndocker stop cdi-model-api-07\ndocker rm cdi-model-api-07\nStopping ends the process; removing deletes that container instance. The image remains available. To remove the image later, first confirm that it is no longer needed:\ndocker image rm cdi-model-api:07",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#troubleshooting",
+    "href": "07-containerizing-the-application.html#troubleshooting",
+    "title": "Containerizing the Application",
+    "section": "Troubleshooting",
+    "text": "Troubleshooting\n\nThe port is already in use\nMap a different host port while leaving the container port unchanged:\ndocker run --rm --publish 8001:8000 cdi-model-api:07\nThe service is then available at http://127.0.0.1:8001.\n\n\nThe container exits immediately\nInspect all containers and read the logs:\ndocker ps --all --filter name=cdi-model-api-07\ndocker logs cdi-model-api-07\nCommon causes include an invalid import string, a missing package, or a model-loading exception during application startup.\n\n\nThe model file cannot be found\nRelative paths depend on the container working directory. Resolve model paths from the application module or from the known /app working directory, and confirm that .dockerignore does not exclude the artifact.\n\n\nThe API works locally but not through Docker\nConfirm that Uvicorn binds to 0.0.0.0, the correct port is published, and the request is sent to the host-side port. Binding to 127.0.0.1 inside the container makes the service unreachable from the host.\n\n\nThe image is unexpectedly large\nInspect its layers:\ndocker history cdi-model-api:07\nUse a slim base image, exclude development files, avoid copying the entire repository, and keep build-only tools out of the final runtime image.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#reproducibility-and-security-checklist",
+    "href": "07-containerizing-the-application.html#reproducibility-and-security-checklist",
+    "title": "Containerizing the Application",
+    "section": "Reproducibility and security checklist",
+    "text": "Reproducibility and security checklist\nBefore treating the image as a deployment candidate, confirm that:\n\nthe API and model tests pass before the image is built;\ndependency versions come from the tested project environment;\nthe model artifact is versioned or traceable to its training run;\nthe build context excludes credentials, caches, reports, and local environments;\nthe application runs as a non-root user;\nthe image has a unique, meaningful tag rather than relying only on latest;\nthe container passes health and prediction checks; and\nimage metadata, source revision, and evaluation evidence can be connected.\n\nContainerization improves environmental consistency, but it does not validate the model, secure the surrounding platform, or monitor prediction quality. Those responsibilities remain part of the wider deployment system.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#chapter-summary",
+    "href": "07-containerizing-the-application.html#chapter-summary",
+    "title": "Containerizing the Application",
+    "section": "Chapter summary",
+    "text": "Chapter summary\nA deployment-ready container is more than a successful docker build. It is a reproducible package containing the required runtime, dependencies, application, and model artifact. Its service must start under container constraints and satisfy the same validated API contract established before packaging.\nThe workflow is therefore:\n\ntest the application outside the container;\ndefine a minimal and safe build context;\nbuild a versioned image;\nrun the image with an explicit port mapping;\nverify health and prediction behaviour; and\ninspect and retain evidence for the exact image tested.\n\nThe next chapter can build on this verified image by adding configuration, release, and operational deployment practices.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "07-containerizing-the-application.html#further-reading",
+    "href": "07-containerizing-the-application.html#further-reading",
+    "title": "Containerizing the Application",
+    "section": "Further reading",
+    "text": "Further reading\n\nDockerfile overview\nDocker build context\nDocker container networking\nFastAPI deployment with containers",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Containerizing the Application</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html",
+    "href": "08-deployment-monitoring-and-maintenance.html",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "",
+    "text": "Learning objectives\nDeploying a model is not the end of the workflow. It is the point at which assumptions made during development begin to meet changing data, real users, network failures, and operational constraints. A healthy service must therefore be observed continuously and maintained deliberately.\nThis chapter develops a small, reproducible monitoring workflow. It records inference events, aggregates service and prediction signals, checks explicit thresholds, examines feature drift, and produces artifacts that can support investigation.\nBy the end of this chapter, you should be able to:",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#learning-objectives",
+    "href": "08-deployment-monitoring-and-maintenance.html#learning-objectives",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "",
+    "text": "distinguish service, data, prediction, and performance monitoring;\ndesign useful inference logs without storing unnecessary sensitive data;\naggregate raw events into time-windowed monitoring metrics;\ndefine warning and critical thresholds before incidents occur;\ndetect feature drift and interpret it cautiously;\nconnect alerts to investigation, rollback, and retraining decisions; and\nmaintain a model through a documented lifecycle.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#monitoring-is-a-layered-problem",
+    "href": "08-deployment-monitoring-and-maintenance.html#monitoring-is-a-layered-problem",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Monitoring is a layered problem",
+    "text": "Monitoring is a layered problem\nNo single metric can establish that a deployed model is healthy. Monitoring should cover several related layers.\n\n\n\n\n\n\n\n\nLayer\nExample signals\nQuestion answered\n\n\n\n\nService\nrequest count, error rate, latency\nIs the API available and responsive?\n\n\nData quality\nmissingness, range violations, schema failures\nAre requests usable and structurally valid?\n\n\nFeature distribution\nsummary statistics, category proportions, drift scores\nDoes current input resemble the reference population?\n\n\nPredictions\nclass balance, score distribution, abstention rate\nHas model behaviour changed?\n\n\nModel performance\naccuracy, recall, calibration, subgroup metrics\nIs the model still correct when outcomes become available?\n\n\nOperations\nmodel version, deployment age, alert status\nCan a change be traced and acted upon?\n\n\n\nService health and model quality are different. An API can return HTTP 200 quickly while producing increasingly unreliable predictions. Conversely, a statistically stable model can still be unusable when the service has high latency or frequent failures.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#design-an-inference-event",
+    "href": "08-deployment-monitoring-and-maintenance.html#design-an-inference-event",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Design an inference event",
+    "text": "Design an inference event\nA monitoring event should contain enough information to reconstruct what happened without becoming an uncontrolled copy of every request. A practical event might include:\n{\n  \"timestamp\": \"2026-08-04T08:15:00Z\",\n  \"request_id\": \"req-4a81\",\n  \"model_version\": \"churn-pipeline-1.2.0\",\n  \"status_code\": 200,\n  \"latency_ms\": 43.7,\n  \"prediction\": 1,\n  \"probability\": 0.78,\n  \"features\": {\n    \"tenure_months\": 7,\n    \"monthly_charges\": 84.5\n  }\n}\nIn a real system, apply data minimisation. Avoid logging direct identifiers, secrets, free text, or sensitive attributes unless they are genuinely required and protected. A pseudonymous request identifier can support tracing without exposing a person’s identity. Define retention periods and access controls for logs just as carefully as for training data.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#produce-structured-logs-in-fastapi",
+    "href": "08-deployment-monitoring-and-maintenance.html#produce-structured-logs-in-fastapi",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Produce structured logs in FastAPI",
+    "text": "Produce structured logs in FastAPI\nThe endpoint can record one structured event after every prediction. The exact logging backend may vary, but the application should emit machine-readable fields consistently.\nimport logging\nimport time\nfrom uuid import uuid4\n\nlogger = logging.getLogger(\"model_api\")\n\n\n@app.post(\"/predict\", response_model=PredictionResponse)\ndef predict(payload: PredictionRequest) -&gt; PredictionResponse:\n    started = time.perf_counter()\n    request_id = str(uuid4())\n\n    probability = float(model.predict_proba(payload.to_frame())[0, 1])\n    prediction = int(probability &gt;= 0.5)\n    latency_ms = (time.perf_counter() - started) * 1_000\n\n    logger.info(\n        \"prediction_completed\",\n        extra={\n            \"request_id\": request_id,\n            \"model_version\": MODEL_VERSION,\n            \"status_code\": 200,\n            \"latency_ms\": round(latency_ms, 2),\n            \"prediction\": prediction,\n            \"probability\": round(probability, 6),\n        },\n    )\n\n    return PredictionResponse(\n        prediction=prediction,\n        probability=probability,\n        model_version=MODEL_VERSION,\n    )\nDo not let monitoring failures make the prediction endpoint unreliable. Production logging and metric exporters should use bounded buffers, sensible timeouts, and failure handling appropriate to the service.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#build-the-chapter-monitoring-demonstration",
+    "href": "08-deployment-monitoring-and-maintenance.html#build-the-chapter-monitoring-demonstration",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Build the chapter monitoring demonstration",
+    "text": "Build the chapter monitoring demonstration\nThe chapter script simulates fourteen days of inference activity. The final days introduce higher latency, more errors, increased missingness, a change in one feature distribution, and a shift in the positive prediction rate. This creates known behaviour against which the monitoring calculations can be checked.\nRun the workflow from the repository root:\npython scripts/python/08-monitor-deployment.py\nAlternatively, use the Bash wrapper:\nbash scripts/bash/08-monitor-deployment.sh\nThe workflow writes:\n\nresults/08-inference-events.csv — simulated request-level records;\nresults/08-daily-monitoring-metrics.csv — daily aggregates;\nresults/08-monitoring-alerts.csv — threshold evaluation results;\nresults/08-drift-summary.csv — feature drift statistics;\nresults/figures/08-monitoring-dashboard.png; and\nresults/figures/08-feature-drift.png.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#aggregate-signals-over-useful-windows",
+    "href": "08-deployment-monitoring-and-maintenance.html#aggregate-signals-over-useful-windows",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Aggregate signals over useful windows",
+    "text": "Aggregate signals over useful windows\nIndividual events are necessary for tracing, but operational decisions are usually based on rolling or fixed windows. For each day, the demonstration calculates:\ndaily = events.groupby(\"date\", as_index=False).agg(\n    requests=(\"request_id\", \"size\"),\n    error_rate=(\"is_error\", \"mean\"),\n    p95_latency_ms=(\"latency_ms\", lambda x: x.quantile(0.95)),\n    missing_rate=(\"feature_missing\", \"mean\"),\n    positive_rate=(\"prediction\", \"mean\"),\n    mean_probability=(\"probability\", \"mean\"),\n)\nThe aggregation window should match the decision. A five-minute window may be suitable for service outages; daily or weekly windows may be more stable for population drift. Very small windows can trigger noise, while very large windows can hide abrupt changes.\n\n\n\n\n\n\nFigure 10.1: Daily monitoring dashboard showing request volume, error rate, latency, and prediction rate. Dashed lines indicate operational thresholds.\n\n\n\nThe dashboard combines related signals without collapsing them into one score. A rise in latency and errors suggests an operational incident. A changed prediction rate without service degradation suggests a data or model-behaviour investigation.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#define-alerts-as-testable-rules",
+    "href": "08-deployment-monitoring-and-maintenance.html#define-alerts-as-testable-rules",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Define alerts as testable rules",
+    "text": "Define alerts as testable rules\nAn alert should identify a condition, severity, observation window, owner, and expected action. Thresholds in this demonstration are deliberately simple:\n\n\n\n\n\n\n\n\nMetric\nWarning condition\nExample first response\n\n\n\n\nError rate\ngreater than 2%\ninspect API and dependency errors\n\n\np95 latency\ngreater than 180 ms\ninspect resource use and downstream calls\n\n\nMissing feature rate\ngreater than 3%\nvalidate upstream data pipeline\n\n\nPositive prediction rate\noutside 25%–55%\ncompare inputs and score distribution with reference\n\n\n\nThresholds must reflect the application rather than universal conventions. Establish baselines from representative traffic, account for expected seasonality, and tune rules using the operational cost of missed and false alerts.\nA simple rule evaluator can retain both healthy and breached checks:\nalerts = []\nfor row in daily.itertuples(index=False):\n    alerts.append({\n        \"date\": row.date,\n        \"metric\": \"error_rate\",\n        \"value\": row.error_rate,\n        \"threshold\": 0.02,\n        \"status\": \"ALERT\" if row.error_rate &gt; 0.02 else \"OK\",\n    })\nIn production, avoid sending one notification per event. Require a sustained breach, group related alerts, apply cooldown periods, and route notifications to a named owner. Every alert should link to a runbook.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#detect-feature-drift",
+    "href": "08-deployment-monitoring-and-maintenance.html#detect-feature-drift",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Detect feature drift",
+    "text": "Detect feature drift\nFeature drift occurs when the distribution of inputs changes relative to a reference period. It can be measured even before true outcomes are available. The demonstration compares the first seven days with the final seven days.\nFor a numeric feature, the population stability index (PSI) divides the reference distribution into bins and compares reference and current proportions:\n\\[\n\\operatorname{PSI} = \\sum_{i=1}^{k}(p_i-q_i)\\log\\left(\\frac{p_i}{q_i}\\right),\n\\]\nwhere \\(p_i\\) is the current proportion and \\(q_i\\) is the reference proportion in bin \\(i\\). Small constants are used in software to avoid taking the logarithm of zero.\n\n\n\n\n\n\nFigure 10.2: Reference and current distributions for the monitored feature, accompanied by their population stability index.\n\n\n\nPSI is a diagnostic, not proof that performance has degraded. Its value depends on binning, sample size, and the reference window. Complement it with domain review, distribution plots, missingness checks, and other suitable statistical distances.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#drift-concept-drift-and-performance-decay",
+    "href": "08-deployment-monitoring-and-maintenance.html#drift-concept-drift-and-performance-decay",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Drift, concept drift, and performance decay",
+    "text": "Drift, concept drift, and performance decay\nThese conditions should not be treated as synonyms:\n\nData drift means the input distribution has changed.\nPrediction drift means scores or predicted classes have changed.\nConcept drift means the relationship between inputs and the target has changed.\nPerformance decay means the model’s measured predictive quality has worsened.\n\nInput and prediction drift can be observed immediately. Concept drift and performance decay normally require delayed ground-truth outcomes. Therefore, the monitoring system should support later joining predictions to verified outcomes using a safe event key.\nWhen labels arrive, calculate the same decision-relevant metrics used during evaluation, including subgroup metrics where appropriate. Preserve the prediction, model version, and decision threshold that were active at inference time; otherwise a retrospective evaluation may not represent what the deployed system actually did.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#investigate-before-retraining",
+    "href": "08-deployment-monitoring-and-maintenance.html#investigate-before-retraining",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Investigate before retraining",
+    "text": "Investigate before retraining\nRetraining is only one possible response to an alert. Use a structured sequence:\n\nConfirm that the alert is genuine and sufficiently sustained.\nCheck recent deployments, configuration changes, and dependency failures.\nValidate schemas, missingness, units, categories, and upstream transformations.\nSegment the signal by model version, client, geography, or other safe operational dimensions.\nCompare current features, predictions, and—when available—outcomes with the reference period.\nDecide whether to continue, mitigate, roll back, recalibrate, adjust a threshold, or retrain.\nRecord the incident, evidence, decision, owner, and follow-up action.\n\nAutomatic retraining can amplify data-quality failures if it is triggered without validation. A safer workflow uses eligibility checks, reproducible training, evaluation gates, approval, staged deployment, and rollback capability.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#maintain-a-model-lifecycle-record",
+    "href": "08-deployment-monitoring-and-maintenance.html#maintain-a-model-lifecycle-record",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Maintain a model lifecycle record",
+    "text": "Maintain a model lifecycle record\nEach production model should have traceable metadata:\n\n\n\n\n\n\n\nRecord\nMinimum useful content\n\n\n\n\nModel version\nimmutable identifier and artifact checksum\n\n\nTraining provenance\ndataset snapshot, code revision, dependencies, parameters\n\n\nEvaluation\nmetrics, slices, thresholds, limitations, approval decision\n\n\nDeployment\nenvironment, date, traffic allocation, configuration\n\n\nMonitoring\nbaselines, alert rules, dashboards, responsible owner\n\n\nIncidents\nsymptoms, impact, diagnosis, mitigation, follow-up\n\n\nRetirement\nreplacement or withdrawal reason and archive location\n\n\n\nA maintenance schedule should include dependency updates, vulnerability review, backup and rollback tests, model review dates, and confirmation that monitoring still reflects current risks.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#practical-interpretation-checklist",
+    "href": "08-deployment-monitoring-and-maintenance.html#practical-interpretation-checklist",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Practical interpretation checklist",
+    "text": "Practical interpretation checklist\nBefore acting on a monitoring signal, ask:\n\nIs the metric defined from valid, complete events?\nIs the reference period representative and version-matched?\nIs the change large enough and sustained long enough to matter?\nCould traffic volume, seasonality, or a changed client explain it?\nDoes the change affect all requests or a specific segment?\nAre true outcomes available, and are they joined without leakage?\nWhat is the safest reversible response?\nWho owns the decision and how will it be documented?",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#chapter-summary",
+    "href": "08-deployment-monitoring-and-maintenance.html#chapter-summary",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Chapter summary",
+    "text": "Chapter summary\nReliable deployment requires observing both the software service and the statistical system. Structured inference events provide the raw evidence; time-windowed metrics make behaviour interpretable; thresholds make expectations testable; drift analysis identifies distribution changes; and delayed outcomes reveal whether predictive performance still meets its purpose.\nMonitoring creates signals, not automatic conclusions. Effective maintenance combines those signals with investigation, versioned evidence, clear ownership, cautious retraining, and a tested rollback path.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "08-deployment-monitoring-and-maintenance.html#exercises",
+    "href": "08-deployment-monitoring-and-maintenance.html#exercises",
+    "title": "Deployment Monitoring and Maintenance",
+    "section": "Exercises",
+    "text": "Exercises\n\nAdd a model_version grouping to the daily monitoring report and compare two simulated versions.\nRequire two consecutive daily threshold breaches before an alert becomes critical.\nAdd a categorical feature and calculate a distribution-distance measure for it.\nSimulate delayed outcomes and extend the report with daily recall and calibration error.\nDraft a one-page runbook for an increased missing-feature alert.",
+    "crumbs": [
+      "Containers and Operations",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Deployment Monitoring and Maintenance</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html",
+    "href": "09-end-to-end-deployment-case-study.html",
+    "title": "End-to-End Deployment Case Study",
+    "section": "",
+    "text": "Learning objectives\nBy the end of this chapter, you should be able to:",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#learning-objectives",
+    "href": "09-end-to-end-deployment-case-study.html#learning-objectives",
+    "title": "End-to-End Deployment Case Study",
+    "section": "",
+    "text": "connect model training, serialization, inference, API serving, validation, testing, containerization, and monitoring;\ndistinguish build-time checks from run-time checks;\nexecute the deployment workflow with one reproducible command;\npreserve verification results as machine-readable evidence; and\ndecide whether a candidate is ready for release.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#the-case-study",
+    "href": "09-end-to-end-deployment-case-study.html#the-case-study",
+    "title": "End-to-End Deployment Case Study",
+    "section": "The case study",
+    "text": "The case study\nThe earlier chapters developed the deployment system one layer at a time. This chapter treats those layers as one release candidate. The objective is not to build a second application. It is to verify that the same fitted pipeline can move from a saved artifact to a tested service without changing its preprocessing or prediction logic.\nThe complete path is:\n\n\nCode\nflowchart TD\n    A[Training data] --&gt; B[Fit preprocessing and model]\n    B --&gt; C[Serialized pipeline]\n    C --&gt; D[Inference function]\n    D --&gt; E[FastAPI service]\n    E --&gt; F[API and contract tests]\n    F --&gt; G[Container image]\n    G --&gt; H[Health and prediction probes]\n    H --&gt; I[Monitoring evidence]\n\n\n\n\n\nflowchart TD\n    A[Training data] --&gt; B[Fit preprocessing and model]\n    B --&gt; C[Serialized pipeline]\n    C --&gt; D[Inference function]\n    D --&gt; E[FastAPI service]\n    E --&gt; F[API and contract tests]\n    F --&gt; G[Container image]\n    G --&gt; H[Health and prediction probes]\n    H --&gt; I[Monitoring evidence]\n\n\n\n\n\n\nThe serialized pipeline is the boundary between model development and serving. Preprocessing must remain inside that pipeline so that training and inference apply the same transformations.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#release-acceptance-criteria",
+    "href": "09-end-to-end-deployment-case-study.html#release-acceptance-criteria",
+    "title": "End-to-End Deployment Case Study",
+    "section": "Release acceptance criteria",
+    "text": "Release acceptance criteria\nA deployment candidate is accepted only when all required checks pass.\n\n\n\n\n\n\n\n\nLayer\nEvidence\nAcceptance criterion\n\n\n\n\nArtifact\nSaved model pipeline\nFile exists and loads successfully\n\n\nInference\nDirect Python prediction\nValid input returns the expected output structure\n\n\nApplication\nFastAPI app\nApplication imports without startup errors\n\n\nHealth\n/health\nHTTP 200 and a healthy status\n\n\nPrediction\n/predict\nValid request returns HTTP 200\n\n\nValidation\nInvalid requests\nRejected with HTTP 422\n\n\nTests\nAutomated test suite\nAll required tests pass\n\n\nContainer\nDocker image and container\nImage builds and probes pass\n\n\nOperations\nStructured report\nResults are written for review and monitoring\n\n\n\nThe gate is intentionally strict: one failed required check means the candidate is not ready. A successful health response alone does not prove that the model can make predictions.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#preserve-one-prediction-contract",
+    "href": "09-end-to-end-deployment-case-study.html#preserve-one-prediction-contract",
+    "title": "End-to-End Deployment Case Study",
+    "section": "Preserve one prediction contract",
+    "text": "Preserve one prediction contract\nThe valid request used in Chapter 06 should remain the canonical smoke-test request. Store it in data/reference/valid-prediction-request.json so that local tests, container tests, and operational probes use the same input.\nFor example:\n{\n  \"feature_1\": 0.25,\n  \"feature_2\": 1.75,\n  \"feature_3\": 8.0\n}\nReplace the illustrative fields above with the fields defined by the application’s Pydantic request model. Do not maintain slightly different payloads in several scripts; contract drift is easier to prevent when there is one reference file.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#run-the-complete-workflow",
+    "href": "09-end-to-end-deployment-case-study.html#run-the-complete-workflow",
+    "title": "End-to-End Deployment Case Study",
+    "section": "Run the complete workflow",
+    "text": "Run the complete workflow\nThe Bash orchestrator runs the repository’s established chapter scripts in release order. From the repository root, run:\nbash scripts/bash/09-run-end-to-end-deployment.sh\nBy default, the workflow performs local checks. Add --with-container when Docker is available and the release candidate must also be verified in a container:\nbash scripts/bash/09-run-end-to-end-deployment.sh --with-container\nThe orchestrator uses existing scripts when they are present rather than duplicating their logic. This preserves the chapter progression:\n\nverify or create the serialized model;\nrun the automated Python tests;\nstart the API and wait for readiness;\nexecute the Chapter 06 API contract tests;\noptionally build and test the container; and\nsummarize the evidence in a report and figure.\n\nIf a required command fails, the script exits immediately. This behaviour makes the workflow suitable for a local release gate and, later, for continuous integration.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#generate-the-verification-report",
+    "href": "09-end-to-end-deployment-case-study.html#generate-the-verification-report",
+    "title": "End-to-End Deployment Case Study",
+    "section": "Generate the verification report",
+    "text": "Generate the verification report\nAfter the checks finish, the reporting script converts their evidence into a consistent JSON summary and a readiness figure:\npython scripts/python/09-summarize-deployment-verification.py \\\n  --api-report results/06-api-test-results.json \\\n  --output results/09-deployment-verification.json \\\n  --figure results/figures/09-deployment-readiness.png\nThe script records each check as passed, failed, skipped, or not_run. Skipped optional container checks remain visible and are not silently reported as successes.\n# Illustrative structure of the generated report.\nreport = {\n    \"overall_status\": \"passed\",\n    \"checks\": [\n        {\"name\": \"health\", \"status\": \"passed\", \"http_status\": 200},\n        {\"name\": \"valid_prediction\", \"status\": \"passed\", \"http_status\": 200},\n        {\"name\": \"missing_required_field\", \"status\": \"passed\", \"http_status\": 422},\n    ],\n}\nWhen the generated figure exists, include it in the rendered guide:\n\n\n\n\n\n\nFigure 11.1: Deployment verification status by check. Green indicates a passed check; red indicates failure; grey indicates a skipped or unavailable check.\n\n\n\nThe figure is a communication aid, while the JSON file is the auditable source. Automated systems should consume the JSON rather than infer status from image colours.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#inspect-failures-by-layer",
+    "href": "09-end-to-end-deployment-case-study.html#inspect-failures-by-layer",
+    "title": "End-to-End Deployment Case Study",
+    "section": "Inspect failures by layer",
+    "text": "Inspect failures by layer\nAn end-to-end failure becomes easier to diagnose when it is assigned to the layer that first failed.\n\n\n\n\n\n\n\n\nSymptom\nLikely layer\nFirst inspection\n\n\n\n\nModel file is missing\nBuild/artifact\nTraining and serialization command\n\n\nModel loads locally but API import fails\nApplication\nImport path, lifespan code, and configuration\n\n\nHealth passes but prediction fails\nContract or inference\nRequest fields, types, feature order, and model input\n\n\nLocal API passes but container fails\nPackaging\nDocker build context, copied files, paths, and port\n\n\nValid input returns 422\nContract\nReference JSON compared with the Pydantic schema\n\n\nInvalid input returns 200\nValidation\nField constraints and request model\n\n\nContainer works but later probes fail\nOperations\nLogs, resource limits, dependency health, and model availability\n\n\n\nAlways inspect the earliest failing layer. Later failures are often consequences rather than independent defects.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#separate-build-time-and-run-time-verification",
+    "href": "09-end-to-end-deployment-case-study.html#separate-build-time-and-run-time-verification",
+    "title": "End-to-End Deployment Case Study",
+    "section": "Separate build-time and run-time verification",
+    "text": "Separate build-time and run-time verification\nBuild-time checks answer whether the release candidate was assembled correctly. Run-time checks answer whether the deployed process remains available and useful.\n\nBuild-time checks\n\ndependencies install in the project environment;\ntests pass;\nthe model artifact loads;\nthe application imports;\nthe container image builds; and\nthe reference request satisfies the API contract.\n\n\n\nRun-time checks\n\nthe process remains alive;\nthe health endpoint responds;\npredictions succeed within an acceptable latency;\nvalidation failures are visible but do not crash the service;\nerror rates and latency remain within operational thresholds; and\ninput or prediction distributions are reviewed for meaningful change.\n\nThe Chapter 09 report is release evidence, not a replacement for continuing monitoring after deployment.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#reproducibility-checklist",
+    "href": "09-end-to-end-deployment-case-study.html#reproducibility-checklist",
+    "title": "End-to-End Deployment Case Study",
+    "section": "Reproducibility checklist",
+    "text": "Reproducibility checklist\nBefore declaring the case study complete, confirm that:\n\nthe repository-specific .venv is active;\ndependencies are installed from the repository requirements file;\nthe serialized pipeline was produced by the documented training script;\nthe application loads the artifact from a stable repository-relative path;\none canonical valid request is stored under data/reference/;\ndirect inference, API tests, and container tests use the same feature contract;\ninvalid input produces HTTP 422 rather than an internal server error;\nthe container is tested when it is part of the intended release;\nJSON evidence and the readiness figure are regenerated; and\ngenerated outputs are reviewed before committing or publishing them.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#what-this-case-study-demonstrates",
+    "href": "09-end-to-end-deployment-case-study.html#what-this-case-study-demonstrates",
+    "title": "End-to-End Deployment Case Study",
+    "section": "What this case study demonstrates",
+    "text": "What this case study demonstrates\nDeployment is not the act of placing a model behind an endpoint. It is a chain of contracts: data to pipeline, pipeline to inference function, inference function to API, API to container, and running service to operational evidence. The release is dependable only when those contracts are tested together.\nThe workflow in this chapter provides a reproducible minimum release gate. It can later be transferred to continuous integration, a container registry, and a managed deployment platform without changing the underlying principles.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "09-end-to-end-deployment-case-study.html#chapter-summary",
+    "href": "09-end-to-end-deployment-case-study.html#chapter-summary",
+    "title": "End-to-End Deployment Case Study",
+    "section": "Chapter summary",
+    "text": "Chapter summary\nThis chapter rebuilt the full deployment path as one verified release candidate. The Bash orchestrator reuses the earlier chapter scripts, while the Python reporter turns test evidence into JSON and a readiness figure. Required failures block release; optional checks are recorded explicitly; and operational monitoring continues after the release gate has passed.",
+    "crumbs": [
+      "Case Study",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>End-to-End Deployment Case Study</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html",
+    "href": "999-appendix.html",
+    "title": "Appendix A — Appendix",
+    "section": "",
+    "text": "What this guide establishes\nThis appendix brings together the commands, interfaces, and diagnostic checks used throughout the guide. It is a reference for repeating the workflow; the explanations and design decisions remain in the main chapters.\nThe completed workflow demonstrates that one fitted preprocessing-and-model pipeline can be:\nThis is the boundary of Model Deployment in the CDI Data Science pathway. A successful JSON request proves the complete prediction pathway, but it does not by itself prove production readiness. CI/CD, infrastructure provisioning, secrets, production observability, scaling, rollback, feedback loops, retraining, governance, and human decision systems belong to the next guide, From Models to Systems.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#what-this-guide-establishes",
+    "href": "999-appendix.html#what-this-guide-establishes",
+    "title": "Appendix A — Appendix",
+    "section": "",
+    "text": "trained reproducibly;\nsaved and loaded as a single artifact;\ncalled through a reliable inference function;\nexposed through a validated HTTP API;\ntested with valid and invalid requests;\npackaged and run in a container; and\nchecked for basic service health and prediction correctness.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#repository-conventions",
+    "href": "999-appendix.html#repository-conventions",
+    "title": "Appendix A — Appendix",
+    "section": "Repository conventions",
+    "text": "Repository conventions\n\n\n\n\n\n\n\nPath\nPurpose\n\n\n\n\napp/\nFastAPI application, schemas, and inference code\n\n\ndata/raw/\nOriginal input data retained without modification\n\n\ndata/processed/\nReproducible training or testing data derived from raw inputs\n\n\nmodels/\nSerialized model pipelines and associated metadata\n\n\nresults/\nMachine-readable test and validation outputs\n\n\nreports/\nHuman-readable summaries or rendered supporting material\n\n\nscripts/python/\nExecutable Python programs, prefixed by chapter number\n\n\nscripts/bash/\nRepeatable shell entry points, prefixed by chapter number\n\n\ntests/\nAutomated application and API tests\n\n\ndocs/\nRendered Quarto book\n\n\n\nGenerated artifacts should not be edited manually. Change the source data or program, then rerun the responsible script.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#environment-commands",
+    "href": "999-appendix.html#environment-commands",
+    "title": "Appendix A — Appendix",
+    "section": "Environment commands",
+    "text": "Environment commands\nCreate and activate the repository-specific environment:\npython -m venv .venv\nsource .venv/bin/activate\npython -m pip install --upgrade pip\npython -m pip install -r requirements.txt\nConfirm that the active interpreter belongs to this repository:\nwhich python\npython --version\npython -m pip --version\nDeactivate it before moving to another project:\ndeactivate\nPython’s venv module creates an isolated environment whose installed packages are separate from the base interpreter (Python Software Foundation n.d.).",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#application-commands",
+    "href": "999-appendix.html#application-commands",
+    "title": "Appendix A — Appendix",
+    "section": "Application commands",
+    "text": "Application commands\nStart the API for local development:\npython -m uvicorn app.main:app --reload\nUseful local endpoints are:\n\n\n\n\n\n\n\nEndpoint\nPurpose\n\n\n\n\nhttp://127.0.0.1:8000/health\nService and model-readiness check\n\n\nhttp://127.0.0.1:8000/predict\nPrediction request\n\n\nhttp://127.0.0.1:8000/docs\nInteractive OpenAPI documentation\n\n\nhttp://127.0.0.1:8000/openapi.json\nMachine-readable API specification\n\n\n\nFastAPI derives request handling and interactive documentation from declared routes and typed schemas (Ramírez n.d.a, n.d.b).\nRun the automated tests:\npython -m pytest -q\nUsing python -m pytest makes the selected Python interpreter explicit. Pytest discovers test modules and reports passing, failing, and erroring tests (pytest developers n.d.).",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#request-and-response-contracts",
+    "href": "999-appendix.html#request-and-response-contracts",
+    "title": "Appendix A — Appendix",
+    "section": "Request and response contracts",
+    "text": "Request and response contracts\nThe request body is a contract, not merely an example. Field names, data types, required values, and numeric boundaries must agree with the schema defined in the application. Pydantic field constraints make those requirements explicit (Pydantic n.d.).\nA prediction request has this general form:\n{\n  \"feature_1\": 12.5,\n  \"feature_2\": 3,\n  \"feature_3\": \"category_a\"\n}\nUse the exact feature names and valid values defined by the project schema. Test with the chapter’s maintained request fixture rather than copying this generic structure into the running application.\nA successful response should expose a stable response schema, for example:\n{\n  \"prediction\": 1,\n  \"probability\": 0.83,\n  \"model_version\": \"1.0.0\"\n}\nThe actual fields are determined by the application’s response model. Declaring a response model allows FastAPI to validate, document, and filter returned data (Ramírez n.d.c).",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#http-outcomes",
+    "href": "999-appendix.html#http-outcomes",
+    "title": "Appendix A — Appendix",
+    "section": "HTTP outcomes",
+    "text": "HTTP outcomes\n\n\n\n\n\n\n\n\nStatus\nMeaning in this workflow\nFirst check\n\n\n\n\n200\nRequest completed successfully\nInspect the returned prediction and metadata\n\n\n404\nRoute was not found\nConfirm the path and HTTP method\n\n\n405\nMethod is not allowed\nUse POST for the prediction endpoint\n\n\n422\nRequest failed schema validation\nCompare JSON fields, types, and constraints with the schema\n\n\n500\nApplication failed during processing\nInspect server logs and the traceback\n\n\n503\nService is running but not ready\nCheck model loading and required files\n\n\n\nValidation failures should be tested deliberately. A 422 response for a malformed request is evidence that the boundary is rejecting invalid input, not that the API is broken.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#command-line-api-checks",
+    "href": "999-appendix.html#command-line-api-checks",
+    "title": "Appendix A — Appendix",
+    "section": "Command-line API checks",
+    "text": "Command-line API checks\nCheck health:\ncurl --silent --show-error --fail \\\n  http://127.0.0.1:8000/health\nSend a prediction request using the maintained JSON fixture:\ncurl --silent --show-error --fail \\\n  --request POST \\\n  --header \"Content-Type: application/json\" \\\n  --data @data/reference/prediction-request.json \\\n  http://127.0.0.1:8000/predict\nThe curl options used here suppress progress output, preserve useful error messages, and return a failure exit status for unsuccessful HTTP responses (curl project n.d.).",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#container-commands",
+    "href": "999-appendix.html#container-commands",
+    "title": "Appendix A — Appendix",
+    "section": "Container commands",
+    "text": "Container commands\nBuild the image from the repository root:\ndocker build --tag model-deployment:latest .\nRun it and map the container port to the host:\ndocker run --rm \\\n  --name model-deployment-api \\\n  --publish 8000:8000 \\\n  model-deployment:latest\nInspect running containers and logs from another terminal:\ndocker ps\ndocker logs model-deployment-api\nStop the container when --rm is not being used interactively:\ndocker stop model-deployment-api\nA Dockerfile defines how the image is assembled, while docker run creates and starts a container from that image (Docker n.d.a, n.d.b).",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#artifact-safety-and-compatibility",
+    "href": "999-appendix.html#artifact-safety-and-compatibility",
+    "title": "Appendix A — Appendix",
+    "section": "Artifact safety and compatibility",
+    "text": "Artifact safety and compatibility\nThe serialized artifact contains the fitted preprocessing and model pipeline. Keep preprocessing inside the pipeline so training and inference apply the same transformations (scikit-learn developers n.d.b).\npickle-based formats, including joblib, must be loaded only from trusted sources. They can execute arbitrary code during loading, and loading an artifact with different dependency versions is unsupported. Record the training code, dependency versions, data reference, and evaluation results needed to reproduce the artifact (scikit-learn developers n.d.a).\nAt minimum, retain:\n\nthe artifact filename and version;\nthe feature schema and target definition;\nthe training-data reference or immutable snapshot identifier;\nthe Python and package versions;\nthe training script or source commit;\nthe evaluation metrics; and\nthe creation date.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#troubleshooting-sequence",
+    "href": "999-appendix.html#troubleshooting-sequence",
+    "title": "Appendix A — Appendix",
+    "section": "Troubleshooting sequence",
+    "text": "Troubleshooting sequence\nDiagnose failures from the inside out:\n\nEnvironment: Is the repository-specific .venv active and are dependencies installed?\nArtifact: Does the expected model file exist, and can it be loaded by the current environment?\nInference: Does a direct Python call return a prediction for a known valid record?\nSchema: Does the JSON body match the declared field names, types, and constraints?\nApplication: Does /health report that the service and model are ready?\nHTTP: Does the maintained valid request return 200, while invalid cases return the expected 422 responses?\nContainer: Does the image contain the artifact and application files, expose the correct port, and start the correct command?\n\n\nCommon failures\n\n\n\n\n\n\n\n\nSymptom\nLikely cause\nCorrective action\n\n\n\n\nModuleNotFoundError\nWrong environment or missing dependency\nActivate .venv; reinstall requirements.txt\n\n\nModel file not found\nWrong working directory or image copy path\nVerify the configured path and Docker build context\n\n\nArtifact load warning or failure\nDependency-version mismatch\nRecreate the recorded environment or rebuild the artifact\n\n\nValid-looking request returns 422\nField name, type, or boundary differs from schema\nCompare the body with /docs or openapi.json\n\n\nDirect inference works but API fails\nRequest-to-dataframe conversion or response serialization issue\nTest the inference adapter separately\n\n\nLocal API works but container fails\nMissing copied file, wrong command, host binding, or port mapping\nInspect the Dockerfile, image contents, and container logs\n\n\nConnection refused\nServer is stopped or the wrong port is used\nStart the service and verify host/container port mapping",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-appendix.html#completion-checklist",
+    "href": "999-appendix.html#completion-checklist",
+    "title": "Appendix A — Appendix",
+    "section": "Completion checklist",
+    "text": "Completion checklist\nThe guide is complete when all of the following are true:\n\nthe repository-specific environment can be recreated from declared dependencies;\nthe fitted preprocessing-and-model pipeline can be saved and loaded;\na known valid record produces the expected direct-inference result;\nthe API reports healthy only after the artifact is ready;\nrequest and response schemas are explicit;\nvalid API input returns 200;\nmissing or invalid input returns the expected validation response;\nautomated tests pass;\nthe container image builds;\nthe container starts and answers health and prediction requests; and\ngenerated results record the verification outcome.\n\nPassing this checklist establishes a packaged, validated, tested, and containerized model service. Broader production operation begins in From Models to Systems.\n\n\n\n\ncurl project. n.d. “Curl Manual Page.” Accessed August 4, 2026. https://curl.se/docs/manpage.html.\n\n\nDocker. n.d.a. “Dockerfile Reference.” Accessed August 4, 2026. https://docs.docker.com/reference/dockerfile/.\n\n\n———. n.d.b. “Running Containers.” Accessed August 4, 2026. https://docs.docker.com/engine/containers/run/.\n\n\nPydantic. n.d. “Fields.” Accessed August 4, 2026. https://docs.pydantic.dev/latest/concepts/fields/.\n\n\npytest developers. n.d. “How to Invoke Pytest.” Accessed August 4, 2026. https://docs.pytest.org/en/stable/how-to/usage.html.\n\n\nPython Software Foundation. n.d. “Venv: Creation of Virtual Environments.” Accessed August 3, 2026. https://docs.python.org/3/library/venv.html.\n\n\nRamírez, Sebastián. n.d.a. “FastAPI: First Steps.” Accessed August 3, 2026. https://fastapi.tiangolo.com/tutorial/first-steps/.\n\n\n———. n.d.b. “Request Body.” Accessed August 4, 2026. https://fastapi.tiangolo.com/tutorial/body/.\n\n\n———. n.d.c. “Response Model: Return Type.” Accessed August 4, 2026. https://fastapi.tiangolo.com/tutorial/response-model/.\n\n\nscikit-learn developers. n.d.a. “Model Persistence.” Accessed August 4, 2026. https://scikit-learn.org/stable/model_persistence.html.\n\n\n———. n.d.b. “Pipelines and Composite Estimators.” Accessed August 3, 2026. https://scikit-learn.org/stable/modules/compose.html.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Appendix</span>"
+    ]
+  },
+  {
+    "objectID": "999-references.html",
+    "href": "999-references.html",
+    "title": "References",
+    "section": "",
+    "text": "curl project. n.d. “Curl Manual Page.” Accessed August 4,\n2026. https://curl.se/docs/manpage.html.\n\n\nDocker. n.d.a. “Dockerfile Reference.” Accessed August 4,\n2026. https://docs.docker.com/reference/dockerfile/.\n\n\n———. n.d.b. “Running Containers.” Accessed August 4, 2026.\nhttps://docs.docker.com/engine/containers/run/.\n\n\nPydantic. n.d. “Fields.” Accessed August 4, 2026. https://docs.pydantic.dev/latest/concepts/fields/.\n\n\npytest developers. n.d. “How to Invoke Pytest.” Accessed\nAugust 4, 2026. https://docs.pytest.org/en/stable/how-to/usage.html.\n\n\nPython Software Foundation. n.d. “Venv: Creation of Virtual\nEnvironments.” Accessed August 3, 2026. https://docs.python.org/3/library/venv.html.\n\n\nQuarto. n.d.a. “Book Structure.” Accessed August 3, 2026.\nhttps://quarto.org/docs/books/book-structure.html.\n\n\n———. n.d.b. “Creating a Book.” Accessed August 3, 2026. https://quarto.org/docs/books/.\n\n\nRamírez, Sebastián. n.d.a. “FastAPI.” Accessed August 4,\n2026. https://fastapi.tiangolo.com/.\n\n\n———. n.d.b. “FastAPI Tutorial: User Guide.” Accessed August\n3, 2026. https://fastapi.tiangolo.com/tutorial/.\n\n\n———. n.d.c. “FastAPI: First Steps.” Accessed August 3,\n2026. https://fastapi.tiangolo.com/tutorial/first-steps/.\n\n\n———. n.d.d. “Lifespan Events.” Accessed August 4, 2026. https://fastapi.tiangolo.com/advanced/events/.\n\n\n———. n.d.e. “Request Body.” Accessed August 4, 2026. https://fastapi.tiangolo.com/tutorial/body/.\n\n\n———. n.d.f. “Response Model: Return Type.” Accessed August\n4, 2026. https://fastapi.tiangolo.com/tutorial/response-model/.\n\n\n———. n.d.g. “Testing Events: Lifespan and\nStartup–Shutdown.” Accessed August 4, 2026. https://fastapi.tiangolo.com/advanced/testing-events/.\n\n\n———. n.d.h. “Testing FastAPI Applications.” Accessed August\n3, 2026. https://fastapi.tiangolo.com/tutorial/testing/.\n\n\n———. n.d.i. “Testing FastAPI Applications.” Accessed August\n4, 2026. https://fastapi.tiangolo.com/tutorial/testing/.\n\n\nscikit-learn developers. n.d.a. “Model Persistence.”\nAccessed August 4, 2026. https://scikit-learn.org/stable/model_persistence.html.\n\n\n———. n.d.b. “Pipelines and Composite Estimators.” Accessed\nAugust 3, 2026. https://scikit-learn.org/stable/modules/compose.html.",
+    "crumbs": [
+      "Appendices",
+      "References"
+    ]
+  }
+]
